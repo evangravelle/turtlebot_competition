@@ -26,10 +26,10 @@ double orientation;
 double dot,det;
 
 //~~~Define Define starting locations for the bucket and cocobot
-double startingLocX=400;
-double startingLocY=400;
+double startingLocX=600;
+double startingLocY=350;
 double bucketLocX=400;
-double bucketLocY=400;
+double bucketLocY=600;
 
 //~~~blah blah blah
 double cenx, ceny;
@@ -131,8 +131,8 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
-                        cout << "got bucket pixel" << "\n";
-	if (state==4){
+                        // cout << "got bucket pixel" << "\n";
+	if (state==4 && (substate==1 || substate==2)){
 
 		if (cenPose->x > 0){
 			substate=2;
@@ -141,6 +141,10 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 	double xPrime=((230-cenPose->y)-b)/m;
 		dist=230-cenPose->y;
 		angle=xPrime-cenPose->x-25; 
+
+		if  (abs(dist)<45){
+			substate=8;
+		}
 
 		if (abs(dist)<15 && abs(angle) <15){
 		state=10;
@@ -222,12 +226,15 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
 		if (state==1 || state==0){
-			substate==1;
+			substate=1;
 		}
 		state=4;
 	}else if (control_state -> sub_state ==MOVING_TO_GOAL){
 		if (state==1 || state==0){
-			substate==1;
+			substate=1;
+		}
+		if (control_state-> sub_state == SEARCH_FOR_GOAL){
+			substate=1;
 		}
 		state=4;
 		gotInitialGoal=true;
@@ -244,45 +251,101 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 //~~~Callback for the ultrasonics, gotta go fast
 void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 
-        // TODO define these magic numbers and parameterize the reading value
-        for (int i = 0; i < sensor_msg->sensor_readings.size(); i++ ) {
-            //ROS_INFO("Explorer: Looking at sensor [%d] reading [%d].", sensor_msg->sensor_readings[i].sensor, sensor_msg->sensor_readings[i].reading);
+	if (substate==8){
 
-            switch (sensor_msg->sensor_readings[i].sensor) {
-                case 0:
-                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 5) {
-                        center_obstacle = true;
-                    } else {
-                        center_obstacle = false;
-                    }
-                    break;
+		int center_sonar = 0;
+		int right_sonar = 0;
+		int left_sonar = 0;
 
-                case 1:
-                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
-                        right_obstacle = true;
-                    } else {
-                        right_obstacle = false;
-                    }
-                    break;
+		// int RL_goal = 19;
+		double ANGLE_BOOST = 16;
+		double DIST_BOOST = 16;
 
-                case 2:
-                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
-                        left_obstacle = true;
-                    } else {
-                        left_obstacle = false;
-                    }
-                    break;
-            
-                default:
-                    break;
-            }
-        }
+		bool sonar_ok = true;
+		for(int i=0;i<sensor_msg->sensor_readings.size();i++){
+			int reading = sensor_msg->sensor_readings[i].reading;
+			int sensor = sensor_msg->sensor_readings[i].sensor;
+
+			if(sensor==0)
+				center_sonar = reading;
+			else if(sensor==1)
+				right_sonar = reading;
+			else if(sensor==2)
+				left_sonar = reading;
+		}
+
+		if(center_sonar > 0 && right_sonar > 0 && left_sonar > 0){
+			dist = center_sonar - 6;
+			dist *= DIST_BOOST;
+
+			//Both sensors should be about 19
+			angle = ((right_sonar - 19) + (19 - left_sonar))/2.0;
+			angle *= ANGLE_BOOST;
+			if (center_sonar >= 6 && center_sonar <= 7
+				&& right_sonar >= 16 && right_sonar <= 20
+				&& left_sonar >= 16 && right_sonar <= 20){
+                state=10;
+		        substate=1;
+		        cs.sub_state=AT_GOAL;
+		        control_pub.publish(cs);
+
+			}
+		}else if(right_sonar > 0 && center_sonar > 0){
+			angle = right_sonar - 19;
+			angle *= ANGLE_BOOST;
+		}else if(left_sonar > 0 && center_sonar > 0){
+			angle = 19 - left_sonar;
+			angle *= ANGLE_BOOST;
+		}else{
+			ROS_WARN("Sonar is fucked! Where's the bucket??");
+		}
+		ROS_INFO("Sonar centering: angle = [%f],  dist=[%f]",angle,dist);
+	}
+
+	// TODO define these magic numbers and parameterize the reading value
+	for (int i = 0; i < sensor_msg->sensor_readings.size(); i++ ) {
+	    //ROS_INFO("Explorer: Looking at sensor [%d] reading [%d].", sensor_msg->sensor_readings[i].sensor, sensor_msg->sensor_readings[i].reading);
+
+		if(sensor_msg->sensor_readings[i].reading == 0)
+			continue; 	//Sensor reading is invalid, skip it
+
+	    switch (sensor_msg->sensor_readings[i].sensor) {
+	        case 0:
+	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 5) {
+	                center_obstacle = true;
+	            } else {
+	                center_obstacle = false;
+	            }
+	            break;
+
+	        case 1:
+	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+	                right_obstacle = true;
+	            } else {
+	                right_obstacle = false;
+	            }
+	            break;
+
+	        case 2:
+	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+	                left_obstacle = true;
+	            } else {
+	                left_obstacle = false;
+	            }
+	            break;
+	    
+	        default:
+	            break;
+	    }
+	}
 }
 
 //~~~medium distance control, for ballz and bucket approaching
 void medControl(){
 KIAngular=0;
 KILinear=0;
+KLinear=.00065;
+KAngular=.0065;
 
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
@@ -344,8 +407,11 @@ KILinear=0;
 
 //~~~Fine adjustment control for centering on ballz
 void fineControl(){
-KIAngular=0.0012;
-KILinear=0.0012;
+KIAngular=0.005;
+KILinear=0.00145;
+KLinear=.0008;
+KAngular=.08;
+
 		ILinear=ILinear+dist;
 		IAngular=IAngular+angle;
 
@@ -473,11 +539,11 @@ a=A*angle;
 		}
 				
 
-		if ((finalVel.angular.z-lastVel.angular.z)>.001){
-					finalVel.angular.z=lastVel.angular.z+.001;
+		if ((finalVel.angular.z-lastVel.angular.z)>.003){
+					finalVel.angular.z=lastVel.angular.z+.003;
 				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
-					finalVel.angular.z=lastVel.angular.z-.001;
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.003){
+					finalVel.angular.z=lastVel.angular.z-.003;
 				}
 		
 		if (abs(finalVel.angular.z)<.0001){
@@ -542,8 +608,8 @@ while(ros::ok()){
 	finalVel.angular.z=0;
 
 	ros::spinOnce();
-		std::cout << "state : " <<  state<<"\n";
-		std::cout << "substate : " << substate << "\n"; 	
+		// std::cout << "state : " <<  state<<"\n";
+		// std::cout << "substate : " << substate << "\n"; 	
 	if (state==1){
 		if (substate==1){
 			cout << "subsate: 1" << "\n";
@@ -555,16 +621,16 @@ while(ros::ok()){
 		u_pub_.publish(finalVel);
 	}else if (state==2){
 		cout << "Exploring ~~~" << "\n";
-		setGlobalGoal(400/112.5,-500/112.5);
+		setGlobalGoal(400/112.5,-400/112.5);
 		global();
 	}else if (state==3){
 		cout << "Global ~~~" << "\n";
 	}else if (state==4){
-		cout << "BUCKET \n";
+		// cout << "BUCKET \n";
 		if (substate==1){
 			setGlobalGoal(bucketLocX/112.5,-bucketLocY/112.5);
 			global();
-		}else if (substate==2){
+		}else if (substate==2 || substate==8){
 			medControl();
 		}else if (substate==3){
 //			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);

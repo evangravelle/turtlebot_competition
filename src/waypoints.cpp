@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     while(ros::ok()) {
         tf::StampedTransform transform;
         try{
-            odom = tf_buffer.lookupTransform("map", "base_footprint", ros::Time(0));
+            odom = tf_buffer.lookupTransform("base_footprint", "map", ros::Time(0));
         }
         catch (tf::TransformException ex){
             ROS_ERROR("%s",ex.what());

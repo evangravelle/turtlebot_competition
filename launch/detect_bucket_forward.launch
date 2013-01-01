@@ -13,8 +13,8 @@
 
   <node name="detect_bucket_forward" pkg="coconuts_odroid" type="detect_bucket_forward" />
 
-  <!-- Publishes bucket transform in 3d space -->
-  <node name="locate_bucket_forward" pkg="coconuts_odroid" type="locate_bucket_forward" output="screen" />
+  <!-- Publishes bucket transform in 3d space 
+  <node name="locate_bucket_forward" pkg="coconuts_odroid" type="locate_bucket_forward" output="screen" /> -->
 
 
   </launch>
