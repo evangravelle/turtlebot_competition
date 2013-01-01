@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 	ros::Subscriber motor_sub = n.subscribe("motor_control",1, &movementCallback);
 	ros::Publisher arm_status_pub = n.advertise<coconuts_common::ArmStatus>("/arm_status",1);
     	
-   	ros::Rate loop_rate(2);
+   	ros::Rate loop_rate(1);
 
 	// Get Parameters
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
@@ -104,41 +104,55 @@ int main(int argc, char **argv) {
 
 		coconuts_common::ArmStatus arm_status;
 
+		// TODO:
+		// Parsing logic is too fragile, can be garbage till "hello"
+		// possibly some carrage returns, clean those out first
+		// READ until hello
+		// cleanse anything other than numbers, space, pipe
+		// then try to find the values
+		// some loop count so we dont go on forever
 		// Read Serial Port
 		try{ 
 			bool readable=serial_port_.waitReadable();
 			if (readable) {
 				std::string status = serial_port_.read(128); 
-				ROS_DEBUG("READ Status from Arduino %s", status.c_str());
+				ROS_INFO("READ Status from Arduino %s", status.c_str());
 				
+				if (status.find("hello") != std::string::npos) {
+					ROS_INFO("Its Adele, turn that shit off");
+				} else {
 				// input is a repeating string of format: "X YYYY|"
 				// if we find a "A|" we should assume its out of sequence and ignore
-				if ( status.find("A|") == std::string::npos) {
+				if ( status.length() > 0 && status.find("A|") == std::string::npos && status.find(" ") >= 0 && status.find("|") >= 0 ) {
 
 					bool looking = true;
 					coconuts_common::MotorPosition motor_position;
-
-				    while (looking) {	
-						if ( status.length() > 0 && status.find(" ") >= 0 && status.find("|") >= 0 ) {
-							looking = true;
+					
+					int loops = 0;
+				    while (looking && loops < 5) {	
+						if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
 							motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
 							motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+							ROS_INFO("BEFORE: [%s].", status.c_str());
 							status = status.erase(0, status.find("|") + 1);
+							ROS_INFO("AFTER: [%s].", status.c_str());
 							arm_status.motor_positions.push_back(motor_position);
 
 							// Copy values locally for relative movement
 							motors[motor_position.motor] = motor_position.position;
 
-							ROS_DEBUG("Found [%i %i|].", motor_position.motor, motor_position.position);
+							ROS_INFO("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
 						} else {
 							looking = false;
-							ROS_DEBUG("Done looking [%s].", status.c_str());
+							ROS_INFO("Done looking [%s].", status.c_str());
 						}
+						loops++;
 					}
 					arm_status_pub.publish(arm_status);
 				} else {
 					ROS_INFO("Found out of sequence request [%s].", status.c_str());
 				}
+			}
 			}
 
 			// Queue up next request for status, but only do it 1/5th of the times we send requests
