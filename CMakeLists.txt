@@ -63,10 +63,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-add_action_files(
-  DIRECTORY action
-  FILES MoveMotor.action
-)
+# add_action_files(
+#   DIRECTORY action
+#   FILES MoveMotor.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -131,16 +131,16 @@ include_directories(
 # add_dependencies(coconuts_odroid ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(coconuts_odroid_node src/coconuts_odroid_node.cpp)
+add_executable(SimpleMover src/SimpleMover.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(coconuts_odroid_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(SimpleMover ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(coconuts_odroid_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(SimpleMover
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -151,10 +151,10 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/controller.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS coconuts_odroid coconuts_odroid_node
