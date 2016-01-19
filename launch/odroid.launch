@@ -1,0 +1,7 @@
+<launch>
+
+<!-- EKF -->
+<node pkg="coconuts_odroid" type="simpleMover" name="simple_mover" >
+</node>
+
+</launch>
