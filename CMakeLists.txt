@@ -151,10 +151,10 @@ target_link_libraries(SimpleMover
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-install(PROGRAMS
-  scripts/controller.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#  install(PROGRAMS
+#    scripts/controller.py
+#    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#  )
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS coconuts_odroid coconuts_odroid_node
