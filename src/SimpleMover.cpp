@@ -17,17 +17,13 @@ void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
 } 
 
 void movementCallback(const std_msgs::String::ConstPtr& msg){
-    ROS_INFO("Received Movement: %s", msg->data.c_str());
+	ROS_INFO("Received Movement: %s", msg->data.c_str());
 	std::ostringstream to_send;
-	// use linear X to represent the motor number
-	// user angular Z to represent the degrees to turn
-    // send movement
-	//to_send << msg->linear.x << " " << msg->angular.z << " " << kp << " " << ki << " "<< kd <<std::endl;
-	
+	to_send << msg->data << " " << kp << " " << ki << " "<< kd <<std::endl;
+	ROS_INFO("Sending Movement (w/PID): %s",to_send.str().c_str());
 	//std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
 	try {
-		//serial_port_.write(to_send.str());
-		serial_port_.write(msg->data);
+		serial_port_.write(to_send.str());
 	} catch(std::exception& e){
 		std::cerr<<e.what()<<std::endl;
 	}
