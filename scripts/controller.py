@@ -85,14 +85,10 @@ def getKey():
 	return key
 
 def getEntry():
-	tty.setraw(sys.stdin.fileno())
-	select.select([sys.stdin], [], [], 0)
-	key = sys.stdin.read(1)
-        while(key != '\r'):
-	  line += key
-	  key = sys.stdin.read(1)
-
-	termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+	#tty.setraw(sys.stdin.fileno())
+	#select.select([sys.stdin], [], [], 0)
+	line = raw_input("Movement: [motor] [movement]: ")  
+	#termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
 	return line
 
 speed = .5
@@ -151,12 +147,13 @@ if __name__=="__main__":
                                 pub_mode.publish(mode)
 				status = (status + 1) % 18
 			elif key in motorBindings.keys():
-				print "Input [Motor][space][Angle]:"	
-				motor = 0
-				degree = 30
-				status = (status + 1) % 18
-				motorMsg = "{} {}".format(motor,degree)
+				#print "Input [Motor][space][Angle]:"	
+				motorMsg = getEntry()
+				#motor = 0
+				#degree = 30
+				#motorMsg = "{} {}".format(motor,degree)
 				pub_motor.publish(motorMsg)
+				status = (status + 1) % 18
 			else:
 				x = 0
 				th = 0
