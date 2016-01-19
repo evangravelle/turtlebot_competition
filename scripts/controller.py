@@ -22,7 +22,7 @@ e/c     : increase/decrease only angular speed by 10%
 stop    : anything else 
 s,v,b,n : play a song
 Mode    : 1:Start 2:Stop 3:Reset 4:PowerDown 5:Safe 6:Full 0:Dock
-Motor	: y followed by [Motor Number][space][Rotation]
+Motor	: y [will prompt for motor and movement]
 
 CTRL-C to quit
 """
@@ -87,8 +87,10 @@ def getKey():
 def getEntry():
 	#tty.setraw(sys.stdin.fileno())
 	#select.select([sys.stdin], [], [], 0)
-	line = raw_input("Movement: [motor] [movement]: ")  
+	motor = raw_input("Motor: ")  
+	movement = raw_input("Movement: ")  
 	#termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+	line = "{} {}|".format(motor, movement)
 	return line
 
 speed = .5
