@@ -2,6 +2,7 @@
 
 <!-- EKF -->
 <node pkg="coconuts_odroid" type="SimpleMover" name="simple_mover" output="screen" >
+	<param name="port" value="/dev/pts/27" />
 </node>
 
 </launch>
