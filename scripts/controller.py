@@ -105,6 +105,7 @@ if __name__=="__main__":
     	settings = termios.tcgetattr(sys.stdin)
 	
 	pub = rospy.Publisher('cmd_vel', Twist,queue_size=10)
+	pub_motor = rospy.Publisher('motor_control', String,queue_size=10)
 	#pub_play_song = rospy.Publisher('play_song', PlaySong,queue_size=10)
 	pub_mode = rospy.Publisher('mode', String,queue_size=10)
 	#pub_song = rospy.Publisher('song', Song,queue_size=10)
@@ -114,6 +115,8 @@ if __name__=="__main__":
 	x = 0
 	th = 0
 	status = 0
+	motor = 0
+	degree = 0
 
 	try:
 		print msg
@@ -123,16 +126,19 @@ if __name__=="__main__":
 			if key in moveBindings.keys():
 				x = moveBindings[key][0]
 				th = moveBindings[key][1]
-			elif key in motorBindings.keys():
-				print "Input [Motor][space][Angle]:"	
-				x = 0
-				th = 30
-				status = (status + 1) % 18
+				twist = Twist()
+				twist.linear.x = x*speed; twist.linear.y = 0; twist.linear.z = 0
+				twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = th*turn
+				pub.publish(twist)
 			elif key in speedBindings.keys():
 				speed = speed * speedBindings[key][0]
 				turn = turn * speedBindings[key][1]
 				print vels(speed,turn)
 				status = (status + 1) % 18
+				twist = Twist()
+				twist.linear.x = x*speed; twist.linear.y = 0; twist.linear.z = 0
+				twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = th*turn
+				pub.publish(twist)
                         elif key in songBindings.keys():
                                 #play_song = PlaySong()
                                 #play_song.song_number = songBindings[key]
@@ -144,16 +150,18 @@ if __name__=="__main__":
                                 print "Changing Mode to: ", mode
                                 pub_mode.publish(mode)
 				status = (status + 1) % 18
+			elif key in motorBindings.keys():
+				print "Input [Motor][space][Angle]:"	
+				motor = 0
+				degree = 30
+				status = (status + 1) % 18
+				motorMsg = "{} {}".format(motor,degree)
+				pub_motor.publish(motorMsg)
 			else:
 				x = 0
 				th = 0
 				if (key == '\x03'):
 					break
-
-			twist = Twist()
-			twist.linear.x = x*speed; twist.linear.y = 0; twist.linear.z = 0
-			twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = th*turn
-			pub.publish(twist)
 
 			if (status == 18):
 				print msg

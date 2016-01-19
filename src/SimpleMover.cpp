@@ -1,11 +1,12 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
+#include "std_msgs/String.h"
 
 #include <serial/serial.h>
 #include <sstream>
 
-//std::string port_name_ = "/dev/pts/27";
-std::string port_name_ = "/dev/ttyUSB0";
+std::string port_name_ = "/dev/pts/27";
+//std::string port_name_ = "/dev/ttyUSB0";
 serial::Serial serial_port_;
 
 double kp,ki,kd;
@@ -17,19 +18,20 @@ void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
     kd = (double) gainPtr -> z;
 } 
 
-void movementCallback(const geometry_msgs::Twist::ConstPtr& msg){
-    ROS_INFO("Recieved Movement: Linear: %f, %f, %f  Angular: %f, %f, %f", msg->linear.x, msg->linear.y, msg->linear.z, msg->angular.x, msg->angular.y, msg->angular.z);
+void movementCallback(const std_msgs::String::ConstPtr& msg){
+    ROS_INFO("Recieved Movement: %s", msg->data.c_str());
 	std::ostringstream to_send;
 	// use linear X to represent the motor number
 	// user angular Z to represent the degrees to turn
     // send movement
-	to_send << msg->linear.x << " " << msg->angular.z << " " << kp << " " << ki << " "<< kd <<std::endl;
+	//to_send << msg->linear.x << " " << msg->angular.z << " " << kp << " " << ki << " "<< kd <<std::endl;
 	
-	std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
+	//std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
 	try {
-		serial_port_.write(to_send.str());
+		//serial_port_.write(to_send.str());
+		serial_port_.write(msg->data);
 	} catch(std::exception& e){
-        std::cerr<<e.what()<<std::endl;
+		std::cerr<<e.what()<<std::endl;
 	}
 }
 
@@ -39,7 +41,7 @@ int main(int argc, char **argv) {
 	
         // Maybe reduce this so we dont buffer commands?
         
-	ros::Subscriber sub = n.subscribe("cmd_vel",100, movementCallback);
+	ros::Subscriber sub = n.subscribe("motor_control",100, movementCallback);
     	ros::Subscriber pidGainSub = n.subscribe<geometry_msgs::Vector3>("/pid_gain", 1, pidGainCallback);
     	
     	ros::Rate loop_rate(10);
