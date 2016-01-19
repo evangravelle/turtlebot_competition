@@ -5,7 +5,7 @@
 #include <sstream>
 
 //std::string port_name_ = "/dev/pts/27";
-std::string port_name_ = "/dev/ttyUSB0";
+std::string port_name_ = "/dev/ttyUSB0/";
 serial::Serial serial_port_;
 
 double kp,ki,kd;
