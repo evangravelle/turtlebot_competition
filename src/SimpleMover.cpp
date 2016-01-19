@@ -19,7 +19,7 @@ void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
 void movementCallback(const std_msgs::String::ConstPtr& msg){
 	ROS_INFO("Received Movement: %s", msg->data.c_str());
 	std::ostringstream to_send;
-	to_send << msg->data << " " << kp << " " << ki << " "<< kd <<std::endl;
+	to_send << msg->data << " " << kp << " " << ki << " "<< kd;
 	ROS_INFO("Sending Movement (w/PID): %s",to_send.str().c_str());
 	//std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
 	try {
