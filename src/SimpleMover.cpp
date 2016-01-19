@@ -5,22 +5,27 @@
 #include <serial/serial.h>
 #include <sstream>
 
+#define DELIMITER "|"
+
 serial::Serial serial_port_;
 
-double kp,ki,kd;
+double kp_,ki_,kd_;
 
 void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
 {
-    kp = (double) gainPtr -> x;
-    ki = (double) gainPtr -> y;
-    kd = (double) gainPtr -> z;
+    kp_ = (double) gainPtr -> x;
+    ki_ = (double) gainPtr -> y;
+    kd_ = (double) gainPtr -> z;
 } 
 
 void movementCallback(const std_msgs::String::ConstPtr& msg){
 	ROS_INFO("Received Movement: %s", msg->data.c_str());
 	std::ostringstream to_send;
-	to_send << msg->data << " " << kp << " " << ki << " "<< kd;
-	ROS_INFO("Sending Movement (w/PID): %s",to_send.str().c_str());
+	//to_send << msg->data << " " << kp_ << " " << ki_ << " "<< kd_;
+	//to_send << msg->data << " " << kp_ << " " << ki_ << " "<< kd_;
+	to_send << msg->data;
+	//ROS_INFO("Sending Movement (w/PID): %s",to_send.str().c_str());
+	ROS_INFO("Sending Movement: %s",to_send.str().c_str());
 	//std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
 	try {
 		serial_port_.write(to_send.str());
@@ -42,6 +47,9 @@ int main(int argc, char **argv) {
     	ros::Rate loop_rate(10);
 	std::string trim_pot_status;
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
+	pn.param<double>("kp", kp_, 0.0);
+	pn.param<double>("ki", ki_, 0.0);
+	pn.param<double>("kd", kd_, 0.0);
 
 	// Open Serial port for Reading
 	try {
