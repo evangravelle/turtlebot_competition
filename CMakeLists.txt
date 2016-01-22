@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(coconuts_master)
+project(coconuts_assignment_1_master)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -7,7 +7,8 @@ project(coconuts_master)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
-  geometry_msgs
+  cv_bridge
+  image_transport
   roscpp
   rospy
   serial
@@ -17,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -72,7 +73,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   actionlib_msgs#   geometry_msgs#   std_msgs
+#   actionlib_msgs
 # )
 
 ################################################
@@ -104,12 +105,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES coconuts_master
-#  CATKIN_DEPENDS actionlib actionlib_msgs geometry_msgs roscpp rospy serial std_msgs tf
-#  DEPENDS system_lib
+#  LIBRARIES coconuts_assignment_1_master
+#  CATKIN_DEPENDS actionlib actionlib_msgs roscpp rospy serial std_msg tf
+   CATKIN_DEPENDS roscpp cv_bridge opencv2 std_msgs image_transport tf
 )
+
 
 ###########
 ## Build ##
@@ -120,27 +123,29 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(coconuts_master
-#   src/${PROJECT_NAME}/coconuts_master.cpp
+# add_library(coconuts_assignment_1_master
+#   src/${PROJECT_NAME}/coconuts_assignment_1_master.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(coconuts_master ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(coconuts_assignment_1_master ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(snes_joy_node src/snes_joy_node.cpp)
+add_executable(detect_ball src/detect_ball.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(coconuts_assignment_1_master_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(snes_joy_node
+target_link_libraries(detect_ball
+  ${OpenCV_LIBS}
   ${catkin_LIBRARIES}
 )
 
@@ -154,12 +159,12 @@ target_link_libraries(snes_joy_node
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/controller.py
+  scripts/create_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS coconuts_master coconuts_master_node
+# install(TARGETS coconuts_assignment_1_master coconuts_assignment_1_master_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -184,7 +189,7 @@ install(PROGRAMS
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_coconuts_master.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_coconuts_assignment_1_master.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
