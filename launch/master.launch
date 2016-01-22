@@ -1,6 +1,17 @@
 <launch>
 
+<!--
 <node pkg="coconuts_master" type="controller.py" name="controller" output="screen" >
+</node>
+-->
+
+<node pkg="joy" type="joy_node" name="joy_node">
+    <param name="dev" type="string" value="/dev/input/js0" />
+</node>
+
+<node pkg="coconuts_master" type="snes_joy_node" name="snes_joy_node" output="screen" >
+    <param name="max_ang_vel" value="1.0" />
+    <param name="max_lin_vel" value="0.25" />
 </node>
 
 </launch>
