@@ -29,22 +29,24 @@ ros::Publisher image_thresh_pub;
 //Store all constants for image encodings in the enc namespace to be used later.
 namespace enc = sensor_msgs::image_encodings;
 
-// Initialize variables
-ros::Time current_time;
-
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW[] = "DETECT_BALL";
 
+// Initialize variables
+ros::Time current_time;
+
 //This function is called everytime a new image is published
-void imageCallback(const sensor_msgs::ImageConstPtr& original_image)
+void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
+    const sensor_msgs::ImageConstPtr hsv_image;
     current_time = ros::Time::now();
-    
+    cv_bridge::CvImagePtr cv_ptr_raw;
+    cv_bridge::CvImagePtr cv_ptr_hsv;
+
     //Convert from the ROS image message to a CvImage suitable for working with OpenCV for processing
-    cv_bridge::CvImagePtr cv_ptr;
     try
     {
-        cv_ptr = cv_bridge::toCvCopy(original_image, enc::BGR8);
+        cv_ptr_raw = cv_bridge::toCvCopy(raw_image, enc::BGR8);
     }
     catch (cv_bridge::Exception& e)
     {
@@ -53,8 +55,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& original_image)
         return;
     }
 
-    //Display the tracked robots
-    cv::imshow(WINDOW, cv_ptr->image);
+    //Convert to HSV
+    //cv::cvtColor(cv_ptr_raw->image, cv_ptr_hsv->image, CV_BGR2HSV);
+
+    //Display the HSV image
+    cv::imshow(WINDOW, cv_ptr_raw->image);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
@@ -66,6 +71,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& original_image)
 
 int main(int argc, char **argv)
 {
+
 	ros::init(argc, argv, "detect_ball");
 	
 	ros::NodeHandle nh;
@@ -76,7 +82,7 @@ int main(int argc, char **argv)
  
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
 	
-    pub = it.advertise("/camera_2/image_processed", 1);
+    pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(coconuts_assignment_1_master)
+project(coconuts_master)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -159,7 +159,7 @@ target_link_libraries(detect_ball
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/create_controller.py
+  scripts/controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
