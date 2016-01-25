@@ -1,26 +1,11 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include "std_msgs/Int32.h"
-#include "nav_msgs/Odometry.h"
-#include <aruco/aruco.h>
-#include <aruco/cameraparameters.h>
-#include <aruco/cvdrawingutils.h>
-#include <aruco/markerdetector.h>
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "geometry_msgs/Quaternion.h"
-#include "geometry_msgs/TransformStamped.h"
-#include "geometry_msgs/PoseArray.h"
 #include <tf/transform_broadcaster.h>
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <stdlib.h> // getenv
 
 // Create publishers
 image_transport::Publisher pub;
