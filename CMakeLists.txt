@@ -137,15 +137,18 @@ include_directories(
 ## Declare a C++ executable
 add_executable(snes_joy_node src/snes_joy_node.cpp)
 add_executable(detect_ball src/detect_ball.cpp)
+add_executable(teleop_config_server_example src/teleop_config_server_example.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(teleop_config_server_example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(snes_joy_node ${catkin_LIBRARIES})
 target_link_libraries(detect_ball ${catkin_LIBRARIES})
+target_link_libraries(teleop_config_server_example ${catkin_LIBRARIES})
 
 #############
 ## Install ##
