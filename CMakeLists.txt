@@ -65,17 +65,17 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  DIRECTORY action
+  FILES
+  ConfigStereoCamera.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   actionlib_msgs#   geometry_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  actionlib_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -156,10 +156,11 @@ target_link_libraries(detect_ball ${catkin_LIBRARIES})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-## install(PROGRAMS
-##  scripts/controller.py
-##  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-## )
+install(PROGRAMS
+  scripts/teleop_config.py
+  scripts/teleop_config_test_server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS coconuts_master coconuts_master_node
