@@ -7,7 +7,7 @@
     <param name="camera_frame_id" type="string" value="webcam" />
     <param name="video_device" type="string" value="/dev/video0" />
     <param name="autofocus" type="bool" value="0" />
-    <!--- Needed for some devices --->
+    <!-- Needed for some devices -->
     <!-- <param name="pixel_format" value="yuyv" /> -->
   </node>
   
