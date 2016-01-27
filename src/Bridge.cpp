@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "std_msgs/String.h"
+#include <coconuts_odroid/Movement.h>
 
 #include <serial/serial.h>
 #include <sstream>
@@ -11,28 +12,9 @@ serial::Serial serial_port_;
 
 int motors[10];
 
-double kp_,ki_,kd_;
 
-void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
-{
-    kp_ = (double) gainPtr -> x;
-    ki_ = (double) gainPtr -> y;
-    kd_ = (double) gainPtr -> z;
-} 
+void movementCallback(const std_msgs::String::ConstPtr& msg){
 
-void statusCallback(const std_msgs::String::ConstPtr& msg){
-
-	ROS_INFO("Requesting POT Status");
-	// Get status on any message...
-	// We'll read response on next control loop
-	try {
-		serial_port_.write("A|");
-	} catch(std::exception& e){
-		std::cerr<<e.what()<<std::endl;
-	}
-}
-
-void absMovementCallback(const std_msgs::String::ConstPtr& msg){
 	ROS_INFO("RECV Absolute Movement Request from client: %s", msg->data.c_str());
 	ROS_INFO("SEND Absolute Position to Arduino: %s",msg->data.c_str());
 	try {
@@ -40,9 +22,6 @@ void absMovementCallback(const std_msgs::String::ConstPtr& msg){
 	} catch(std::exception& e){
 		std::cerr<<e.what()<<std::endl;
 	}
-}
-
-void relMovementCallback(const std_msgs::String::ConstPtr& msg){
 
 	int motor, movement;
 	std::ostringstream request;
@@ -67,16 +46,14 @@ void relMovementCallback(const std_msgs::String::ConstPtr& msg){
 }
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "SimpleMover");
+
+	ros::init(argc, argv, "Bridge");
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 	std::string port_name;
 	
    	// Maybe reduce this so we dont buffer commands?
-	ros::Subscriber motor_rel_sub = n.subscribe("motor_control_relative",100, &relMovementCallback);
-	ros::Subscriber motor_abs_sub = n.subscribe("motor_control_absolute",100, &absMovementCallback);
-	ros::Subscriber motor_status_sub = n.subscribe("motor_control_status",100, &statusCallback);
-	ros::Subscriber pidGainSub = n.subscribe<geometry_msgs::Vector3>("/pid_gain", 1, pidGainCallback);
+	ros::Subscriber motor_sub = n.subscribe("motor_control",100, &movementCallback);
 	ros::Publisher pot_status_pub = n.advertise<std_msgs::String>("/pot_status",1);
     	
    	ros::Rate loop_rate(10);
