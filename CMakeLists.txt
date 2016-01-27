@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   cv_bridge
   image_transport
+  coconuts_common
 )
 
 ## System dependencies are found with CMake's conventions
@@ -141,7 +142,7 @@ add_executable(teleop_config_server_example src/teleop_config_server_example.cpp
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(detect_ball ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(teleop_config_server_example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
