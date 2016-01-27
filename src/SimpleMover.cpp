@@ -19,13 +19,13 @@ void pidGainCallback(const geometry_msgs::Vector3::ConstPtr& gainPtr)
 } 
 
 void movementCallback(const std_msgs::String::ConstPtr& msg){
-	ROS_INFO("Received Movement: %s", msg->data.c_str());
+	ROS_INFO("RECV Movement Request from client: %s", msg->data.c_str());
 	std::ostringstream to_send;
 	//to_send << msg->data << " " << kp_ << " " << ki_ << " "<< kd_;
 	//to_send << msg->data << " " << kp_ << " " << ki_ << " "<< kd_;
 	to_send << msg->data;
 	//ROS_INFO("Sending Movement (w/PID): %s",to_send.str().c_str());
-	ROS_INFO("Sending Movement: %s",to_send.str().c_str());
+	ROS_INFO("SEND Movement to Arduino: %s",to_send.str().c_str());
 	//std::cout<<"Sending Movement: "<<to_send.str()<<std::endl;
 	try {
 		serial_port_.write(to_send.str());
@@ -43,9 +43,11 @@ int main(int argc, char **argv) {
         // Maybe reduce this so we dont buffer commands?
 	ros::Subscriber sub = n.subscribe("motor_control",100, movementCallback);
     	ros::Subscriber pidGainSub = n.subscribe<geometry_msgs::Vector3>("/pid_gain", 1, pidGainCallback);
+	ros::Publisher pot_status_pub = n.advertise<std_msgs::String>("/pot_status",1);
     	
     	ros::Rate loop_rate(10);
 	std::string trim_pot_status;
+	std_msgs::String tps;
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
 	pn.param<double>("kp", kp_, 0.0);
 	pn.param<double>("ki", ki_, 0.0);
@@ -58,6 +60,10 @@ int main(int argc, char **argv) {
 			serial::Timeout T = serial::Timeout::simpleTimeout(100);
 			serial_port_.setTimeout(T);
 			serial_port_.open();
+		
+			// Send request for initial status
+			serial_port_.write("A|");
+	
 	} catch (std::exception & e) {
 		std::cerr<<"Error Opening Serial port: " <<e.what()<<std::endl;
 		return(-1);
@@ -70,7 +76,10 @@ int main(int argc, char **argv) {
         		bool readable=serial_port_.waitReadable();
         		if (readable) {
 					trim_pot_status = serial_port_.read(128); 
-					ROS_INFO("Read Status %s", trim_pot_status.c_str());
+					ROS_INFO("READ Status from Arduino %s", trim_pot_status.c_str());
+
+					tps.data = trim_pot_status;
+					pot_status_pub.publish(tps);
 				}
 		} catch(std::exception& e){
 			std::cerr<<e.what()<<std::endl;
