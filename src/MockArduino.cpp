@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 	std::string port_name;
-	int motor_count, temp_int, motor, movement;
+	int motor_count, temp_int;
 	std::ostringstream param_name;
 	std::ostringstream pot_status;
 	bool send_update;
@@ -77,38 +77,45 @@ int main(int argc, char **argv) {
 		// Read Serial Port
 		try{ 
 			bool readable=serial_port_.waitReadable();
+			bool send_status = false;
+			bool looking = true;
+			int motor, movement;
 			if (readable) {
 				movement_request = serial_port_.read(128); 
-				ROS_INFO("READ Movement Request from SimpleMover [%s]", movement_request.c_str());
 
-				if (movement_request != "A|" ) {
-
-					// TODO: Update status of motor positions, honoring limits
-					motor = atoi(movement_request.substr(0, movement_request.find(" ")).c_str());
-					movement_request.erase(0, movement_request.find(" "));	
-					movement = atoi(movement_request.substr(0, movement_request.length() -1 ).c_str());
+				while(looking) {
 					
-					if (movement > 0) {
-						if (motors[motor]["status"] + movement <= motors[motor]["max"]) {
-							motors[motor]["status"] += movement;
-						}
-					// TODO: Not working
-					} else { // movement <= 0
-						if (motors[motor]["status"] + movement >= motors[motor]["min"]) {
-							motors[motor]["status"] += movement;
-						}
-					}
+					if ( movement_request.find("A|") == 0) {
+						ROS_DEBUG("Received status request from Bridge");
+						send_status = true;
+						movement_request = movement_request.erase(0,2);
+					} else if ( movement_request.length() > 0 && movement_request.find(" ") >= 0 && movement_request.find("|") >= 0) {
+						ROS_INFO("READ Movement Request from Bridge [%s]", movement_request.c_str());
+                        motor = atoi(movement_request.substr(0, movement_request.find(" ")).c_str());
+                        movement = atoi(movement_request.substr(movement_request.find(" ") + 1, movement_request.find("|")).c_str());
+                        movement_request = movement_request.erase(0, movement_request.find("|") + 1);
 
-					pot_status.str("");
-					pot_status.clear();
-			
-					// Update status string
-					for (int i = 0; i < motor_count; i++) {
-						pot_status << i << " " << motors[i]["status"] << "|";
+						if ( movement <= motors[motor]["max"] && movement >= motors[motor]["min"] ) {
+							ROS_INFO("Requested movement within threshold");
+							motors[motor]["status"] = movement;
+						} else {
+							ROS_INFO("Requested movement outside of threshold, ignoring");
+						}
+					} else {
+						looking = false;
 					}
+				}
+
+				// Update status string
+				pot_status.str("");
+				pot_status.clear();
+				for (int i = 0; i < motor_count; i++) {
+					pot_status << i << " " << motors[i]["status"] << "|";
+				}
+
 				// Write back previous movement request...
-				} else  {
-					ROS_INFO("SEND status to SimpleMover [%s].", pot_status.str().c_str());
+				if (send_status == true ) {
+					ROS_DEBUG("SEND status to Bridge [%s].", pot_status.str().c_str());
 					serial_port_.write(pot_status.str());
 				} 
 			}

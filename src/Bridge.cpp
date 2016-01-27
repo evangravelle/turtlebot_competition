@@ -1,7 +1,9 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "std_msgs/String.h"
-#include <coconuts_odroid/Movement.h>
+#include <coconuts_common/ArmMovement.h>
+#include <coconuts_common/MotorPosition.h>
+#include <coconuts_common/ArmStatus.h>
 
 #include <serial/serial.h>
 #include <sstream>
@@ -10,39 +12,61 @@
 
 serial::Serial serial_port_;
 
+// Current motor status
+// Hope we dont have more than 10...
 int motors[10];
 
+void movementCallback(const coconuts_common::ArmMovement::ConstPtr& msg){
 
-void movementCallback(const std_msgs::String::ConstPtr& msg){
-
-	ROS_INFO("RECV Absolute Movement Request from client: %s", msg->data.c_str());
-	ROS_INFO("SEND Absolute Position to Arduino: %s",msg->data.c_str());
-	try {
-		serial_port_.write(msg->data);
-	} catch(std::exception& e){
-		std::cerr<<e.what()<<std::endl;
-	}
-
-	int motor, movement;
 	std::ostringstream request;
-	ROS_INFO("RECV Relative Movement Request from client: %s", msg->data.c_str());
-	ROS_INFO("Calculating absolute position from relative change");
-	// Get motor and adjustment
 
-	motor = atoi(msg->data.substr(0, msg->data.find(" ")).c_str());
-	movement = atoi(msg->data.substr(msg->data.find(" ") + 1, msg->data.find("|")).c_str());
+	ROS_INFO("Got Movment of type [%s].", msg->type.c_str());
 
-	// Get Cached Positions, udpate and send
-	movement += motors[motor];
+	if ( msg->type == "ABSOLUTE" ) {
 
-	request << motor << " " << movement << "|";
-	
-	ROS_INFO("SEND Absolute Position to Arduino: [%s]",request.str().c_str());
-	try {
-		serial_port_.write(request.str());
-	} catch(std::exception& e){
-		std::cerr<<e.what()<<std::endl;
+		for (int i = 0; i < msg->motor_positions.size(); i++) {
+			int motor, position;
+			motor = msg->motor_positions[i].motor;
+
+			position = msg->motor_positions[i].position;
+
+			request << motor << " " << position << "|";
+
+			// Update our cached status 
+			motors[motor] = position;
+		}
+
+	} else if ( msg->type == "RELATIVE" ) {
+
+		for (int i = 0; i < msg->motor_positions.size(); i++) {
+			int motor, position;
+			motor = msg->motor_positions[i].motor;
+
+			// Add relative request to current motor position 
+			position = motors[motor] + msg->motor_positions[i].position;
+
+			request << motor << " " << position << "|";
+
+			// Update our cached status
+			motors[motor] = position;
+		}
+		
+	} else if ( msg->type == "POSE" ) {
+		// TODO: Create a request using Pose data defined somewhere
 	}
+
+	ROS_INFO("SEND Request to Arduino [%s].", request.str().c_str());
+
+	if ( request.str().length() > 0 ) {
+		try {
+			serial_port_.write(request.str());
+		} catch(std::exception& e){
+			std::cerr<<e.what()<<std::endl;
+		}
+	} else {
+		ROS_INFO("Nothing to Send");
+	}
+
 }
 
 int main(int argc, char **argv) {
@@ -53,29 +77,23 @@ int main(int argc, char **argv) {
 	std::string port_name;
 	
    	// Maybe reduce this so we dont buffer commands?
-	ros::Subscriber motor_sub = n.subscribe("motor_control",100, &movementCallback);
-	ros::Publisher pot_status_pub = n.advertise<std_msgs::String>("/pot_status",1);
+	ros::Subscriber motor_sub = n.subscribe("motor_control",1, &movementCallback);
+	ros::Publisher arm_status_pub = n.advertise<coconuts_common::ArmStatus>("/arm_status",1);
     	
-   	ros::Rate loop_rate(10);
-	std::string trim_pot_status;
-	std_msgs::String tps;
-	int motor, status;
+   	ros::Rate loop_rate(2);
+
+	// Get Parameters
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
-	pn.param<double>("kp", kp_, 0.0);
-	pn.param<double>("ki", ki_, 0.0);
-	pn.param<double>("kd", kd_, 0.0);
+
+	// TODO Get Pre-fabs defined and included:)
 
 	// Open Serial port for Reading
 	try {
-			serial_port_.setPort(port_name);
-			serial_port_.setBaudrate(115200);
-			serial::Timeout T = serial::Timeout::simpleTimeout(100);
-			serial_port_.setTimeout(T);
-			serial_port_.open();
-		
-			// Send request for initial status
-			serial_port_.write("A|");
-	
+		serial_port_.setPort(port_name);
+		serial_port_.setBaudrate(115200);
+		serial::Timeout T = serial::Timeout::simpleTimeout(100);
+		serial_port_.setTimeout(T);
+		serial_port_.open();
 	} catch (std::exception & e) {
 		std::cerr<<"Error Opening Serial port: " <<e.what()<<std::endl;
 		return(-1);
@@ -83,28 +101,51 @@ int main(int argc, char **argv) {
 
 	int count=0;
 	while(ros::ok()) {
+
+		coconuts_common::ArmStatus arm_status;
+
 		// Read Serial Port
 		try{ 
-        		bool readable=serial_port_.waitReadable();
-        		if (readable) {
-					trim_pot_status = serial_port_.read(128); 
-					ROS_INFO("READ Status from Arduino %s", trim_pot_status.c_str());
+			bool readable=serial_port_.waitReadable();
+			if (readable) {
+				std::string status = serial_port_.read(128); 
+				ROS_DEBUG("READ Status from Arduino %s", status.c_str());
+				
+				// input is a repeating string of format: "X YYYY|"
+				// if we find a "A|" we should assume its out of sequence and ignore
+				if ( status.find("A|") == std::string::npos) {
 
-					tps.data = trim_pot_status;
-					// update current values
-					// TODO: This is very fragile....
-					int count = 0;
-					while(trim_pot_status.length() > 0 && count < 10) {
-						motor = atoi(trim_pot_status.substr(0, trim_pot_status.find(" ")).c_str());
-						status = atoi(trim_pot_status.substr(trim_pot_status.find(" ") + 1, trim_pot_status.find("|")).c_str());
-						trim_pot_status.erase(0, trim_pot_status.find("|"));
-						motors[motor] = status;
-						count++;
+					bool looking = true;
+					coconuts_common::MotorPosition motor_position;
+
+				    while (looking) {	
+						if ( status.length() > 0 && status.find(" ") >= 0 && status.find("|") >= 0 ) {
+							looking = true;
+							motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
+							motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+							status = status.erase(0, status.find("|") + 1);
+							arm_status.motor_positions.push_back(motor_position);
+
+							// Copy values locally for relative movement
+							motors[motor_position.motor] = motor_position.position;
+
+							ROS_DEBUG("Found [%i %i|].", motor_position.motor, motor_position.position);
+						} else {
+							looking = false;
+							ROS_DEBUG("Done looking [%s].", status.c_str());
+						}
 					}
-					
-					// Publish response back out
-					pot_status_pub.publish(tps);
+					arm_status_pub.publish(arm_status);
+				} else {
+					ROS_INFO("Found out of sequence request [%s].", status.c_str());
 				}
+			}
+
+			// Queue up next request for status, but only do it 1/5th of the times we send requests
+			if ( count % 5 == 0 ) {
+				serial_port_.write("A|");
+			}
+
 		} catch(std::exception& e){
 			std::cerr<<e.what()<<std::endl;
 		}
@@ -116,7 +157,7 @@ int main(int argc, char **argv) {
 	}
 
 	try {
-			serial_port_.close();
+		serial_port_.close();
 	} catch (std::exception & e) {
 		std::cerr<<"Error Closing Serial port: " <<e.what()<<std::endl;
 		return(-1);
