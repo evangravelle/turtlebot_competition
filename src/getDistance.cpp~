@@ -75,7 +75,6 @@ int main(int argc, char **argv)
 
 	ros::Subscriber cameraImageLeft=n.subscribe<stereo_msgs::DisparityImage>("/stereo/disparity", 1, distanceCB);
 	ros::Subscriber receivedPoint=n.subscribe<geometry_msgs::Pose>("/ballLocation",1, locateBall);
-	ros::Publisher ballMeasurementPublisher=n.advertise<geometry_msgs::Pose>("/ballMeasurement",1, true);
 
 ros::Time stamp = ros::Time::now();
 AaronIsCool.image.data.resize(4*height*width);
@@ -84,7 +83,6 @@ AaronIsCool.image.data.resize(4*height*width);
     {
 	ros::spinOnce();
 	std::cout<<"Distance: " <<ball.position.z<< "\n";
-	ballMeasurementPublisher.publish(ball);
         loop_rate.sleep();
     }
 }
