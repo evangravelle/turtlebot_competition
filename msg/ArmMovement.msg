@@ -1,4 +1,4 @@
 Header header
 string type
-string position
+string pose
 MotorPosition[] motor_positions
