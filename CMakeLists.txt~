@@ -151,20 +151,6 @@ target_link_libraries(snes_joy_node ${catkin_LIBRARIES})
 target_link_libraries(detect_ball ${catkin_LIBRARIES})
 target_link_libraries(teleop_config_server_example ${catkin_LIBRARIES})
 
-add_executable(publishInfo src/publishInfo.cpp)
-add_dependencies(publishInfo ${catkin_EXPORTED_TARGETS})
-target_link_libraries(publishInfo
-${catkin_LIBRARIES}
-)
-
-
-add_executable(getDistance src/getDistance.cpp)
-add_dependencies(getDistance ${catkin_EXPORTED_TARGETS})
-target_link_libraries(getDistance
-${catkin_LIBRARIES}
-)
-
-
 #############
 ## Install ##
 #############

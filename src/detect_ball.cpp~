@@ -27,6 +27,8 @@ image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
 ros::Publisher ball_location_pub;
 geometry_msgs::Pose ball;
+cv::Point lastPoint;
+int lastPointConfidence;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball/image_hsv";
@@ -78,13 +80,23 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     if(circles.size() > 0) {
         int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 5;
-//        for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) { AARON EDIT 
+//        for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
         for(int current_circle = 0; current_circle < 1; ++current_circle) {
             cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
             int radius = std::floor(circles[current_circle][2]);
 
             cv::circle(hsv_image, center, radius, cv::Scalar(0, 255, 0), 5);
-
+/*
+		if ((center.x-lastPoint.x)<100 && (center.y-lastPoint.y)<100 ){
+			lastPoint=center;
+			lastPointConfidence=0;
+		}else if (lastPointConfidence<-15){
+			lastPoint=center;
+			lastPointConfidence=0;
+		}else{
+			center=lastPoint;
+			lastPointConfidence--;
+		} */
 
 		ball.position.x=center.x;
 		ball.position.y=center.y;
