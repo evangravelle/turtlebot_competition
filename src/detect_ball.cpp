@@ -153,7 +153,8 @@ int main(int argc, char **argv)
 
     createTrackbars();
  
-    image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
+    //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
+image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     pub = it.advertise("/detect_ball/hsv_image", 1);
 

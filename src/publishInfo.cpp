@@ -81,7 +81,7 @@ camLeft.width=640;
 camLeft.distortion_model="plumb_bob";
 
 
-
+/*
 	
 camLeft.D[0]=0.161257;
 camLeft.D[1]=-0.236007;
@@ -173,6 +173,125 @@ camRight.P[3]=-71.123538;
 camRight.P[4]=0;
 camRight.P[5]=676.945399;
 camRight.P[6]=248.725296;
+camRight.P[7]=0;
+
+camRight.P[8]=0;
+camRight.P[9]=0;
+camRight.P[10]=1;
+camRight.P[11]=0;
+
+*/
+
+
+
+
+
+
+
+
+	
+camLeft.D[0]=0.164040 ;
+camLeft.D[1]= -0.383535 ;
+camLeft.D[2]=0.005638;
+camLeft.D[3]= 0.006325;
+camLeft.D[4]=0.000000;
+	
+
+
+
+camLeft.K[0]=621.856397;
+camLeft.K[1]=0;
+camLeft.K[2]=329.273501;
+
+camLeft.K[3]=0;
+camLeft.K[4]=623.854970;
+camLeft.K[5]=249.707862;
+
+camLeft.K[6]=0;
+camLeft.K[7]=0;
+camLeft.K[8]=1;
+
+
+
+camLeft.R[0]=-0.057356;
+camLeft.R[1]= -0.997713;
+camLeft.R[2]= -0.035754;
+
+camLeft.R[3]=0.998200;
+camLeft.R[4]= -0.057938;
+camLeft.R[5]= 0.015470;
+
+camLeft.R[6]=-0.017507;
+camLeft.R[7]= -0.034802;
+camLeft.R[8]=0.999241;
+
+
+
+
+camLeft.P[0]=-433.119753;
+camLeft.P[1]=0.000000;
+camLeft.P[2]=346.042173;
+camLeft.P[3]=0.000000;
+
+camLeft.P[4]=0;
+camLeft.P[5]=-433.119753;
+camLeft.P[6]=246.166927;
+camLeft.P[7]=0;
+
+camLeft.P[8]=0;
+camLeft.P[9]=0;
+camLeft.P[10]=1;
+camLeft.P[11]=0;
+
+
+camRight.height=480;
+camRight.width=640;
+camRight.distortion_model="plumb_bob";
+
+
+
+camRight.D[0]=0.146668;
+camRight.D[1]= -0.276947;
+camRight.D[2]=-0.007716;
+camRight.D[3]=-0.010825;
+camRight.D[4]=0.000000;
+
+
+camRight.K[0]=624.671544;
+camRight.K[1]=0;
+camRight.K[2]=301.624420;
+
+camRight.K[3]=0;
+camRight.K[4]= 626.965435;
+camRight.K[5]=235.907642;
+
+camRight.K[6]=0;
+camRight.K[7]=0;
+camRight.K[8]=1;
+
+
+
+
+camRight.R[0]=0.060012 ;
+camRight.R[1]= 0.995730 ;
+camRight.R[2]=  -0.070145;
+
+camRight.R[3]=-0.997998;
+camRight.R[4]=0.061258;
+camRight.R[5]= 0.015747;
+
+camRight.R[6]=0.019977;
+camRight.R[7]=0.069060;
+camRight.R[8]=0.997412;
+
+camRight.P[0]=-433.119753;
+camRight.P[1]=0.000000;
+camRight.P[2]=346.042173;
+camRight.P[3]=11.500988;
+
+camRight.P[4]=0;
+camRight.P[5]=-433.119753;
+camRight.P[6]=246.166927;
 camRight.P[7]=0;
 
 camRight.P[8]=0;

@@ -34,7 +34,7 @@ float finalAverage=0;
 float returnDistance(float measurement){
 
 
-	if (measurement<1){
+	if (measurement<1 && measurement >-1){
 	finalAverage=0;
 		for (int i=AVG_SIZE-1;i>0;i--){
 			avg[i]=avg[i-1];
@@ -62,8 +62,9 @@ void locateBall(const geometry_msgs::Pose::ConstPtr& posePtr)
 
 
 	ball.orientation.z=45-90*(posePtr->position.x/width);
-	ball.position.z=returnDistance((AaronIsCool.f*AaronIsCool.T)/(int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+1]);
-//	std::cout<<"Ball Location : " << ball.position.z << "\n";
+	ball.position.z=returnDistance((-AaronIsCool.f*AaronIsCool.T)/(int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2]);
+
+	std::cout<<"Ball Location : " << (int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2] << "\n";
 
 }
 
