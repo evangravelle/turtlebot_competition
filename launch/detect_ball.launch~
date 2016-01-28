@@ -6,8 +6,16 @@
 <!-- Publish and Sync -->
 <node name= "publishInfo" pkg="coconuts_master" type="publishInfo"/>
 
+<!-- Disparity Map Analysis-->
+<node name= "getDistance" pkg="coconuts_master" type="getDistance"/>
+
+<!--stereoimageProc-->
+<node ns="stereo" name= "stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc"/>
+
 <!-- usb_cam -->
-<node name= "usb_cam_node" pkg="usb_cam" type="usb_cam_node" video_device="/dev/video0"/>
+<node name= "usb_cam" pkg="usb_cam" type="usb_cam_node" >
+<param name="video_device" type="string" value="/dev/video0"/>
+</node>
 
   <node ns="camera_2" pkg="uvc_camera" type="uvc_camera_node_2" name="uvc_camera_node_2" output="screen">
     <param name="width" type="int" value="640" />
@@ -18,7 +26,6 @@
     <param name="auto_focus" type="bool" value="0" />
   </node>
 
-  <node ns="stereo" pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc" />
 
 
   </launch>
