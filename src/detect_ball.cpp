@@ -39,8 +39,8 @@ static const char WINDOW4[] = "/detect_ball/after_dilate";
 ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN = 0;
-int H_MAX = 179;
-int S_MIN = 0;
+int H_MAX = 50;
+int S_MIN = 120;
 int S_MAX = 255;
 int V_MIN = 0;
 int V_MAX = 255;
@@ -49,7 +49,7 @@ void on_trackbar(int,void*) {
 
 
 }
-
+/*
 void createTrackbars() {
     cv::namedWindow("trackbars",0);
 
@@ -60,7 +60,7 @@ void createTrackbars() {
     cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_MAX, on_trackbar);
     cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_MAX, on_trackbar);
 }
-
+*/
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
@@ -92,18 +92,18 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     // split HSV, then threshold
     cv::split(hsv_image, hsv_channels);
     cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-    cv::imshow(WINDOW2, hsv_thresh);
+//    cv::imshow(WINDOW2, hsv_thresh);
 
     cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
     cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
     // Erode then display
     cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-    cv::imshow(WINDOW3, hsv_thresh);
+//    cv::imshow(WINDOW3, hsv_thresh);
 
     // Dilate then display
     cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-    cv::imshow(WINDOW4, hsv_thresh);
+//    cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
     cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
-
+/*
     cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
     cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW3, CV_WINDOW_AUTOSIZE);
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     //cv::namedWindow(WINDOW5, CV_WINDOW_AUTOSIZE);
 
     createTrackbars();
- 
+*/
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
 image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
@@ -161,9 +161,11 @@ image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color",
 	ros::spin();
 
     ROS_INFO("Detect_ball closed successfully");
+/*
 	cv::destroyWindow(WINDOW1);
     cv::destroyWindow(WINDOW2);
     cv::destroyWindow(WINDOW3);
     cv::destroyWindow(WINDOW4);
     //cv::destroyWindow(WINDOW5);
+*/
  }

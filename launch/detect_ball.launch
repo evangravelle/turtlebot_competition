@@ -1,7 +1,12 @@
   <launch>
 
   <!-- Detect Ball -->
-  <node name="detect_ball" pkg="coconuts_master" type="detect_ball"/>
+  <node name="detect_ball" pkg="coconuts_master" type="detect_ball">
+    <param name="H_MIN" type="int" value="0" />
+    <param name="H_MAX" type="int" value="50" />
+    <param name="S_MIN" type="int" value="120" />
+</node>
+
 
 <!-- Publish and Sync -->
 <node name= "publishInfo" pkg="coconuts_master" type="publishInfo"/>
@@ -10,7 +15,10 @@
 <node name= "getDistance" pkg="coconuts_master" type="getDistance"/>
 
 <!--stereoimageProc-->
-<node ns="stereo" name= "stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc"/>
+<node ns="stereo" name= "stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc">
+    <param name="min_disparity" type="int" value="-42" />
+
+</node>
 
 <!-- usb_cam -->
 <node name= "usb_cam" pkg="usb_cam" type="usb_cam_node" >
