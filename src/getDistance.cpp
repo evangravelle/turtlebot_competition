@@ -82,7 +82,7 @@ void locateBall(const geometry_msgs::Pose::ConstPtr& posePtr)
 {
 
 
-	ball.orientation.z=returnAngle(45-90*(posePtr->position.x/width));
+	ball.orientation.z=45-90*(posePtr->position.x/width);
 	ball.position.z=returnDistance((-AaronIsCool.f*AaronIsCool.T)/(int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2]);
 
 	std::cout<<"Ball Location : " << (int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2] << "\n";
