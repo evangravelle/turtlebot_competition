@@ -18,18 +18,15 @@
 //Added publisher to distance finder
 //Filter circles
 
-//
-
-
-
 
 image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
+
 ros::Publisher ball_location_pub;
 geometry_msgs::Pose ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball/image_hsv";
+static const char WINDOW1[] = "/detect_ball/image_raw";
 static const char WINDOW2[] = "/detect_ball/hsv_thresh";
 static const char WINDOW3[] = "/detect_ball/after_erode";
 static const char WINDOW4[] = "/detect_ball/after_dilate";
@@ -119,7 +116,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
             int radius = std::floor(circles[current_circle][2]);
 
-            cv::circle(hsv_image, center, radius, cv::Scalar(0, 255, 0), 5);
+            cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
 
 		    ball.position.x=center.x;
 		    ball.position.y=center.y;
@@ -128,11 +125,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
     }
 
+    cv::imshow(WINDOW1, cv_ptr_raw->image);
+
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
     //Convert the CvImage to a ROS image message and publish it on the "camera/image_processed" topic.
-    //pub.publish(cv_ptr->toImageMsg());
+    //pub.publish(cv_ptr_raw->toImageMsg());
 
 }
 
@@ -155,7 +154,7 @@ int main(int argc, char **argv)
  
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
-    pub = it.advertise("/detect_ball/hsv_image", 1);
+    //pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();
 
