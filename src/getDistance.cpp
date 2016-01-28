@@ -27,9 +27,12 @@ geometry_msgs::Pose ball;
 
 const int height=480;
 const int width =640;
-const int AVG_SIZE=50;
+const int AVG_SIZE=25;
+
 float avg[AVG_SIZE];
 float finalAverage=0;
+float avg2[AVG_SIZE];
+float finalAverage2=0;
 
 float returnDistance(float measurement){
 
@@ -49,6 +52,24 @@ float returnDistance(float measurement){
 
 }
 
+float returnAngle(float measurement){
+
+
+	if (measurement<25 && measurement >-25){
+	finalAverage2=0;
+		for (int i=AVG_SIZE-1;i>0;i--){
+			avg2[i]=avg2[i-1];
+			finalAverage2=finalAverage2+avg2[i];
+		}
+	avg2[0]=measurement;
+	finalAverage2=finalAverage2+avg2[0];
+	finalAverage2=finalAverage2/AVG_SIZE;
+	}
+
+	return (finalAverage2);
+
+}
+
 void distanceCB(const stereo_msgs::DisparityImage::ConstPtr& imagePtr)
 {
 	AaronIsCool.image.data=imagePtr->image.data;
@@ -61,7 +82,7 @@ void locateBall(const geometry_msgs::Pose::ConstPtr& posePtr)
 {
 
 
-	ball.orientation.z=45-90*(posePtr->position.x/width);
+	ball.orientation.z=returnAngle(45-90*(posePtr->position.x/width));
 	ball.position.z=returnDistance((-AaronIsCool.f*AaronIsCool.T)/(int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2]);
 
 	std::cout<<"Ball Location : " << (int)AaronIsCool.image.data[(int) (posePtr->position.y*width+posePtr->position.x)*4+2] << "\n";
