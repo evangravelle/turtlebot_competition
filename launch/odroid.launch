@@ -10,6 +10,11 @@
 	<param name="port" value="/dev/pts/1" />
 	-->
 
+	<!-- 	represents how frequently the Arduino should be queried
+		for position updates as a fraction of the ROS frequency. 
+		For example, using 20 means that for every 20 times the 
+		ROS loop executes this will execute once -->	
+	<param name="polling_frequency" type="int" value="20" />
 	<param name="motor_count" type="int" value="4" />
 	
 	<!-- Link 0 -->
