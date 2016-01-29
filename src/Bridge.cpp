@@ -8,8 +8,6 @@
 #include <serial/serial.h>
 #include <sstream>
 
-#define DELIMITER "|"
-
 serial::Serial serial_port_;
 
 // Current/cached motor positions
@@ -92,7 +90,7 @@ int main(int argc, char **argv) {
 	ros::NodeHandle pn("~");
 	std::string port_name;
 	std::ostringstream param_name;
-	int motor_count;
+	int motor_count, polling_frequency;
 	
    	// Maybe reduce this so we dont buffer commands?
 	ros::Subscriber motor_sub = n.subscribe("motor_control",1, &movementCallback);
@@ -102,6 +100,7 @@ int main(int argc, char **argv) {
 	// Get Parameters
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
 	pn.param<int>("motor_count", motor_count, 4);
+	pn.param<int>("polling_frequency", polling_frequency, 20);
 
 	for(int i = 0; i < motor_count; i++) {
 
@@ -121,7 +120,7 @@ int main(int argc, char **argv) {
 
 	// TODO Get Pre-fabs defined and included:)
 
-   	ros::Rate loop_rate(1);
+   	ros::Rate loop_rate(10);
 
 	// Open Serial port for Reading
 	try {
@@ -166,7 +165,7 @@ int main(int argc, char **argv) {
 					coconuts_common::MotorPosition motor_position;
 					
 					int loops = 0;
-				    while (looking && loops < 5) {	
+				    while (looking && loops < 10) {	
 						if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
 							motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
 							motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
@@ -192,8 +191,8 @@ int main(int argc, char **argv) {
 			}
 			}
 
-			// Queue up next request for status, but only do it 1/5th of the times we send requests
-			if ( count % 5 == 0 ) {
+			// Queue up next request for status, but only do it 1/10th of the times we send requests
+			if ( count % polling_frequency == 0 ) {
 				serial_port_.write("A|");
 			}
 
