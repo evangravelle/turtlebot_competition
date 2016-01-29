@@ -1,7 +1,30 @@
 <launch>
 
 <node pkg="coconuts_odroid" type="Bridge" name="bridge_node" output="screen" >
+
+	<param name="port" value="/dev/pts/26" />
+
+	<!-- Commonly Used Ports
 	<param name="port" value="/dev/ttyACM0" />
+	<param name="port" value="/dev/ttyUSB0" />
+	<param name="port" value="/dev/pts/1" />
+	-->
+
+	<param name="motor_count" type="int" value="4" />
+	
+	<!-- Link 0 -->
+	<param name="motor_0_inverted" type="int" value="0" />
+	<param name="motor_0_increment" type="int" value="20" />
+	<!-- Link 1 -->
+	<param name="motor_1_inverted" type="int" value="0" />
+	<param name="motor_1_increment" type="int" value="20" />
+	<!-- Link 2 -->
+	<param name="motor_2_inverted" type="int" value="1" />
+	<param name="motor_2_increment" type="int" value="20" />
+	<!-- Pincer -->
+	<param name="motor_3_inverted" type="int" value="1" />
+	<param name="motor_3_increment" type="int" value="50" />
+
 </node>
 
 </launch>
