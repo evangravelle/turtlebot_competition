@@ -9,6 +9,6 @@
     <param name="max_lin_vel" value="0.25" />
 </node>
 
- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_assignment_1_master)/rviz/robot.rviz" />
+ <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
 
 </launch>
