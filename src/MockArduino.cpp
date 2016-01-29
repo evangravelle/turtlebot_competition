@@ -61,6 +61,9 @@ int main(int argc, char **argv) {
 		serial::Timeout T = serial::Timeout::simpleTimeout(100);
 		serial_port_.setTimeout(T);
 		serial_port_.open();
+		// Seed port with some garbage...
+		serial_port_.write("SA?SDAF?ASFD");
+		serial_port_.write("hello");
 	} catch (std::exception & e) {
 		std::cerr<<"Error Opening Serial port: " <<e.what()<<std::endl;
 		return(-1);
