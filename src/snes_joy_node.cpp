@@ -129,7 +129,10 @@ public:
         }
 
 	
-		motor_pub.publish(arm_movement);
+		// Cut down on the chatter 
+		if (arm_movement.motor_positions.size() > 0) {
+				motor_pub.publish(arm_movement);
+		}
 		twist_pub.publish(twist);
 	}
 
