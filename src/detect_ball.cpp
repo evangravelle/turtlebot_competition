@@ -35,29 +35,10 @@ static const char WINDOW4[] = "/detect_ball/after_dilate";
 // Initialize variables
 ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
-int H_MIN = 0;
-int H_MAX = 50;
-int S_MIN = 120;
-int S_MAX = 255;
-int V_MIN = 0;
-int V_MAX = 255;
+int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 
-void on_trackbar(int,void*) {
+void on_trackbar(int,void*) {}
 
-
-}
-/*
-void createTrackbars() {
-    cv::namedWindow("trackbars",0);
-
-    cv::createTrackbar("H_MIN", "trackbars", &H_MIN, H_MAX, on_trackbar);
-    cv::createTrackbar("H_MAX", "trackbars", &H_MAX, H_MAX, on_trackbar);
-    cv::createTrackbar("S_MIN", "trackbars", &S_MIN, S_MAX, on_trackbar);
-    cv::createTrackbar("S_MAX", "trackbars", &S_MAX, S_MAX, on_trackbar);
-    cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_MAX, on_trackbar);
-    cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_MAX, on_trackbar);
-}
-*/
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
@@ -125,7 +106,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
     }
 
-    cv::imshow(WINDOW1, cv_ptr_raw->image);
+    //cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
@@ -143,28 +124,19 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
-/*
-    cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
-    cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
-    cv::namedWindow(WINDOW3, CV_WINDOW_AUTOSIZE);
-    cv::namedWindow(WINDOW4, CV_WINDOW_AUTOSIZE);
-    //cv::namedWindow(WINDOW5, CV_WINDOW_AUTOSIZE);
 
-    createTrackbars();
-*/
+    nh.getParam("/detect_ball/h_min", H_MIN);
+    nh.getParam("/detect_ball/h_max", H_MAX);
+    nh.getParam("/detect_ball/s_min", S_MIN);
+    nh.getParam("/detect_ball/s_max", S_MAX);
+    nh.getParam("/detect_ball/v_min", V_MIN);
+    nh.getParam("/detect_ball/v_max", V_MAX);
+
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
-image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
+    image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();
 
-    ROS_INFO("Detect_ball closed successfully");
-/*
-	cv::destroyWindow(WINDOW1);
-    cv::destroyWindow(WINDOW2);
-    cv::destroyWindow(WINDOW3);
-    cv::destroyWindow(WINDOW4);
-    //cv::destroyWindow(WINDOW5);
-*/
  }
