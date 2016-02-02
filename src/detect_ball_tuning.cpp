@@ -7,18 +7,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
+
 // Create publishers
-
-//
-
-
-//Changelog
-
-//Aaron: 1/30
-//Added publisher to distance finder
-//Filter circles
-
-
 image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
 
@@ -35,16 +25,15 @@ static const char WINDOW4[] = "/detect_ball/after_dilate";
 ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN = 0;
-int H_MAX = 50;
-int S_MIN = 120;
+int H_MAX = 179;
+int S_MIN = 0;
 int S_MAX = 255;
 int V_MIN = 0;
 int V_MAX = 255;
 
-void on_trackbar(int,void*) {
-    nh.setParam("/detect_ball/h_min", H_MIN);
+//guess is 0 50 120 255 0 255
 
-}
+void on_trackbar(int,void*) {}
 
 void createTrackbars() {
     cv::namedWindow("trackbars",0);
@@ -88,18 +77,18 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     // split HSV, then threshold
     cv::split(hsv_image, hsv_channels);
     cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-//    cv::imshow(WINDOW2, hsv_thresh);
+    cv::imshow(WINDOW2, hsv_thresh);
 
     cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
     cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
     // Erode then display
     cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-//    cv::imshow(WINDOW3, hsv_thresh);
+    cv::imshow(WINDOW3, hsv_thresh);
 
     // Dilate then display
     cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-//    cv::imshow(WINDOW4, hsv_thresh);
+    cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
     cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
@@ -124,7 +113,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
     }
 
-    cv::imshow(WINDOW1, cv_ptr_raw->image);
+    //cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
@@ -137,13 +126,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "detect_ball");
-	
-	ros::NodeHandle nh;
+    ros::init(argc, argv, "detect_ball_tuning");
+
+    ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
 
-    cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
+    //cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
     cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW3, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW4, CV_WINDOW_AUTOSIZE);
@@ -155,13 +144,21 @@ int main(int argc, char **argv)
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
-	ros::spin();
+    while(ros::ok()) {
+	   ros::spin();
+    }
 
-    ROS_INFO("Detect_ball closed successfully");
+    nh.setParam("/detect_ball/h_min", H_MIN);
+    nh.setParam("/detect_ball/h_max", H_MAX);
+    nh.setParam("/detect_ball/s_min", S_MIN);
+    nh.setParam("/detect_ball/s_max", S_MAX);
+    nh.setParam("/detect_ball/v_min", V_MIN);
+    nh.setParam("/detect_ball/v_max", V_MAX);
 
-	cv::destroyWindow(WINDOW1);
+	//cv::destroyWindow(WINDOW1);
     cv::destroyWindow(WINDOW2);
     cv::destroyWindow(WINDOW3);
     cv::destroyWindow(WINDOW4);
 
  }
+

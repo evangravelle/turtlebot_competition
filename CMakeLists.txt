@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   serial
   std_msgs
   tf
+  cv_bridge
+  image_transport
   coconuts_common
 )
 
@@ -136,15 +138,18 @@ include_directories(
 ## Declare a C++ executable
 add_executable(snes_joy_node src/snes_joy_node.cpp)
 add_executable(teleop_config_server_example src/teleop_config_server_example.cpp)
+add_executable(detect_ball_tuning src/detect_ball_tuning.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(teleop_config_server_example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_ball_tuning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(snes_joy_node ${catkin_LIBRARIES})
 target_link_libraries(teleop_config_server_example ${catkin_LIBRARIES})
+target_link_libraries(detect_ball_tuning ${catkin_LIBRARIES})
 
 #############
 ## Install ##

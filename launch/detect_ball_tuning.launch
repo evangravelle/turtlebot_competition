@@ -1,0 +1,6 @@
+<launch>
+
+  <!-- Detect Ball -->
+  <node name="detect_ball_tuning" pkg="coconuts_master" type="detect_ball_tuning"/>
+
+</launch>
