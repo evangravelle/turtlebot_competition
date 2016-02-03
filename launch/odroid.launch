@@ -21,7 +21,7 @@
 	<param name="motor_0_inverted" type="int" value="0" />
 	<param name="motor_0_increment" type="int" value="20" />
 	<!-- Link 1 -->
-	<param name="motor_1_inverted" type="int" value="0" />
+	<param name="motor_1_inverted" type="int" value="1" />
 	<param name="motor_1_increment" type="int" value="20" />
 	<!-- Link 2 -->
 	<param name="motor_2_inverted" type="int" value="1" />
