@@ -28,7 +28,7 @@
 	<param name="motor_2_increment" type="int" value="20" />
 	<!-- Pincer -->
 	<param name="motor_3_inverted" type="int" value="1" />
-	<param name="motor_3_increment" type="int" value="50" />
+	<param name="motor_3_increment" type="int" value="20" />
 
 </node>
 
