@@ -18,7 +18,7 @@
 
 
 // Keep track of Quadcopter state
-double T = 30; // ROS loop rate
+double T = 5; // ROS loop rate
 
 sensor_msgs::CameraInfo camLeft;
 sensor_msgs::CameraInfo camRight;
@@ -142,8 +142,8 @@ camRight=camLeft;
 
     ros::Subscriber cameraImageLeft=n.subscribe<sensor_msgs::Image>("/usb_cam/image_raw", 1, leftImageCB);
     ros::Subscriber cameraImageRight=n.subscribe<sensor_msgs::Image>("/camera_2/image_raw", 1, rightImageCB);
-    ros::Publisher cameraInfoLeft = n.advertise<sensor_msgs::CameraInfo>("/stereo/left/camera_info", 1000, true);
-    ros::Publisher cameraInfoRight = n.advertise<sensor_msgs::CameraInfo>("/stereo/right/camera_info", 1000, true);
+    ros::Publisher cameraInfoLeft = n.advertise<sensor_msgs::CameraInfo>("/usb_cam/camera_info", 1000, true);
+    ros::Publisher cameraInfoRight = n.advertise<sensor_msgs::CameraInfo>("/camera_2/camera_info", 1000, true);
     ros::Publisher cameraReLeft = n.advertise<sensor_msgs::Image>("/stereo/left/image_raw", 1000, true);
     ros::Publisher cameraReRight = n.advertise<sensor_msgs::Image>("/stereo/right/image_raw", 1000, true);
 
@@ -154,7 +154,7 @@ ros::Time stamp = ros::Time::now();
 
     while (ros::ok()) 
     {
-	ros::spinOnce();
+	//ros::spinOnce();
 	if (gotLeft==true && gotRight==true){
 	stamp = ros::Time::now();
 
@@ -163,14 +163,16 @@ ros::Time stamp = ros::Time::now();
 	camLeft.header.stamp=stamp;
 	camRight.header.stamp=stamp;
 
-	cameraReLeft.publish(leftImage);
-	cameraReRight.publish(rightImage);
+	//cameraReLeft.publish(leftImage);
+	//cameraReRight.publish(rightImage);
 	cameraInfoLeft.publish(camLeft);
 	cameraInfoRight.publish(camRight);
 
 	gotLeft=false;
 	gotRight=false;
 	}
+        cameraInfoLeft.publish(camLeft);
+        cameraInfoRight.publish(camRight);
 
 
         loop_rate.sleep();

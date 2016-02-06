@@ -10,28 +10,22 @@
     <param name="v_max" type="int" value="255" />
 </node>
 
+<!--stereoimageProcaleft-->
+<node ns="usb_cam" name= "image_proc_left" pkg="image_proc" type="image_proc"/>
 
-<!-- Publish and Sync -->
-<node name= "publishInfo" pkg="coconuts_odroid" type="publishInfo"/>
-
-<!-- Disparity Map Analysis-->
-<node name= "getDistance" pkg="coconuts_odroid" type="getDistance"/>
-
-<!--stereoimageProc-->
-<node ns="stereo" name= "stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc">
-    <param name="min_disparity" type="int" value="-42" />
-
-</node>
+<!--stereoimageProcright-->
+<node ns="camera_2" name= "image_proc_right" pkg="image_proc" type="image_proc"/>
 
 <!-- usb_cam -->
-<node name= "usb_cam" pkg="usb_cam" type="usb_cam_node" >
+<node name= "usb_cam_2" pkg="usb_cam" type="usb_cam_node" >
 <param name="video_device" type="string" value="/dev/video0"/>
+<param name="framerate" type="int" value="5"/>
 </node>
 
   <node ns="camera_2" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_2" output="screen">
     <param name="width" type="int" value="640" />
     <param name="height" type="int" value="480" />
-    <param name="fps" type="int" value="30" />
+    <param name="fps" type="int" value="5" />
     <param name="frame" type="string" value="webcam" />
     <param name="device" type="string" value="/dev/video1" />
     <param name="auto_focus" type="bool" value="0" />
