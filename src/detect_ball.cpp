@@ -6,11 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <tf/transform_broadcaster.h>
-#include <geometry_msgs/Pose.h>
-// Create publishers
-
-//
-
+#include <geometry_msgs/Point.h>
 
 //Changelog
 
@@ -22,8 +18,8 @@
 image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
 
-ros::Publisher ball_location_pub;
-geometry_msgs::Pose ball;
+ros::Publisher ball_pixel_pub;
+geometry_msgs::Point ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball/image_raw";
@@ -33,7 +29,6 @@ static const char WINDOW4[] = "/detect_ball/after_dilate";
 //static const char WINDOW5[] = "/detect_ball/hsv_thresh";
 
 // Initialize variables
-ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 
@@ -42,7 +37,7 @@ void on_trackbar(int,void*) {}
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    current_time = ros::Time::now();
+
     // const sensor_msgs::ImageConstPtr hsv_image;
     cv_bridge::CvImagePtr cv_ptr_raw;
 
@@ -99,9 +94,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
             cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
 
-		    ball.position.x=center.x;
-		    ball.position.y=center.y;
-		    ball_location_pub.publish(ball);
+		    ball.x=center.x;
+		    ball.y=center.y;
+		    ball_pixel_pub.publish(ball);
 
         }
     }
@@ -134,7 +129,7 @@ int main(int argc, char **argv)
 
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
-	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/ball_pixel",1,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();
