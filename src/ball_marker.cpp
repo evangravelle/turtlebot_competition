@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.pose.position.x = 0;
-	marker.pose.position.y = 1;
+	marker.pose.position.y = 0;
 	marker.pose.position.z = 0;
 	marker.pose.orientation.x = 0.0;
 	marker.pose.orientation.y = 0.0;
@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
         	continue;
     	}
 
-    	marker.pose.position.x = ball.transform.translation.x;
-		marker.pose.position.y = ball.transform.translation.y;
+    	//marker.pose.position.x = ball.transform.translation.x;
+		//marker.pose.position.y = ball.transform.translation.y;
 
 		marker_pub.publish(marker);
 
