@@ -18,16 +18,18 @@ double camera_from_center = 1.5; // in y direction, in inches
 // Assumes a horizontal camera view of 90 degrees
 
 
-void leftLocationCallback(const geometry_msgs::Point::ConstPtr& pointPtr) {
+void leftLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	static tf2_ros::TransformBroadcaster tf_br;
 	ball.header.stamp = ros::Time::now();
 
-
 	left_image_pixel.x = pointPtr->x;
-	left_image_pixel.y = pointPtr->y;
+
+	//std::cout << (left_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
 
 	left_theta = atan((left_image_pixel.x - image_width/2.0)/(image_width/2.0));
+
+	//std::cout << left_theta << std::endl;
 
 	dist = baseline_length * sin(M_PI/2 - right_theta) / sin(left_theta + right_theta);
 
@@ -38,10 +40,12 @@ void leftLocationCallback(const geometry_msgs::Point::ConstPtr& pointPtr) {
 
 }
 
-void rightLocationCallback(const geometry_msgs::Point::ConstPtr& pointPtr) {
+void rightLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	right_image_pixel.x = pointPtr->x;
 	right_image_pixel.y = pointPtr->y;
+
+	right_theta = atan((image_width/2.0 - right_image_pixel.x)/(image_width/2.0));
 
 }
 
@@ -55,11 +59,18 @@ int main(int argc, char **argv) {
 	ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
 	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
 
+
+	// Defaults
+	image_width = 640;
+	image_height = 480;
+
 	nh.getParam("/usb_cam/image_width", image_width);
 	nh.getParam("/usb_cam/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
 
 	right_image_pixel.x = image_width/2.0;
+	right_image_pixel.y = image_width/2.0;
+	left_image_pixel.x = image_width/2.0;
 	left_image_pixel.y = image_height/2.0;
 
 	ball.header.frame_id = "left_camera";

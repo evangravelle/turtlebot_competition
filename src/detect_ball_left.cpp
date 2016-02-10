@@ -59,7 +59,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     // split HSV, then threshold
     cv::split(hsv_image, hsv_channels);
     cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-//    cv::imshow(WINDOW2, hsv_thresh);
+    //cv::imshow(WINDOW2, hsv_thresh);
 
     cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
     cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
@@ -70,7 +70,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     // Dilate then display
     cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-//    cv::imshow(WINDOW4, hsv_thresh);
+    //cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
     cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
@@ -127,5 +127,8 @@ int main(int argc, char **argv)
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();
+
+    //cv::destroyWindow(WINDOW2);
+    //cv::destroyWindow(WINDOW4);
 
  }
