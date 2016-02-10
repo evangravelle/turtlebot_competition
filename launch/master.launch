@@ -9,6 +9,10 @@
     <param name="max_lin_vel" value="0.25" />
 </node>
 
- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
+
+<node name="turtlebot_tf" pkg="coconuts_master" type="turtlebot_tf" />
+
+<node name="ball_marker" pkg="coconuts_master" type="ball_marker" />
 
 </launch>

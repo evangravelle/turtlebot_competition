@@ -1,6 +1,0 @@
-<launch>
-
-  <!-- Detect Ball -->
-  <node name="detect_ball_minimal" pkg="coconuts_master" type="detect_ball"/>
-
-</launch>

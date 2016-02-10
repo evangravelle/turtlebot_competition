@@ -24,27 +24,14 @@ static const char WINDOW4[] = "/detect_ball/after_dilate";
 // Initialize variables
 ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
-int H_MIN = 0;
-int H_MAX = 179;
-int S_MIN = 0;
-int S_MAX = 255;
-int V_MIN = 0;
-int V_MAX = 255;
+int H_TOP = 179; // top end value of sliders
+int S_TOP = 255;
+int V_TOP = 255;
+int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
 
 //guess is 0 50 120 255 0 255
 
 void on_trackbar(int,void*) {}
-
-void createTrackbars() {
-    cv::namedWindow("trackbars",0);
-
-    cv::createTrackbar("H_MIN", "trackbars", &H_MIN, H_MAX, on_trackbar);
-    cv::createTrackbar("H_MAX", "trackbars", &H_MAX, H_MAX, on_trackbar);
-    cv::createTrackbar("S_MIN", "trackbars", &S_MIN, S_MAX, on_trackbar);
-    cv::createTrackbar("S_MAX", "trackbars", &S_MAX, S_MAX, on_trackbar);
-    cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_MAX, on_trackbar);
-    cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_MAX, on_trackbar);
-}
 
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
@@ -64,6 +51,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
         return;
     }
+
+    cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
 
@@ -113,8 +102,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
     }
 
-    //cv::imshow(WINDOW1, cv_ptr_raw->image);
-
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
@@ -137,12 +124,26 @@ int main(int argc, char **argv)
     cv::namedWindow(WINDOW3, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW4, CV_WINDOW_AUTOSIZE);
 
-    createTrackbars();
-
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     //image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
+
+    nh.getParam("/detect_ball/h_min", H_MIN);
+    nh.getParam("/detect_ball/h_max", H_MAX);
+    nh.getParam("/detect_ball/s_min", S_MIN);
+    nh.getParam("/detect_ball/s_max", S_MAX);
+    nh.getParam("/detect_ball/v_min", V_MIN);
+    nh.getParam("/detect_ball/v_max", V_MAX);
+
+    cv::namedWindow("trackbars",0);
+
+    cv::createTrackbar("H_MIN", "trackbars", &H_MIN, H_TOP, on_trackbar);
+    cv::createTrackbar("H_MAX", "trackbars", &H_MAX, H_TOP, on_trackbar);
+    cv::createTrackbar("S_MIN", "trackbars", &S_MIN, S_TOP, on_trackbar);
+    cv::createTrackbar("S_MAX", "trackbars", &S_MAX, S_TOP, on_trackbar);
+    cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_TOP, on_trackbar);
+    cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_TOP, on_trackbar);
 
     while(ros::ok()) {
 	   ros::spin();
