@@ -3,6 +3,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 
+double ball_diameter = .0254; // in meters
 
 int main(int argc, char **argv) {
 
@@ -22,16 +23,16 @@ int main(int argc, char **argv) {
 	marker.id = 0;
 	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
-	marker.pose.position.x = 1.1;
-	marker.pose.position.y = 1.1;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 1;
 	marker.pose.position.z = 0;
 	marker.pose.orientation.x = 0.0;
 	marker.pose.orientation.y = 0.0;
 	marker.pose.orientation.z = 0.0;
 	marker.pose.orientation.w = 1.0;
-	marker.scale.x = .1;
-	marker.scale.y = .1;
-	marker.scale.z = .1;
+	marker.scale.x = ball_diameter;
+	marker.scale.y = ball_diameter;
+	marker.scale.z = ball_diameter;
 	marker.color.a = 1.0; // Don't forget to set the alpha!
 	marker.color.r = 1.0;
 	marker.color.g = 0.6;
