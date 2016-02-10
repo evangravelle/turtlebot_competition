@@ -101,7 +101,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     cv::waitKey(3);
 
     //Convert the CvImage to a ROS image message and publish it on the "camera/image_processed" topic.
-    //pub.publish(cv_ptr_raw->toImageMsg());
+    it_pub.publish(cv_ptr_raw->toImageMsg());
 
 }
 
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/left_camera/image_rect_color", 1, imageCallback); //Testing
 	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/left_image_ball_pixel",1,true);
-    //pub = it.advertise("/detect_ball/hsv_image", 1);
+    it_pub = it.advertise("/detect_ball_left/circles", 1);
 
 	ros::spin();
 

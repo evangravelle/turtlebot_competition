@@ -10,10 +10,10 @@ geometry_msgs::Point left_image_pixel, right_image_pixel;
 geometry_msgs::TransformStamped ball;
 int image_width, image_height;
 double left_theta, right_theta, dist;
-double ball_diameter = 1.3; // in inches
-double baseline_length = 9.75;
-double camera_height = 16.0; // in inches
-double camera_from_center = 1.5; // in y direction, in inches
+double ball_diameter = .033; // in meters
+double baseline_length = .248; // in meters
+double camera_height = .406; // in meters
+double camera_from_center = .038; // in y direction, in meters
 
 // Assumes a horizontal camera view of 90 degrees
 
