@@ -9,17 +9,17 @@
 #include <geometry_msgs/Point.h>
 
 
-image_transport::Publisher pub;
+image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub;
 
 ros::Publisher ball_pixel_pub;
 geometry_msgs::Point ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball/image_raw";
-static const char WINDOW2[] = "/detect_ball/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball/after_erode";
-static const char WINDOW4[] = "/detect_ball/after_dilate";
+static const char WINDOW1[] = "/detect_ball_left/image_raw";
+static const char WINDOW2[] = "/detect_ball_left/hsv_thresh";
+static const char WINDOW3[] = "/detect_ball_left/after_erode";
+static const char WINDOW4[] = "/detect_ball_left/after_dilate";
 //static const char WINDOW5[] = "/detect_ball/hsv_thresh";
 
 // Initialize variables
@@ -108,7 +108,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "detect_ball");
+	ros::init(argc, argv, "detect_ball_left");
 	
 	ros::NodeHandle nh;
 
@@ -122,8 +122,8 @@ int main(int argc, char **argv)
     nh.getParam("/detect_ball/v_max", V_MAX);
 
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
-    image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/ball_pixel",1,true);
+    image_transport::Subscriber sub = it.subscribe("/left_camera/image_rect_color", 1, imageCallback); //Testing
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/left_image_ball_pixel",1,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
 	ros::spin();

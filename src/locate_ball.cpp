@@ -11,6 +11,9 @@ geometry_msgs::TransformStamped ball;
 int image_width, image_height;
 double left_theta, right_theta, dist;
 double ball_diameter = 1.3; // in inches
+double baseline_length = 9.75;
+double camera_height = 16.0; // in inches
+double camera_from_center = 1.5; // in y direction, in inches
 
 // Assumes a horizontal camera view of 90 degrees
 
@@ -18,7 +21,7 @@ double ball_diameter = 1.3; // in inches
 void leftLocationCallback(const geometry_msgs::Point::ConstPtr& pointPtr) {
 
 	static tf2_ros::TransformBroadcaster tf_br;
-	ball.header.stamp = ross::Time::now();
+	ball.header.stamp = ros::Time::now();
 
 
 	left_image_pixel.x = pointPtr->x;
@@ -28,8 +31,8 @@ void leftLocationCallback(const geometry_msgs::Point::ConstPtr& pointPtr) {
 
 	dist = baseline_length * sin(M_PI/2 - right_theta) / sin(left_theta + right_theta);
 
-	ball.transform.position.x = dist*sin(left_theta);
-	ball.transform.position.y = dist*sin(right_theta);
+	ball.transform.translation.x = dist*sin(left_theta);
+	ball.transform.translation.y = dist*sin(right_theta);
 
 	tf_br.sendTransform(ball);
 
@@ -50,26 +53,24 @@ int main(int argc, char **argv) {
 
 	ros::Subscriber left_image_sub = nh.subscribe<geometry_msgs::Point>("/left_image_ball_pixel", 1, leftLocationCallback);
 	ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
-	location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
+	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
 
 	nh.getParam("/usb_cam/image_width", image_width);
 	nh.getParam("/usb_cam/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
-	nh.setParam("/camera_height", camera_height);
-	nh.setParam("/camera_from_center", camera_from_center);
 
 	right_image_pixel.x = image_width/2.0;
 	left_image_pixel.y = image_height/2.0;
 
 	ball.header.frame_id = "left_camera";
 	ball.child_frame_id = "ball";
-	ball.transform.position.x = 0.0;
-	ball.transform.position.y = 0.0;
-	ball.transform.position.z = -camera_height + ball_diameter/2.0;
-	ball.transform.orientation.x = 0.0;
-	ball.transform.orientation.y = 0.0;
-	ball.transform.orientation.z = 0.0;
-	ball.transform.orientation.w = 1.0;
+	ball.transform.translation.x = 0.0;
+	ball.transform.translation.y = 0.0;
+	ball.transform.translation.z = -camera_height + ball_diameter/2.0;
+	ball.transform.rotation.x = 0.0;
+	ball.transform.rotation.y = 0.0;
+	ball.transform.rotation.z = 0.0;
+	ball.transform.rotation.w = 1.0;
 
 	ros::spin();
 
