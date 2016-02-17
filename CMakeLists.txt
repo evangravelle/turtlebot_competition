@@ -137,23 +137,32 @@ include_directories(
 add_executable(Bridge src/Bridge.cpp)
 add_executable(MockArduino src/MockArduino.cpp)
 add_executable(detect_ball src/detect_ball.cpp)
+add_executable(detect_ball_left src/detect_ball_left.cpp)
+add_executable(detect_ball_right src/detect_ball_right.cpp)
 add_executable(publishInfo src/publishInfo.cpp)
 add_executable(getDistance src/getDistance.cpp)
+add_executable(locate_ball src/locate_ball.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(Bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
 add_dependencies(MockArduino ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_ball_left ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_ball_right ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(publishInfo ${catkin_EXPORTED_TARGETS})
 add_dependencies(getDistance ${catkin_EXPORTED_TARGETS})
+add_dependencies(locate_ball ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(Bridge ${catkin_LIBRARIES})
 target_link_libraries(MockArduino ${catkin_LIBRARIES})
 target_link_libraries(detect_ball ${catkin_LIBRARIES})
+target_link_libraries(detect_ball_left ${catkin_LIBRARIES})
+target_link_libraries(detect_ball_right ${catkin_LIBRARIES})
 target_link_libraries(publishInfo ${catkin_LIBRARIES})
 target_link_libraries(getDistance ${catkin_LIBRARIES})
+target_link_libraries(locate_ball ${catkin_LIBRARIES})
 
 #############
 ## Install ##

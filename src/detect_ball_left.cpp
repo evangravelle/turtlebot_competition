@@ -16,10 +16,10 @@ ros::Publisher ball_pixel_pub;
 geometry_msgs::Point ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball/image_raw";
-static const char WINDOW2[] = "/detect_ball/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball/after_erode";
-static const char WINDOW4[] = "/detect_ball/after_dilate";
+static const char WINDOW1[] = "/detect_ball_left/image_raw";
+static const char WINDOW2[] = "/detect_ball_left/hsv_thresh";
+static const char WINDOW3[] = "/detect_ball_left/after_erode";
+static const char WINDOW4[] = "/detect_ball_left/after_dilate";
 //static const char WINDOW5[] = "/detect_ball/hsv_thresh";
 
 // Initialize variables
@@ -59,7 +59,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     // split HSV, then threshold
     cv::split(hsv_image, hsv_channels);
     cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-//    cv::imshow(WINDOW2, hsv_thresh);
+    //cv::imshow(WINDOW2, hsv_thresh);
 
     cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
     cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
@@ -70,7 +70,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     // Dilate then display
     cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-//    cv::imshow(WINDOW4, hsv_thresh);
+    //cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
     cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
@@ -108,7 +108,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "detect_ball");
+	ros::init(argc, argv, "detect_ball_left");
 	
 	ros::NodeHandle nh;
 
@@ -122,10 +122,13 @@ int main(int argc, char **argv)
     nh.getParam("/detect_ball/v_max", V_MAX);
 
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
-    image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/ball_pixel",1,true);
-    it_pub = it.advertise("/detect_ball/circles", 1);
+    image_transport::Subscriber sub = it.subscribe("/left_camera/image_rect_color", 1, imageCallback); //Testing
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/left_image_ball_pixel",1,true);
+    it_pub = it.advertise("/detect_ball_left/circles", 1);
 
 	ros::spin();
+
+    //cv::destroyWindow(WINDOW2);
+    //cv::destroyWindow(WINDOW4);
 
  }
