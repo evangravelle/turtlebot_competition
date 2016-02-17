@@ -65,6 +65,9 @@ public:
         // LT indicates a movement in the negative
         // A,B,X,Y represent individual motors
         // Wont let you send up and down at same time. 
+
+		// POSES:  Hold SELECT and A,B,X,T or START 
+
         // Assumes hardware device will be limiting movement past tolerances
         if(joy_msg->buttons.at(RT) && !joy_msg->buttons.at(LT)) {
             if(joy_msg->buttons.at(A)) {
@@ -121,7 +124,21 @@ public:
         }
             
         if(joy_msg->buttons.at(SELECT)) {
-            ROS_DEBUG("SELECT");
+            ROS_DEBUG("SELECTing a POSE");
+
+			arm_movement.type = "POSE";
+
+            if(joy_msg->buttons.at(A)) {
+				arm_movement.pose = "GRAB_BALL_OPEN";
+            } else if(joy_msg->buttons.at(B)) {
+				arm_movement.pose = "GRAB_BALL_CLOSE";
+            } else if(joy_msg->buttons.at(X)) {
+				arm_movement.pose = "DROP_BALL_OPEN";
+            } else if(joy_msg->buttons.at(Y)) {
+				arm_movement.pose = "DROP_BALL_CLOSE";
+            } else if(joy_msg->buttons.at(START)) {
+				arm_movement.pose = "SEARCH";
+			}
         }
 
         if(joy_msg->buttons.at(START)) {
@@ -130,9 +147,18 @@ public:
 
 	
 		// Cut down on the chatter 
-		if (arm_movement.motor_positions.size() > 0) {
+		if (arm_movement.type == "RELATIVE" &&
+			arm_movement.motor_positions.size() > 0) {
+
+				motor_pub.publish(arm_movement);
+
+		} else if (arm_movement.type == "POSE" &&
+				arm_movement.pose.length() > 0 ) {
+
 				motor_pub.publish(arm_movement);
 		}
+
+		// Allways publish twist
 		twist_pub.publish(twist);
 	}
 
