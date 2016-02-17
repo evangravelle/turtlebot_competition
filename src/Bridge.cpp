@@ -13,6 +13,7 @@ serial::Serial serial_port_;
 // Current/cached motor positions
 // Hope we dont have more than 10...
 std::map<std::string,int> motors[10];
+std::map<std::string,std::string> poses;
 
 void movementCallback(const coconuts_common::ArmMovement::ConstPtr& msg){
 
@@ -66,7 +67,8 @@ void movementCallback(const coconuts_common::ArmMovement::ConstPtr& msg){
 		}
 		
 	} else if ( msg->type == "POSE" ) {
-		// TODO: Create a request using Pose data defined somewhere
+		ROS_INFO("Got Pose [%s].", msg->pose.c_str());
+		request << poses[msg->pose.c_str()];
 	}
 
 	ROS_INFO("SEND Request to Arduino [%s].", request.str().c_str());
@@ -119,6 +121,12 @@ int main(int argc, char **argv) {
 	}
 
 	// TODO Get Pre-fabs defined and included:)
+	// Canned Poses
+	pn.param<std::string>("SEARCH", poses["SEARCH"], "UNDEF");
+	pn.param<std::string>("GRAB_BALL_OPEN", poses["GRAB_BALL_OPEN"], "UNDEF");
+	pn.param<std::string>("GRAB_BALL_CLOSE", poses["GRAB_BALL_CLOSE"],"UNDEF");
+	pn.param<std::string>("DROP_BALL_OPEN", poses["DROP_BALL_OPEN"], "UNDEF");
+	pn.param<std::string>("DROP_BALL_CLOSE", poses["DROP_BALL_CLOSE"], "UNDEF");
 
    	ros::Rate loop_rate(10);
 
