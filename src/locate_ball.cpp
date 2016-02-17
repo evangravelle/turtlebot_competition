@@ -31,21 +31,12 @@ void leftLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	//std::cout << left_theta << std::endl;
 
-	dist = baseline_length * sin(M_PI/2 - right_theta) / sin(left_theta + right_theta);
+	dist = 10;
 
-	ball.transform.translation.x = dist*sin(left_theta);
-	ball.transform.translation.y = dist*sin(right_theta);
+	ball.transform.translation.x = dist*cos(left_theta);
+	ball.transform.translation.y = dist*sin(left_theta);
 
 	tf_br.sendTransform(ball);
-
-}
-
-void rightLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
-
-	right_image_pixel.x = pointPtr->x;
-	right_image_pixel.y = pointPtr->y;
-
-	right_theta = atan((image_width/2.0 - right_image_pixel.x)/(image_width/2.0));
 
 }
 
@@ -56,9 +47,8 @@ int main(int argc, char **argv) {
 	ros::NodeHandle nh;
 
 	ros::Subscriber left_image_sub = nh.subscribe<geometry_msgs::Point>("/left_image_ball_pixel", 1, leftLocationCallback);
-	ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
+	// ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
 	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
-
 
 	// Defaults
 	image_width = 640;
@@ -68,8 +58,6 @@ int main(int argc, char **argv) {
 	nh.getParam("/usb_cam/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
 
-	right_image_pixel.x = image_width/2.0;
-	right_image_pixel.y = image_width/2.0;
 	left_image_pixel.x = image_width/2.0;
 	left_image_pixel.y = image_height/2.0;
 
