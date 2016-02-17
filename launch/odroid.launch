@@ -19,23 +19,23 @@
 	
 	<!-- Link 0 -->
 	<param name="motor_0_inverted" type="int" value="0" />
-	<param name="motor_0_increment" type="int" value="20" />
+	<param name="motor_0_increment" type="int" value="5" />
 	<!-- Link 1 -->
 	<param name="motor_1_inverted" type="int" value="0" />
-	<param name="motor_1_increment" type="int" value="20" />
+	<param name="motor_1_increment" type="int" value="5" />
 	<!-- Link 2 -->
 	<param name="motor_2_inverted" type="int" value="0" />
-	<param name="motor_2_increment" type="int" value="20" />
+	<param name="motor_2_increment" type="int" value="5" />
 	<!-- Pincer -->
 	<param name="motor_3_inverted" type="int" value="0" />
 	<param name="motor_3_increment" type="int" value="20" />
 
 	<!-- POSES -->
-	<param name="SEARCH" type="string" value="0 150|1 317|2 94|3 100|" />
-	<param name="GRAB_BALL_OPEN" type="string" value="0 200|1 317|2 94|3 200|" />
-	<param name="GRAB_BALL_CLOSE" type="string" value="0 200|1 317|2 94|3 100|" />
-	<param name="DROP_BALL_OPEN" type="string" value="0 100|1 317|2 94|3 200|" />
-	<param name="DROP_BALL_CLOSE" type="string" value="0 100|1 317|2 94|3 100|" />
+	<param name="SEARCH" type="string" value="0 222|1 218|2 272|3 250|" />
+	<param name="GRAB_BALL_OPEN" type="string" value="0 83|1 395|2 668|3 291|" />
+	<param name="GRAB_BALL_CLOSE" type="string" value="0 83|1 395|2 668|3 416|" />
+	<param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 300|" />
+	<param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|3 416|" />
 
 </node>
 
