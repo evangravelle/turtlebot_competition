@@ -19,8 +19,8 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
 JointController joint_0(80, 700, A0, AFMS.getMotor(1));
 JointController joint_1(94, 797, A1, AFMS.getMotor(2));
-JointController joint_2(340,750, A2, AFMS.getMotor(3));
-JointController joint_3(240,640, A3, AFMS.getMotor(4), 10);
+JointController joint_2(275, 670, A2, AFMS.getMotor(3));
+JointController joint_3(240, 640, A3, AFMS.getMotor(4), 10);
 
 #define NUM_MOTORS 4
 JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
@@ -48,7 +48,7 @@ void setup() {
   Serial.print("hello");
   AFMS.begin();  // create with the default frequency 1.6KHz
 
-  joint_3.move_to(240);
+  // joint_3.move_to(240);
   joint_3.set_ki(0);
 }
 
@@ -89,7 +89,7 @@ void loop() {
     joints[i]->update();
 
   
-  delay(100);
+  delay(10);
 }
 
 

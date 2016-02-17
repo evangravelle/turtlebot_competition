@@ -1,7 +1,7 @@
 #include "JointController.h"
 
 // #define PID_VERBOSE
-#define ACK_MOVEMENTS
+// #define ACK_MOVEMENTS
 
 int JointController::_total_joint_count = 0;
 
