@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include <tf2_msgs/TFMessage.h>
+#include "sensor_msgs/CameraInfo.h"
+#include "sensor_msgs/Image.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include <geometry_msgs/PoseStamped.h>
+#include <tf/tf.h>
+#include <fstream>
+#include <math.h>
+#include <time.h> 
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <vector>
+#include <stdlib.h>
+#include "std_msgs/String.h"
+#include <std_msgs/Float64.h>
+#include <sstream>
+
+int 
+
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "beepboop"); //Ros Initialize
+    ros::start();
+    ros::Rate loop_rate(T); //Set Ros frequency to 50/s (fast)
+    ros::NodeHandle n;
+
+    ros::Subscriber cameraImageLeft=n.subscribe<sensor_msgs::Image>("template", 1, template_cb);
+ros::Time stamp = ros::Time::now();
+
+
+    while (ros::ok()) 
+    {
+	ros::spinOnce();
+
+        loop_rate.sleep();
+    }
+}
+
