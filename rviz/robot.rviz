@@ -236,7 +236,7 @@ Visualization Manager:
       Marker Topic: ball_marker
       Name: BallMarker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -244,7 +244,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        ball:
+        arm_1:
+          Value: true
+        arm_2:
+          Value: true
+        arm_3:
+          Value: true
+        arm_base:
           Value: true
         base_footprint:
           Value: true
@@ -253,6 +259,8 @@ Visualization Manager:
         camera_depth_frame:
           Value: true
         camera_depth_optical_frame:
+          Value: true
+        camera_forward:
           Value: true
         camera_link:
           Value: true
@@ -264,6 +272,8 @@ Visualization Manager:
           Value: true
         caster_front_link:
           Value: true
+        claw:
+          Value: true
         cliff_sensor_front_link:
           Value: true
         cliff_sensor_left_link:
@@ -271,8 +281,6 @@ Visualization Manager:
         cliff_sensor_right_link:
           Value: true
         gyro_link:
-          Value: true
-        left_camera:
           Value: true
         mount_asus_xtion_pro_link:
           Value: true
@@ -314,8 +322,6 @@ Visualization Manager:
           Value: true
         pole_top_3_link:
           Value: true
-        right_camera:
-          Value: true
       Marker Scale: 0.2
       Name: TF
       Show Arrows: true
@@ -323,6 +329,8 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_footprint:
+          arm_base:
+            {}
           base_link:
             camera_rgb_frame:
               camera_depth_frame:
@@ -384,10 +392,7 @@ Visualization Manager:
               {}
             pole_top_3_link:
               {}
-          left_camera:
-            ball:
-              {}
-          right_camera:
+          camera_forward:
             {}
       Update Interval: 0
       Value: true
@@ -401,6 +406,14 @@ Visualization Manager:
       Normalize Range: true
       Queue Size: 2
       Transport Hint: raw
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /arm_1_marker
+      Name: Arm1Marker
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -426,7 +439,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.52031
+      Distance: 1.3616
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -438,10 +451,10 @@ Visualization Manager:
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.900398
+      Pitch: 0.725398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5804
+      Yaw: 1.6854
     Saved: ~
 Window Geometry:
   Displays:
@@ -461,5 +474,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1445
-  X: 166
-  Y: 30
+  X: 156
+  Y: 20

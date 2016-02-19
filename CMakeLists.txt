@@ -139,23 +139,23 @@ include_directories(
 add_executable(snes_joy_node src/snes_joy_node.cpp)
 add_executable(teleop_config_server_example src/teleop_config_server_example.cpp)
 add_executable(detect_ball_tuning src/detect_ball_tuning.cpp)
-add_executable(turtlebot_tf src/turtlebot_tf.cpp)
-add_executable(ball_marker src/ball_marker.cpp)
+add_executable(publish_transforms src/publish_transforms.cpp)
+add_executable(publish_markers src/publish_markers.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(teleop_config_server_example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_tuning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(turtlebot_tf ${catkin_EXPORTED_TARGETS})
-add_dependencies(ball_marker ${catkin_EXPORTED_TARGETS})
+add_dependencies(publish_transforms ${catkin_EXPORTED_TARGETS})
+add_dependencies(publish_markers ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(snes_joy_node ${catkin_LIBRARIES})
 target_link_libraries(teleop_config_server_example ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_tuning ${catkin_LIBRARIES})
-target_link_libraries(turtlebot_tf ${catkin_LIBRARIES})
-target_link_libraries(ball_marker ${catkin_LIBRARIES})
+target_link_libraries(publish_transforms ${catkin_LIBRARIES})
+target_link_libraries(publish_markers ${catkin_LIBRARIES})
 
 #############
 ## Install ##

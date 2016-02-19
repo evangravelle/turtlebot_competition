@@ -11,8 +11,8 @@
 
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
 
-<node name="turtlebot_tf" pkg="coconuts_master" type="turtlebot_tf" />
+<node name="publish_transforms" pkg="coconuts_master" type="publish_transforms" />
 
-<node name="ball_marker" pkg="coconuts_master" type="ball_marker" />
+<node name="publish_markers" pkg="coconuts_master" type="publish_markers" />
 
 </launch>
