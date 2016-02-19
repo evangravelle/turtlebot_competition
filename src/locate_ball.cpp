@@ -8,6 +8,7 @@
 ros::Publisher location_pub;
 geometry_msgs::Point left_image_pixel, right_image_pixel;
 geometry_msgs::TransformStamped ball;
+
 int image_width, image_height;
 double left_theta, right_theta, dist;
 double ball_diameter = .033; // in meters
