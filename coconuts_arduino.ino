@@ -1,3 +1,4 @@
+
 /*
 
 This controls the arm 
@@ -9,8 +10,10 @@ e.g.
 
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
+#include <stdint.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 #include "JointController.h"
+#include "CommandQueue.h"
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -27,6 +30,8 @@ JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
 
 #define BUF_SIZE 16
 char buffer[BUF_SIZE];
+
+CommandQueue cmd_queue;
 
 int readUntilPipe(char *buffer, int buf_size){
   long start = millis();
@@ -56,6 +61,10 @@ int select;
 int set_point = 500;
 int i;
 
+uint8_t waiting_mode = 0;
+
+JointCmd current_cmd;
+
 void loop() {
   // Serial.println("hello from the other side");
   if (Serial.available()) {
@@ -71,7 +80,13 @@ void loop() {
         joints[i]->dump();
         Serial.print("|");
       }
+    }else if(buffer[0]=='w' || buffer[0]=='W'){
+      current_cmd.select=-1;
+      current_cmd.set_point=-1;
+      current_cmd.wait = 1;
+      cmd_queue.enq(current_cmd);
     }else{
+      //enqueue motor commands
       select = atoi(buffer);
       char * next = strchr(buffer, ' ');
       set_point = 0;
@@ -80,17 +95,37 @@ void loop() {
       }
 
       if(select >= 0 && select < NUM_MOTORS && set_point){
-        joints[select]->move_to(set_point);
+        current_cmd.select = select;
+        current_cmd.set_point = set_point;
+        current_cmd.wait = 0;
+        cmd_queue.enq(current_cmd);
       }
     }
   }
 
-  for(i=0;i<NUM_MOTORS;i++)
-    joints[i]->update();
+  uint8_t all_ok = 1;
+  for(i=0;i<NUM_MOTORS;i++){
+    all_ok = all_ok && joints[i]->update();
+  }
+
+  if(all_ok)
+    waiting_mode = 0;  //All joints have finished moving
+
+
+  if(!waiting_mode){
+    //Dequeue the motor command
+    //But if we're in waiting mode and the joints are still going, don't
+    current_cmd = cmd_queue.dq();
+    if(current_cmd.wait){
+      waiting_mode = 1;
+    }else if(current_cmd.select >=0 && 
+              select < NUM_MOTORS && 
+              set_point > 0){
+      joints[current_cmd.select]->move_to(current_cmd.set_point);
+    }
+  }
 
   
   delay(10);
 }
-
-
 

@@ -6,7 +6,8 @@ public:
   JointController(int, int, int, Adafruit_DCMotor*, int=2);
 
   //Run the PID update
-  void update();
+  //Return if we've reached the set point
+  int update();
 
   void move_to(int);
 

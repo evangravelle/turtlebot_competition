@@ -1,3 +1,4 @@
+
 #include "JointController.h"
 
 // #define PID_VERBOSE
@@ -24,8 +25,9 @@ JointController::JointController( int min,
 }
 
 
-void JointController::update(){
+int JointController::update(){
   int speed;
+  int set_ok = 0;
 
   _current = analogRead(_analog_pin);
   _error = _set_point - _current;
@@ -40,6 +42,7 @@ void JointController::update(){
   if(abs_error > _tolerance){
     speed = constrain(_Kp*abs_error + _I, 50, 255);
   }else{
+    set_ok = 1;
     _I = 0;
     speed = 0;
     _set_point = _current;
@@ -66,6 +69,8 @@ void JointController::update(){
     _af_motor->run(BACKWARD);
     _af_motor->setSpeed(speed);
   }
+
+  return set_ok;
 }
 
 void JointController::move_to(int new_set_point){
