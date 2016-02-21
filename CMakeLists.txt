@@ -141,6 +141,8 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(Bridge src/Bridge.cpp)
+add_executable(arm_control src/arm_control.cpp)
+add_executable(arm_poll src/arm_poll.cpp)
 add_executable(MockArduino src/MockArduino.cpp)
 add_executable(detect_ball_forward src/detect_ball_forward.cpp)
 add_executable(detect_ball_left src/detect_ball_left.cpp)
@@ -154,6 +156,8 @@ add_executable(locate_ball src/locate_ball.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(Bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
+add_dependencies(arm_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
+add_dependencies(arm_poll ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
 add_dependencies(MockArduino ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_forward ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_left ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -165,6 +169,8 @@ add_dependencies(locate_ball ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(Bridge ${catkin_LIBRARIES})
+target_link_libraries(arm_control ${catkin_LIBRARIES})
+target_link_libraries(arm_poll ${catkin_LIBRARIES})
 target_link_libraries(MockArduino ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_forward ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_left ${catkin_LIBRARIES})
