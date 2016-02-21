@@ -1,6 +1,6 @@
 <launch>
 
-<node pkg="coconuts_odroid" type="arm_control" name="arm_control_node" output="screen" >
+<node pkg="coconuts_odroid" type="arm_poll" name="arm_poll_node" output="screen" >
 	<param name="port" value="/dev/ttyACM0" />
 	<param name="polling_frequency" type="int" value="20" />
 </node>
