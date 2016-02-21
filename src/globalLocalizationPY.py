@@ -20,13 +20,6 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Pose
 
-#NOTE TO AARON - NEED TO CALIBRATE ANGLE~
-
-
-
-
-
-
 
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
@@ -63,6 +56,7 @@ class GL:
 		self.sx=0
 		self.sy=0
 		self.angle=0
+		self.count=0
 
 		self.lastOdomX=0
 		self.lastOdomY=0
@@ -72,27 +66,33 @@ class GL:
 
 
 	def odometryCB(self,data):
+		self.count+=1
+
 		if self.lastOdomX is 0 and self.lastOdomY is 0 and self.lastYaw is 0:
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
 			self.lastQuaternion.z=data.pose.pose.orientation.z
 			self.lastQuaternion.w=data.pose.pose.orientation.w
+
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
+			self.count=0
 			self.lastYaw = yaw
 		else:
 
 			self.pose.position.x+=math.sin(self.angle*0.0174533)*250*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.pose.position.y+=math.cos(self.angle*0.0174533)*250*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
-			self.angle+=1*(yaw-self.lastYaw)
-			print str((self.angle))
+
 
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
+
 			self.lastQuaternion.z=data.pose.pose.orientation.z
 			self.lastQuaternion.w=data.pose.pose.orientation.w
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
-			self.lastYaw= yaw
+			self.angle+=(yaw-self.lastYaw)
+			self.lastYaw = yaw
+			self.count=0
+			print str(self.angle*57)
 			
 		self.pub.publish(self.pose)
 
