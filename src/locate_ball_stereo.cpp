@@ -6,11 +6,10 @@
 #include <tf2_ros/transform_broadcaster.h>
 
 ros::Publisher location_pub;
-geometry_msgs::Point forward_image_pixel;
+geometry_msgs::Point left_image_pixel, right_image_pixel;
 geometry_msgs::TransformStamped ball;
-
 int image_width, image_height;
-double xy_angle, dist;
+double left_theta, right_theta, dist;
 double ball_diameter = .033; // in meters
 double baseline_length = .248; // in meters
 double camera_height = .406; // in meters
@@ -19,25 +18,34 @@ double camera_from_center = .038; // in y direction, in meters
 // Assumes a horizontal camera view of 90 degrees
 
 
-void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
+void leftLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	static tf2_ros::TransformBroadcaster tf_br;
 	ball.header.stamp = ros::Time::now();
 
-	forward_image_pixel.x = pointPtr->x;
+	left_image_pixel.x = pointPtr->x;
 
-	//std::cout << (forward_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
+	//std::cout << (left_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
 
-	xy_angle = atan((forward_image_pixel.x - image_width/2.0)/(image_width/2.0));
+	left_theta = atan((left_image_pixel.x - image_width/2.0)/(image_width/2.0));
 
-	//std::cout << xy_angle << std::endl;
+	//std::cout << left_theta << std::endl;
 
-	dist = 1;
+	dist = baseline_length * sin(M_PI/2 - right_theta) / sin(left_theta + right_theta);
 
-	ball.transform.translation.x = dist*cos(xy_angle);
-	ball.transform.translation.y = dist*sin(xy_angle);
+	ball.transform.translation.x = dist*sin(left_theta);
+	ball.transform.translation.y = dist*sin(right_theta);
 
 	tf_br.sendTransform(ball);
+
+}
+
+void rightLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
+
+	right_image_pixel.x = pointPtr->x;
+	right_image_pixel.y = pointPtr->y;
+
+	right_theta = atan((image_width/2.0 - right_image_pixel.x)/(image_width/2.0));
 
 }
 
@@ -47,9 +55,10 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle nh;
 
-	ros::Subscriber image_sub = nh.subscribe<geometry_msgs::Point>("/forward_image_ball_pixel", 1, forwardLocationCallback);
-	// ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
+	ros::Subscriber left_image_sub = nh.subscribe<geometry_msgs::Point>("/left_image_ball_pixel", 1, leftLocationCallback);
+	ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
 	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
+
 
 	// Defaults
 	image_width = 640;
@@ -59,10 +68,12 @@ int main(int argc, char **argv) {
 	nh.getParam("/usb_cam/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
 
-	forward_image_pixel.x = image_width/2.0;
-	forward_image_pixel.y = image_height/2.0;
+	right_image_pixel.x = image_width/2.0;
+	right_image_pixel.y = image_width/2.0;
+	left_image_pixel.x = image_width/2.0;
+	left_image_pixel.y = image_height/2.0;
 
-	ball.header.frame_id = "camera_forward";
+	ball.header.frame_id = "left_camera";
 	ball.child_frame_id = "ball";
 	ball.transform.translation.x = 0.0;
 	ball.transform.translation.y = 0.0;

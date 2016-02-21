@@ -75,7 +75,7 @@ find_package(catkin REQUIRED COMPONENTS
 #generate_messages(
 #  DEPENDENCIES actionlib_msgs geometry_msgs std_msgs
 #)
-
+generate_messages()
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
@@ -110,6 +110,7 @@ catkin_package(
 #  LIBRARIES coconuts_odroid
 #  CATKIN_DEPENDS actionlib actionlib_msgs geometry_msgs roscpp rospy serial std_msgs tf cv_bridge image_transport
 #  DEPENDS system_lib
+CATKIN_DEPENDS message_runtime
 )
 
 ###########
@@ -133,37 +134,45 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 ## add_dependencies(Bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+  catkin_install_python(PROGRAMS
+    src/globalLocalizationPY.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
 ## Declare a C++ executable
 add_executable(Bridge src/Bridge.cpp)
 add_executable(MockArduino src/MockArduino.cpp)
-add_executable(detect_ball src/detect_ball.cpp)
+add_executable(detect_ball_forward src/detect_ball_forward.cpp)
 add_executable(detect_ball_left src/detect_ball_left.cpp)
 add_executable(detect_ball_right src/detect_ball_right.cpp)
 add_executable(publishInfo src/publishInfo.cpp)
 add_executable(getDistance src/getDistance.cpp)
 add_executable(locate_ball src/locate_ball.cpp)
+#add_executable(globalLocalization src/globalLocalization.cpp)
+#add_executable(globalLocalization src/globalLocalization.py)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(Bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
 add_dependencies(MockArduino ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(detect_ball ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_ball_forward ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_left ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_right ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(publishInfo ${catkin_EXPORTED_TARGETS})
 add_dependencies(getDistance ${catkin_EXPORTED_TARGETS})
 add_dependencies(locate_ball ${catkin_EXPORTED_TARGETS})
+#add_dependencies(globalLocalization ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(Bridge ${catkin_LIBRARIES})
 target_link_libraries(MockArduino ${catkin_LIBRARIES})
-target_link_libraries(detect_ball ${catkin_LIBRARIES})
+target_link_libraries(detect_ball_forward ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_left ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_right ${catkin_LIBRARIES})
 target_link_libraries(publishInfo ${catkin_LIBRARIES})
 target_link_libraries(getDistance ${catkin_LIBRARIES})
 target_link_libraries(locate_ball ${catkin_LIBRARIES})
-
+#target_link_libraries(globalLocalization ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
@@ -173,10 +182,7 @@ target_link_libraries(locate_ball ${catkin_LIBRARIES})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-#  install(PROGRAMS
-#    scripts/controller.py
-#    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#  )
+
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS coconuts_odroid coconuts_odroid_node
