@@ -32,10 +32,19 @@
 	<param name="motor_3_increment" type="int" value="10" />
 
 	<!-- POSES -->
-	<param name="SEARCH" type="string" value="0 222|1 218|2 272|3 250|" />
-	<param name="GRAB_BALL_OPEN" type="string" value="0 83|1 395|2 668|3 291|" />
-	<param name="GRAB_BALL_CLOSE" type="string" value="0 83|1 395|2 668|3 416|" />
+	<!-- SELECT -->
+	<param name="SEARCH" type="string" value="0 222|1 218|2 280|3 250|" />
+
+	<!-- A -->
+	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|2 668|3 291|" />
+
+	<!-- B -->
+	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|2 668|3 416|" />
+
+	<!-- X -->
 	<param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 300|" />
+
+	<!-- Y -->
 	<param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|3 416|" />
 
 </node>
