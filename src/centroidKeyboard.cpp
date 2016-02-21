@@ -6,7 +6,7 @@
 #include <std_msgs/Float64.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/Twist.h"
-#include <turtlebot_deployment/PoseWithName.h>
+// #include <turtlebot_deployment/PoseWithName.h>
 #include <tf/tf.h>
 #include <math.h>
 #include <termios.h>
@@ -47,9 +47,9 @@ r=75;
 ros::NodeHandle ph_("~"), nh_;
 ros::Publisher cen_pub_;
 geometry_msgs::Twist cmd_vel_;
-turtlebot_deployment::PoseWithName cenPose;
-cenPose.pose.position.x=cenx;
-cenPose.pose.position.y=ceny;
+// turtlebot_deployment::PoseWithName cenPose;
+// cenPose.pose.position.x=cenx;
+// cenPose.pose.position.y=ceny;
 cen_pub_ = nh_.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 5, true);
 
 double k=1.75;
