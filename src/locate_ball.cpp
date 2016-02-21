@@ -6,11 +6,11 @@
 #include <tf2_ros/transform_broadcaster.h>
 
 ros::Publisher location_pub;
-geometry_msgs::Point left_image_pixel, right_image_pixel;
+geometry_msgs::Point forward_image_pixel;
 geometry_msgs::TransformStamped ball;
 
 int image_width, image_height;
-double left_theta, right_theta, dist;
+double xy_angle, dist;
 double ball_diameter = .033; // in meters
 double baseline_length = .248; // in meters
 double camera_height = .406; // in meters
@@ -19,23 +19,23 @@ double camera_from_center = .038; // in y direction, in meters
 // Assumes a horizontal camera view of 90 degrees
 
 
-void leftLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
+void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	static tf2_ros::TransformBroadcaster tf_br;
 	ball.header.stamp = ros::Time::now();
 
-	left_image_pixel.x = pointPtr->x;
+	forward_image_pixel.x = pointPtr->x;
 
-	//std::cout << (left_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
+	//std::cout << (forward_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
 
-	left_theta = atan((left_image_pixel.x - image_width/2.0)/(image_width/2.0));
+	xy_angle = atan((forward_image_pixel.x - image_width/2.0)/(image_width/2.0));
 
-	//std::cout << left_theta << std::endl;
+	//std::cout << xy_angle << std::endl;
 
-	dist = 10;
+	dist = 1;
 
-	ball.transform.translation.x = dist*cos(left_theta);
-	ball.transform.translation.y = dist*sin(left_theta);
+	ball.transform.translation.x = dist*cos(xy_angle);
+	ball.transform.translation.y = dist*sin(xy_angle);
 
 	tf_br.sendTransform(ball);
 
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle nh;
 
-	ros::Subscriber left_image_sub = nh.subscribe<geometry_msgs::Point>("/left_image_ball_pixel", 1, leftLocationCallback);
+	ros::Subscriber image_sub = nh.subscribe<geometry_msgs::Point>("/forward_image_ball_pixel", 1, forwardLocationCallback);
 	// ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
 	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
 
@@ -59,10 +59,10 @@ int main(int argc, char **argv) {
 	nh.getParam("/usb_cam/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
 
-	left_image_pixel.x = image_width/2.0;
-	left_image_pixel.y = image_height/2.0;
+	forward_image_pixel.x = image_width/2.0;
+	forward_image_pixel.y = image_height/2.0;
 
-	ball.header.frame_id = "left_camera";
+	ball.header.frame_id = "camera_forward";
 	ball.child_frame_id = "ball";
 	ball.transform.translation.x = 0.0;
 	ball.transform.translation.y = 0.0;

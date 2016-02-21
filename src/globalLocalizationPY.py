@@ -14,7 +14,12 @@ import cv2
 
 from cv2 import __version__
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge, CvBridgeError
+from tf.transformations import euler_from_quaternion
+from geometry_msgs.msg import Quaternion
+from geometry_msgs.msg import Pose
+
 
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
@@ -33,7 +38,7 @@ for imagePath in np.linspace(0, 1,  1)[::-1]:
 	# bookkeeping variable to keep track of the matched region
 	#image = cv2.imread(imagePath)
 	image = cv2.imread("/home/aaron/ceiling/t.png")
-	print str(image.shape[0])
+
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	(rows,cols) = template.shape[:2]
 
@@ -42,18 +47,54 @@ class GL:
 
 	def __init__(self):
 		self.bridge = CvBridge()
-		self.pub = rospy.Publisher('chatter', String, queue_size=1)
-		self.sub =rospy.Subscriber('/left_camera/image_raw', Image, self.callback)
-		self.x=0
-		self.y=0
+		self.pub = rospy.Publisher('/pose', Pose, queue_size=1)
+		self.sub =rospy.Subscriber('/camera_forward/image_raw', Image, self.callback)
+		self.sub =rospy.Subscriber('/odom',Odometry , self.odometryCB)
+		self.pose = Pose()
+		self.pose.position.x=0
+		self.pose.position.y=0
 		self.sx=0
 		self.sy=0
 		self.angle=0
+		self.count=0
+
+		self.lastOdomX=0
+		self.lastOdomY=0
+		self.lastQuaternion = type('Quaternion', (), {})()
+		self.lastQuaternion.__class__.__bases__
+		self.lastYaw=0
 
 
+	def odometryCB(self,data):
+		self.count+=1
+
+		if self.lastOdomX is 0 and self.lastOdomY is 0 and self.lastYaw is 0:
+			self.lastOdomX = data.pose.pose.position.x
+			self.lastOdomY = data.pose.pose.position.y
+			self.lastQuaternion.z=data.pose.pose.orientation.z
+			self.lastQuaternion.w=data.pose.pose.orientation.w
+
+			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
+			self.count=0
+			self.lastYaw = yaw
+		else:
+
+			self.pose.position.x+=math.sin(self.angle*0.0174533)*250*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.y+=math.cos(self.angle*0.0174533)*250*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 
 
+			self.lastOdomX = data.pose.pose.position.x
+			self.lastOdomY = data.pose.pose.position.y
 
+			self.lastQuaternion.z=data.pose.pose.orientation.z
+			self.lastQuaternion.w=data.pose.pose.orientation.w
+			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
+			self.angle+=(yaw-self.lastYaw)
+			self.lastYaw = yaw
+			self.count=0
+			print str(self.angle*57)
+			
+		self.pub.publish(self.pose)
 
 
 
@@ -63,7 +104,7 @@ class GL:
 
 		cv2.waitKey(1)
 		template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-		template = cv2.Canny(template, 175, 225)
+		template = cv2.Canny(template, 25, 25)
 		tempt=template
 
 		found2 = None
@@ -71,15 +112,12 @@ class GL:
 		image = cv2.imread("/home/aaron/ceiling/t.png")
 		resized=image;
 
-		self.sx=self.x
-		self.sy=self.y
-
-		if self.x is not 0 and self.y is not 0 and self.x > 176 and self.y> 176:
-			resized=resized[(self.y*2-350)/2:(self.y*2-350)/2+350, (self.x*2-350)/2:350+(self.x*2-350)/2]
+		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
+			resized=resized[(self.pose.position.y*2-350)/2:(self.pose.position.y*2-350)/2+350, (self.pose.position.x*2-350)/2:350+(self.pose.position.x*2-350)/2]
 
 
 
-		for scale in np.linspace(self.angle-45, self.angle+45,  5)[::-1]:
+		for scale in np.linspace(self.angle-20, self.angle+20,  5)[::-1]:
 			M = cv2.getRotationMatrix2D((cols/2,rows/2),scale,1)
 			template = cv2.warpAffine(tempt,M,(cols,rows))
 			template = template[(rows-250)/2:(rows-250)/2+250, (cols-250)/2:250+(cols-250)/2]
@@ -88,13 +126,11 @@ class GL:
 
 			# detect edges in the resized, grayscale image and apply template
 			# matching to find the template in the image
-			edged = cv2.Canny(resized, 25, 200)
+			edged = cv2.Canny(resized, 25, 25)
 
 
 			result = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF)
 			(_, maxVal, _, maxLoc) = cv2.minMaxLoc(result)
-			cv2.imshow("Image2", template)
-			cv2.waitKey(1)
 			# if we have found a new maximum correlation value, then ipdate
 			# the bookkeeping variable
 			if found2 is None or maxVal > found2[0]:
@@ -116,13 +152,15 @@ class GL:
 
 
 
-		if self.x is not 0 and self.y is not 0 and self.x > 176 and self.y> 176:
+		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
+			print("2")
 			#image=image[(self.y*2-350)/2:(self.y*2-350)/2+350, (self.x*2-350)/2:350+(self.x*2-350)/2]
-			self.x+=-175+startX#-175+startX
-			self.y+=-175+startY#175+startY
+#			self.pose.position.x+=-175+startX#-175+startX
+#			self.pose.position.y+=-175+startY#175+startY
 		else:
-			self.x=startX#-175+startX
-			self.y=startY#175+startY
+			self.pose.position.x=startX#-175+startX
+			self.pose.position.y=startY#175+startY
+#		self.angle=maxScale
 
 
 
@@ -130,33 +168,14 @@ class GL:
 
 		cv2.imshow("Image", image)
 		cv2.imshow("Image2", template)
-		cv2.imshow("Image3", resized)
+		cv2.imshow("Image3", edged)
 		cv2.waitKey(1)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main(args):
-	gl = GL()
 	rospy.init_node('image_converter', anonymous=True)
+	gl = GL()
 	try:
 		rospy.spin()
 	except KeyboardInterrupt:
