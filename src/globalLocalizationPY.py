@@ -68,6 +68,8 @@ class GL:
 		self.sy=0
 		self.angle=0
 		self.turning=0
+		self.signal=Twist()
+		self.init=False
 
 		self.lastOdomX=0
 		self.lastOdomY=0
@@ -79,24 +81,19 @@ class GL:
 
 
 	def odometryCB(self,data):
-
+##UPDATE POSE MESSAGES
 		if self.lastOdomX is 0 and self.lastOdomY is 0 and self.lastYaw is 0:
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
 			self.lastQuaternion.z=data.pose.pose.orientation.z
 			self.lastQuaternion.w=data.pose.pose.orientation.w
-
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
 			self.lastYaw = yaw
 		else:
-
 			self.pose.position.x+=math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.pose.position.y+=math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-
-
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
-
 			self.lastQuaternion.z=data.pose.pose.orientation.z
 			self.lastQuaternion.w=data.pose.pose.orientation.w
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
@@ -105,7 +102,7 @@ class GL:
 
 
 
-
+##UPDATE TRANSFORM MESSAGES
 		self.t.header.stamp= rospy.Time.now()
 		self.t.header.frame_id = "map";
 		self.t.child_frame_id = "base_footprint";
@@ -142,10 +139,15 @@ class GL:
 	def twistCB(self,data):
 		if data.angular.z is not 0:
 			self.turning = time.time()
+		self.signal.angular=data.angular
+		self.signal.linear=data.linear
+
+
 
 
 
 	def callback(self,data):
+		self.init=True
 		self.start = time.time()
 		if time.time()-self.turning > 2:
 			self.angleRange=12
@@ -234,7 +236,24 @@ class GL:
 		self.t.transform.rotation.w = self.q[3]
 		self.br.sendTransform(self.t)
 		self.pub.publish(self.pose)
-		print "confidence: " + str(maxVal)
+
+
+	def kalman(self):
+		while True and self.init is True:
+			self.pose.position.x+=math.sin(self.angle*0.0174533)*self.signal.linear.x*4.
+			self.pose.position.y+=math.cos(self.angle*0.0174533)*self.signal.linear.x*4.
+			self.angle+=self.signal.angular.z
+
+			postingImage = np.copy(image)
+			resized=postingImage
+
+			(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
+			(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
+
+			cv2.line(resized, (startX, startY), (endX, endY), (255, 0, 0), 2)
+			cv2.circle(resized,(startX,startY), 40, (255,0,0), 5)
+			cv2.imshow("Image", postingImage)
+			cv2.waitKey(10)
 
 
 
@@ -242,13 +261,17 @@ class GL:
 def main(args):
 	rospy.init_node('image_converter', anonymous=True)
 	gl = GL()
+	gl.kalman()
 	try:
 		rospy.spin()
 	except KeyboardInterrupt:
 		print("Shutting down")
+
+
 	cv2.destroyAllWindows()
 
 if __name__ == '__main__':
 	main(sys.argv)
+
 
 
