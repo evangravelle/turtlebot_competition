@@ -4,15 +4,18 @@
 #include <math.h>
 #include <tf2/LinearMath/Quaternion.h>
 
-double baseline_length = .248; // in inches
-double camera_height = .406; // in inches
-double camera_from_center = .038; // in y direction, in inches
-double arm_base_forward = .197;
-double arm_base_up = .178;
-double arm_diameter = .03;
-double arm_1_length = .102;
-double arm_2_length = .076;
-double claw_length = .15;
+double inches_to_meters = 0.0254;
+double baseline_length = 10.5*inches_to_meters;
+double camera_forward_dist_from_ground = 16.0*inches_to_meters;
+double camera_up_dist_from_ground = camera_forward_dist_from_ground + 2.5*inches_to_meters;
+double camera_forward_from_center = 1.5*inches_to_meters; // in x direction
+double camera_up_from_center = 2.5*inches_to_meters + camera_forward_from_center; // in x direction
+double arm_base_forward = 7.0*inches_to_meters;
+double arm_base_up = 7.0*inches_to_meters;
+double arm_diameter = 1.5*inches_to_meters;
+double arm_1_length = 3.75*inches_to_meters;
+double arm_2_length = 4.75*inches_to_meters;
+double claw_length = 3.75*inches_to_meters;
 double arm_1_pitch, arm_2_pitch, claw_pitch;
 
 geometry_msgs::TransformStamped camera_forward, camera_up, camera_down, arm_base, arm_1, arm_2, claw;
@@ -63,9 +66,10 @@ int main(int argc, char **argv) {
 	tf2_ros::TransformBroadcaster tf_br;
 	ros::Subscriber arm_sub = nh.subscribe<coconuts_common::ArmStatus>("/arm_status", 1000, armStatusCallback);
 
-	nh.setParam("/baseline_length", baseline_length); 
-	nh.setParam("/camera_height", camera_height);
-	nh.setParam("/camera_from_center", camera_from_center);
+	//nh.setParam("/baseline_length", baseline_length); 
+	//nh.setParam("/camera_dist_from_ground", camera_dist_from_ground);
+	//nh.setParam("/camera_forward_from_center", camera_forward_from_center);
+	//nh.setParam("/camera_up_from_center", camera_up_from_center);
 	
 	// Initialize transforms
 	tf2::Quaternion camera_forward_quat;
@@ -73,35 +77,35 @@ int main(int argc, char **argv) {
 	camera_forward.header.stamp = ros::Time::now();
 	camera_forward.header.frame_id = "base_footprint";
 	camera_forward.child_frame_id = "camera_forward";
-	camera_forward.transform.translation.x = -camera_from_center;
+	camera_forward.transform.translation.x = -camera_forward_from_center;
 	camera_forward.transform.translation.y = baseline_length/2.0;
-	camera_forward.transform.translation.z = camera_height;
+	camera_forward.transform.translation.z = camera_forward_dist_from_ground;
 	camera_forward.transform.rotation.x = camera_forward_quat.x();
 	camera_forward.transform.rotation.y = camera_forward_quat.y();
 	camera_forward.transform.rotation.z = camera_forward_quat.z();
 	camera_forward.transform.rotation.w = camera_forward_quat.w();
 
 	tf2::Quaternion camera_up_quat;
-	camera_up_quat.setRPY(0, -M_PI/2, 0);
+	camera_up_quat.setRPY(0, -M_PI/2.0, 0);
 	camera_up.header.stamp = ros::Time::now();
 	camera_up.header.frame_id = "base_footprint";
 	camera_up.child_frame_id = "camera_up";
-	camera_up.transform.translation.x = -camera_from_center;
+	camera_up.transform.translation.x = -camera_up_from_center;
 	camera_up.transform.translation.y = -baseline_length/2.0;
-	camera_up.transform.translation.z = camera_height;
+	camera_up.transform.translation.z = camera_up_dist_from_ground;
 	camera_up.transform.rotation.x = camera_up_quat.x();
 	camera_up.transform.rotation.y = camera_up_quat.y();
 	camera_up.transform.rotation.z = camera_up_quat.z();
 	camera_up.transform.rotation.w = camera_up_quat.w();
 
 	tf2::Quaternion camera_down_quat;
-	camera_down_quat.setRPY(0, -M_PI/2.0, 0);
+	camera_down_quat.setRPY(0, -M_PI/2.0 - 0.185, 0);
 	camera_down.header.stamp = ros::Time::now();
 	camera_down.header.frame_id = "arm_2";
 	camera_down.child_frame_id = "camera_down";
-	camera_down.transform.translation.x = -arm_diameter;
+	camera_down.transform.translation.x = -1.5*inches_to_meters;
 	camera_down.transform.translation.y = 0;
-	camera_down.transform.translation.z = arm_2_length/2.0;
+	camera_down.transform.translation.z = 1.0*inches_to_meters;
 	camera_down.transform.rotation.x = camera_down_quat.x();
 	camera_down.transform.rotation.y = camera_down_quat.y();
 	camera_down.transform.rotation.z = camera_down_quat.z();
