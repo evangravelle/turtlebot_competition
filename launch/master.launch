@@ -11,7 +11,7 @@
 
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
 
-<node name="publish_transforms" pkg="coconuts_master" type="publish_transforms" />
+<node name="publish_transforms" pkg="coconuts_master" type="publish_transforms" output="screen"/>
 
 <node name="publish_markers" pkg="coconuts_master" type="publish_markers" />
 
