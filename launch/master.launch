@@ -16,6 +16,5 @@
 
 <node name="publish_markers" pkg="coconuts_master" type="publish_markers" />
 
-<!-- <include file="$(find coconuts_master)/launch/turtlebot_minimal.launch" /> -->
 
 </launch>
