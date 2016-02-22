@@ -11,7 +11,7 @@ e.g.
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include <stdint.h>
-#include "utility/Adafruit_MS_PWMServoDriver.h"
+// #include "utility/Adafruit_MS_PWMServoDriver.h"
 #include "JointController.h"
 #include "CommandQueue.h"
 
@@ -23,7 +23,7 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 JointController joint_0(80, 700, A0, AFMS.getMotor(1));
 JointController joint_1(94, 797, A1, AFMS.getMotor(2));
 JointController joint_2(275, 670, A2, AFMS.getMotor(3));
-JointController joint_3(240, 640, A3, AFMS.getMotor(4), 10);
+JointController joint_3(280, 640, A3, AFMS.getMotor(4), 10);
 
 #define NUM_MOTORS 4
 JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
@@ -103,29 +103,34 @@ void loop() {
     }
   }
 
-  uint8_t all_ok = 1;
-  for(i=0;i<NUM_MOTORS;i++){
-    all_ok = all_ok && joints[i]->update();
+  if(!waiting_mode){
+    //Dequeue the motor command
+    //But if we're in waiting mode and the joints are still going, don't
+
+    while(cmd_queue.size() > 0){
+      current_cmd = cmd_queue.dq();
+      if(current_cmd.wait){
+        //wait and no more move_to's
+        waiting_mode = 1;
+        break;
+      }else if(current_cmd.select >=0 && 
+              select < NUM_MOTORS && 
+              set_point > 0){
+        joints[current_cmd.select]->move_to(current_cmd.set_point);
+      }
+    }
   }
 
+
+  uint8_t all_ok = 1;
+  for(i=0;i<NUM_MOTORS;i++){
+    all_ok = joints[i]->update() && all_ok;
+  }
   if(all_ok)
     waiting_mode = 0;  //All joints have finished moving
 
 
-  if(!waiting_mode){
-    //Dequeue the motor command
-    //But if we're in waiting mode and the joints are still going, don't
-    current_cmd = cmd_queue.dq();
-    if(current_cmd.wait){
-      waiting_mode = 1;
-    }else if(current_cmd.select >=0 && 
-              select < NUM_MOTORS && 
-              set_point > 0){
-      joints[current_cmd.select]->move_to(current_cmd.set_point);
-    }
-  }
-
-  
   delay(10);
 }
+
 

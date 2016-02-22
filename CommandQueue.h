@@ -1,6 +1,7 @@
 
 #include <stdint.h>
-	
+
+
 typedef struct JointCmd{
   int select;
   int set_point;
@@ -9,7 +10,7 @@ typedef struct JointCmd{
 };
 
 
-#define Q_SIZE 16
+#define Q_SIZE 128
 
 /*
 Simple circular buffer queue of arm commands
@@ -24,6 +25,8 @@ public:
 
 	void enq(JointCmd);
 	JointCmd dq();
+
+
 
 private:
 	int _front; 	//dq pulls out stuff from here
