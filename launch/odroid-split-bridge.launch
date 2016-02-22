@@ -2,7 +2,7 @@
 
 <node pkg="coconuts_odroid" type="arm_poll" name="arm_poll_node" output="screen" >
 	<param name="port" value="/dev/ttyACM0" />
-	<param name="polling_frequency" type="int" value="20" />
+	<param name="polling_frequency" type="int" value="5" />
 </node>
 
 <node pkg="coconuts_odroid" type="arm_control" name="arm_control_node" output="screen" >
@@ -31,13 +31,13 @@
 	<param name="motor_3_inverted" type="int" value="0" />
 	<param name="motor_3_increment" type="int" value="10" />
 
-	<!-- POSES -->
+	<!-- POSES hold SELECT and-->
 
-	<!-- SELECT -->
+	<!-- START -->
 	<param name="SEARCH" type="string" value="0 222|1 218|2 280|3 250|" />
 
 	<!-- A -->
-	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|2 668|3 291|" />
+	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|W|2 668|3 291|" />
 
 	<!-- B -->
 	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|2 668|3 416|" />
