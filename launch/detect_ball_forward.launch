@@ -41,7 +41,7 @@
     <param name="height" type="int" value="1080" />
     <param name="brightness" type="int" value="150"/>
     <param name="fps" type="int" value="5" />
-    <param name="frame" type="string" value="webcam" />
+    <param name="frame" type="string" value="camera_up" />
     <param name="device" type="string" value="/dev/video0" />
     <param name="auto_focus" type="bool" value="0" />
     <param name="camera_frame_id" type="string" value="camera_up" /> 

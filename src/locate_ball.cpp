@@ -4,17 +4,18 @@
 #include <geometry_msgs/Pose.h>
 #include <tf2_msgs/TFMessage.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <math.h>
 
 ros::Publisher location_pub;
 geometry_msgs::Point forward_image_pixel;
 geometry_msgs::TransformStamped ball;
 
+double inches_to_meters = 0.0254;
+double ball_diameter = 1.125*inches_to_meters; // in meters
+double baseline_length = 10.5*inches_to_meters;
+double camera_forward_dist_from_ground = 16.0*inches_to_meters;
 int image_width, image_height;
 double xy_angle, dist;
-double ball_diameter = .033; // in meters
-double baseline_length = .248; // in meters
-double camera_height = .406; // in meters
-double camera_from_center = .038; // in y direction, in meters
 
 // Assumes a horizontal camera view of 90 degrees
 
@@ -25,17 +26,10 @@ void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 	ball.header.stamp = ros::Time::now();
 
 	forward_image_pixel.x = pointPtr->x;
+	forward_image_pixel.y = pointPtr->y;
 
-	//std::cout << (forward_image_pixel.x - image_width/2.0)/(image_width/2.0) << std::endl;
-
-	xy_angle = atan((forward_image_pixel.x - image_width/2.0)/(image_width/2.0));
-
-	//std::cout << xy_angle << std::endl;
-
-	dist = 1;
-
-	ball.transform.translation.x = dist*cos(xy_angle);
-	ball.transform.translation.y = dist*sin(xy_angle);
+	ball.transform.translation.y = exp(8.1*pow(10,6)*pow(forward_image_pixel.y,2) - 0.0091*forward_image_pixel.y + 5.1283);
+	ball.transform.translation.x = ball.transform.translation.y * (forward_image_pixel.x - image_width/2.0)/(image_width/2.0);
 
 	tf_br.sendTransform(ball);
 
@@ -66,7 +60,7 @@ int main(int argc, char **argv) {
 	ball.child_frame_id = "ball";
 	ball.transform.translation.x = 0.0;
 	ball.transform.translation.y = 0.0;
-	ball.transform.translation.z = -camera_height + ball_diameter/2.0;
+	ball.transform.translation.z = -camera_forward_dist_from_ground + ball_diameter/2.0;
 	ball.transform.rotation.x = 0.0;
 	ball.transform.rotation.y = 0.0;
 	ball.transform.rotation.z = 0.0;
