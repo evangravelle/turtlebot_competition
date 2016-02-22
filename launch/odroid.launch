@@ -15,7 +15,7 @@
 		for position updates as a fraction of the ROS frequency. 
 		For example, using 20 means that for every 20 times the 
 		ROS loop executes this will execute once -->	
-	<param name="polling_frequency" type="int" value="20" />
+	<param name="polling_frequency" type="int" value="10" />
 	<param name="motor_count" type="int" value="4" />
 	
 	<!-- Link 0 -->
@@ -31,22 +31,25 @@
 	<param name="motor_3_inverted" type="int" value="0" />
 	<param name="motor_3_increment" type="int" value="10" />
 
-	<!-- POSES -->
+        <!-- POSES -->
 
-	<!-- SELECT -->
-	<param name="SEARCH" type="string" value="0 222|1 218|2 280|3 250|" />
+        <!-- SELECT -->
+        <param name="SEARCH" type="string" value="0 300|2 260|W|3 291|0 222|1 218|" />
 
-	<!-- A -->
-	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|2 668|3 291|" />
+        <!-- A -->
+        <param name="GRAB_BALL_OPEN" type="string" value="1 395|2 668|3 291|W|0 93|" />
 
-	<!-- B -->
-	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|2 668|3 416|" />
+        <!-- B -->
+        <param name="GRAB_BALL_CLOSE" type="string" value="3 416|" />
+        <!-- <param name="GRAB_BALL_CLOSE" type="string" value="0 93|1 395|W|2 668|3 416|" />-->
 
-	<!-- X -->
-	<param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 300|" />
+        <!-- X -->
+        <param name="DROP_BALL_OPEN" type="string" value="3 291|" />
+        <!-- <param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 291|" /> -->
 
-	<!-- Y -->
-	<param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|3 416|" />
+        <!-- Y -->
+        <param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|" />
+        <!-- <param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|3 416|" />-->
 
 </node>
 
