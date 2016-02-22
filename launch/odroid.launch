@@ -2,11 +2,11 @@
 
 <node pkg="coconuts_odroid" type="Bridge" name="bridge_node" output="screen" >
 
-
 	<param name="port" value="/dev/ttyACM0" />
 
-
 	<!-- Commonly Used Ports
+	<param name="port" value="/dev/pts/27" />
+	<param name="port" value="/dev/ttyACM0" />
 	<param name="port" value="/dev/ttyUSB0" />
 	<param name="port" value="/dev/pts/1" />
 	-->
