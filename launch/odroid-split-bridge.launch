@@ -40,7 +40,7 @@
 	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|W|2 668|3 291|" />
 
 	<!-- B -->
-	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|2 668|3 416|" />
+	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|W|2 668|3 416|" />
 
 	<!-- X -->
 	<param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 300|" />
