@@ -37,10 +37,10 @@
 
   <!-- upward camera uses uvc_camera -->
   <node ns="camera_up" name="camera_up" pkg="uvc_camera" type="uvc_camera_node" >
-    <param name="width" type="int" value="640" />
-    <param name="height" type="int" value="480" />
+    <param name="width" type="int" value="160" />
+    <param name="height" type="int" value="120" />
     <param name="brightness" type="int" value="150"/>
-    <param name="fps" type="int" value="3" />
+    <param name="fps" type="int" value="30" />
     <param name="frame" type="string" value="camera_up" />
     <param name="device" type="string" value="/dev/video1" />
     <param name="auto_focus" type="bool" value="0" />
