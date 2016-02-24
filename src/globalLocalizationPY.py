@@ -39,7 +39,7 @@ sliceSize=125/2 #prev 250
 
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
-template = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
+template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
@@ -56,7 +56,7 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
+image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = cv2.Canny(image, 25, 50)
@@ -236,9 +236,9 @@ class GL:
 			self.pose.position.y=startY
 		self.ceilingAngle=maxScale
 
-		cv2.imshow("Image2", template)
-		cv2.imshow("Image3", edged)
-		cv2.waitKey(1)
+#		cv2.imshow("Image2", template)
+#		cv2.imshow("Image3", edged)
+#		cv2.waitKey(1)
 
 		self.t.header.stamp= rospy.Time.now()
 		self.t.header.frame_id = "map";
