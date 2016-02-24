@@ -26,10 +26,10 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import TransformStamped
 
 
-startingX=225
-startingY=225
-mapSliceSize=175 #prev 350
-sliceSize=125 #prev 250
+startingX=265/2 #550 for 640
+startingY=225/2
+mapSliceSize=175/2 #prev 350 for 640
+sliceSize=125/2 #prev 250
 
 
 
@@ -56,11 +56,11 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/map_small.png")
+image = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = cv2.Canny(image, 25, 50)
-imageCanny=cv2.Canny(image, 25, 50)
+imageCanny=cv2.Canny(image, 25, 75)
 postingImage = np.copy(image)
 (rows,cols) = template.shape[:2]
 
@@ -127,8 +127,8 @@ class GL:
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
 			self.lastYaw = yaw
 		else:
-			self.pose.position.x+=sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			self.pose.position.y+=sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.x+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.y+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.odomMeasurement.position.x=self.lastPoseX+sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.odomMeasurement.position.y=self.lastPoseY+sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.lastPoseX=self.pose.position.x
@@ -203,19 +203,19 @@ class GL:
 
 #		cv2.waitKey(1)
 		template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-		template = cv2.Canny(template, 25, 50)
+		template = cv2.Canny(template, 25, 150)
 		tempt=template
 
 		found2 = None
 		postingImage = np.copy(image)
 		resized=np.copy(imageCanny)
 
-		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
+		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > mapSliceSize/2+1 and self.pose.position.y> mapSliceSize/2+1:
 			resized=resized[(self.pose.position.y*2-mapSliceSize)/2:(self.pose.position.y*2-mapSliceSize)/2+mapSliceSize, (self.pose.position.x*2-mapSliceSize)/2:mapSliceSize+(self.pose.position.x*2-mapSliceSize)/2]
 
 
 
-		for scale in np.linspace(self.angle-self.angleRange, self.angle+self.angleRange,  5)[::-1]:
+		for scale in np.linspace(self.angle-self.angleRange, self.angle+self.angleRange,  10)[::-1]:
 			M = cv2.getRotationMatrix2D((cols/2,rows/2),scale,1)
 			template = cv2.warpAffine(tempt,M,(cols,rows))
 			template = template[(rows-sliceSize)/2:(rows-sliceSize)/2+sliceSize, (cols-sliceSize)/2:sliceSize+(cols-sliceSize)/2]
@@ -255,7 +255,7 @@ class GL:
 
 		if self.ceilingConfidence>1:
 			self.ceilingConfidence=1.0
-		print str(time.time()-self.start)
+		print "Can Handle: "+str(1/(time.time()-self.start))
 
 
 
@@ -266,8 +266,8 @@ class GL:
 #			self.angle+=self.signal.angular.z
 
 			if self.ceilingFlag is True:
-				self.pose.position.x=self.pose.position.x+self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
-				self.pose.position.y=self.pose.position.y+self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
+				self.pose.position.x=self.pose.position.x+.8*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
+				self.pose.position.y=self.pose.position.y+.8*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
 				self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
 #				print str(self.ceilingConfidence)
 				self.ceilingFlag=False
