@@ -32,13 +32,6 @@ mapSliceSize=175/2 #prev 350 for 640
 sliceSize=125/2 #prev 250
 
 
-
-
-
-
-
-# load the image image, convert it to grayscale, and detect edges
-#template = cv2.imread(args["template"])
 template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
@@ -59,7 +52,6 @@ def sign(x):
 image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#image = cv2.Canny(image, 25, 50)
 imageCanny=cv2.Canny(image, 25, 75)
 postingImage = np.copy(image)
 (rows,cols) = template.shape[:2]
@@ -72,7 +64,6 @@ class GL:
 #		self.pub = rospy.Publisher('/pose', Pose, queue_size=1)
 		self.pubImage=rospy.Publisher('/localization/Image', Image, queue_size=1)
 		self.br= tf2_ros.TransformBroadcaster()
-#		self.tfPub = rospy.Publisher('/tf', TransformStamped, queue_size=1)
 		self.sub =rospy.Subscriber('/camera_up/image_raw', Image, self.callback)
 		self.sub2 =rospy.Subscriber('/odom',Odometry , self.odometryCB)
 		self.sub3 =rospy.Subscriber('/mobile_base/commands/velocity', Twist, self.twistCB)
@@ -141,32 +132,6 @@ class GL:
 			self.odomAngle=self.lastPoseAngle+57.2958*(yaw-self.lastYaw)
 			self.lastPoseAngle=self.angle
 			self.lastYaw = yaw
-
-
-
-##UPDATE TRANSFORM MESSAGES
-		self.t.header.stamp= rospy.Time.now()
-		self.t.header.frame_id = "map";
-		self.t.child_frame_id = "base_footprint";
-		self.t.transform.translation.x = self.pose.position.x/250.;
-		self.t.transform.translation.y = self.pose.position.y/250.;
-		self.q= tf.transformations.quaternion_from_euler(0, 0, self.angle*0.0174533)
-		self.t.transform.rotation.x = self.q[0]
-		self.t.transform.rotation.y = self.q[1]
-		self.t.transform.rotation.z = self.q[2]
-		self.t.transform.rotation.w = self.q[3]
-		self.br.sendTransform(self.t)
-		
-#		(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
-#		(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
-
-#		postingImage = np.copy(image)
-#		resized=postingImage
-
-#		cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
-#		cv2.circle(resized,(startX,startY), 40, (0,255,0), 5)
-#		cv2.imshow("Image", postingImage)
-#		cv2.waitKey(1)
 
 
 
@@ -301,6 +266,21 @@ class GL:
 			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 255), 2)
 			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*5))
 
+
+
+
+##UPDATE TRANSFORM MESSAGES
+			self.t.header.stamp= rospy.Time.now()
+			self.t.header.frame_id = "map";
+			self.t.child_frame_id = "base_footprint";
+			self.t.transform.translation.x = self.pose.position.x/250.*350./mapSliceSize;
+			self.t.transform.translation.y = self.pose.position.y/250.*350./mapSliceSize;
+			self.q= tf.transformations.quaternion_from_euler(0, 0, self.angle*0.0174533)
+			self.t.transform.rotation.x = self.q[0]
+			self.t.transform.rotation.y = self.q[1]
+			self.t.transform.rotation.z = self.q[2]
+			self.t.transform.rotation.w = self.q[3]
+			self.br.sendTransform(self.t)
 
 			self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
 #			cv2.imshow("Image", postingImage)
