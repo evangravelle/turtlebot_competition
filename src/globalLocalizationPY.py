@@ -28,7 +28,7 @@ from geometry_msgs.msg import TransformStamped
 
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
-template = cv2.imread("/home/aaron/ceiling/p10.png")
+template = cv2.imread("template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
@@ -45,7 +45,7 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("/home/aaron/ceiling/t.png")
+image = cv2.imread("map.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = cv2.Canny(image, 25, 50)
