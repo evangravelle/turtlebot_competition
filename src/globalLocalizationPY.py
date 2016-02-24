@@ -28,7 +28,7 @@ from geometry_msgs.msg import TransformStamped
 
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
-template = cv2.imread("template_dummy.png")
+template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
@@ -45,7 +45,7 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("map.png")
+image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = cv2.Canny(image, 25, 50)
@@ -82,6 +82,7 @@ class GL:
 		self.ceilingMeasurement.position.y=550
 		self.ceilingAngle=0
 		self.ceilingConfidence=0
+		self.lastMeasurement=0
 
 		self.odomFlag=False
 		self.odomMeasurement = Pose()
@@ -169,6 +170,13 @@ class GL:
 
 
 	def callback(self,data):
+		
+		if data.header.stamp.secs-self.lastMeasurement < 1:
+			return
+		self.lastMeasurement=data.header.stamp.secs
+
+
+		
 		self.ceilingFlag=True
 		self.init=True
 		self.start = time.time()
@@ -182,7 +190,7 @@ class GL:
 		template= self.bridge.imgmsg_to_cv2(data, "bgr8")
 		(rows,cols) = template.shape[:2]
 
-		cv2.waitKey(1)
+#		cv2.waitKey(1)
 		template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 		template = cv2.Canny(template, 25, 50)
 		tempt=template
@@ -236,6 +244,7 @@ class GL:
 
 		if self.ceilingConfidence>1:
 			self.ceilingConfidence=1.0
+		print str(time.time()-self.start)
 
 
 
@@ -284,7 +293,7 @@ class GL:
 
 			self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
 #			cv2.imshow("Image", postingImage)
-			cv2.waitKey(10)
+			cv2.waitKey(1)
 #			self.pub.publish(self.pose)
 
 
