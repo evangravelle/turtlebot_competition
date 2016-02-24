@@ -26,9 +26,20 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import TransformStamped
 
 
+startingX=225
+startingY=225
+mapSliceSize=175 #prev 350
+sliceSize=125 #prev 250
+
+
+
+
+
+
+
 # load the image image, convert it to grayscale, and detect edges
 #template = cv2.imread(args["template"])
-template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
+template = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
@@ -45,7 +56,7 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map.png")
+image = cv2.imread("/home/aaron/catkin_ws/src/coconuts_odroid/src/map_small.png")
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #image = cv2.Canny(image, 25, 50)
@@ -66,8 +77,8 @@ class GL:
 		self.sub2 =rospy.Subscriber('/odom',Odometry , self.odometryCB)
 		self.sub3 =rospy.Subscriber('/mobile_base/commands/velocity', Twist, self.twistCB)
 		self.pose = Pose()
-		self.pose.position.x=550
-		self.pose.position.y=550
+		self.pose.position.x=startingX
+		self.pose.position.y=startingY
 		self.sx=0
 		self.sy=0
 		self.angle=0
@@ -78,16 +89,16 @@ class GL:
 
 		self.ceilingFlag=False
 		self.ceilingMeasurement = Pose()
-		self.ceilingMeasurement.position.x=550
-		self.ceilingMeasurement.position.y=550
+		self.ceilingMeasurement.position.x=startingX
+		self.ceilingMeasurement.position.y=startingY
 		self.ceilingAngle=0
 		self.ceilingConfidence=0
 		self.lastMeasurement=0
 
 		self.odomFlag=False
 		self.odomMeasurement = Pose()
-		self.odomMeasurement.position.x=550
-		self.odomMeasurement.position.y=550
+		self.odomMeasurement.position.x=startingX
+		self.odomMeasurement.position.y
 		self.odomAngle=0
 
 		self.lastPoseX=0
@@ -171,9 +182,9 @@ class GL:
 
 	def callback(self,data):
 		
-		if data.header.stamp.secs-self.lastMeasurement < 1:
-			return
-		self.lastMeasurement=data.header.stamp.secs
+#		if data.header.stamp.nsecs-self.lastMeasurement < 20000000:
+#			return
+#		self.lastMeasurement=data.header.stamp.nsecs
 
 
 		
@@ -200,14 +211,14 @@ class GL:
 		resized=np.copy(imageCanny)
 
 		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
-			resized=resized[(self.pose.position.y*2-350)/2:(self.pose.position.y*2-350)/2+350, (self.pose.position.x*2-350)/2:350+(self.pose.position.x*2-350)/2]
+			resized=resized[(self.pose.position.y*2-mapSliceSize)/2:(self.pose.position.y*2-mapSliceSize)/2+mapSliceSize, (self.pose.position.x*2-mapSliceSize)/2:mapSliceSize+(self.pose.position.x*2-mapSliceSize)/2]
 
 
 
 		for scale in np.linspace(self.angle-self.angleRange, self.angle+self.angleRange,  5)[::-1]:
 			M = cv2.getRotationMatrix2D((cols/2,rows/2),scale,1)
 			template = cv2.warpAffine(tempt,M,(cols,rows))
-			template = template[(rows-250)/2:(rows-250)/2+250, (cols-250)/2:250+(cols-250)/2]
+			template = template[(rows-sliceSize)/2:(rows-sliceSize)/2+sliceSize, (cols-sliceSize)/2:sliceSize+(cols-sliceSize)/2]
 			edged=resized
 			result = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF)
 			(_, maxVal, _, maxLoc) = cv2.minMaxLoc(result)
@@ -215,19 +226,19 @@ class GL:
 				found2 = (maxVal, maxLoc, scale)
 
 		(maxVal, maxLoc, maxScale) = found2
-		(startX, startY) = (int(maxLoc[0]  +125), int(maxLoc[1]+125 ))
-		(endX, endY) = (int((maxLoc[0] +125+40*math.sin(maxScale*0.0174533)) ), int((maxLoc[1] +125+40*math.cos(maxScale*0.0174533)) ))
-		if self.pose.position.x is not 550 and self.pose.position.y is not 550 and self.pose.position.x > 176 and self.pose.position.y> 176:
-			self.ceilingMeasurement.position.x=self.pose.position.x-175+startX
-			self.ceilingMeasurement.position.y=self.pose.position.y-175+startY
+		(startX, startY) = (int(maxLoc[0]  +sliceSize/2), int(maxLoc[1]+sliceSize/2 ))
+		(endX, endY) = (int((maxLoc[0] +sliceSize/2+40*math.sin(maxScale*0.0174533)) ), int((maxLoc[1] +sliceSize/2+40*math.cos(maxScale*0.0174533)) ))
+		if self.pose.position.x is not startingX and self.pose.position.y is not startingY and self.pose.position.x > mapSliceSize/2+1 and self.pose.position.y> mapSliceSize/2+1:
+			self.ceilingMeasurement.position.x=self.pose.position.x-mapSliceSize/2+startX
+			self.ceilingMeasurement.position.y=self.pose.position.y-mapSliceSize/2+startY
 		else:
 			self.pose.position.x=startX
 			self.pose.position.y=startY
 		self.ceilingAngle=maxScale
 
-#		cv2.imshow("Image2", template)
-#		cv2.imshow("Image3", edged)
-#		cv2.waitKey(1)
+		cv2.imshow("Image2", template)
+		cv2.imshow("Image3", edged)
+		cv2.waitKey(1)
 
 		self.t.header.stamp= rospy.Time.now()
 		self.t.header.frame_id = "map";
@@ -258,7 +269,7 @@ class GL:
 				self.pose.position.x=self.pose.position.x+self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
 				self.pose.position.y=self.pose.position.y+self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
 				self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
-				print str(self.ceilingConfidence)
+#				print str(self.ceilingConfidence)
 				self.ceilingFlag=False
 
 #			if self.odomFlag is True:
@@ -276,19 +287,19 @@ class GL:
 			resized=postingImage
 
 			(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
-			(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
+			(endX, endY) = (int((self.pose.position.x+mapSliceSize/350.*40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+mapSliceSize/350.*40*math.cos(self.angle*0.0174533)) ))
 			cv2.line(resized, (startX, startY), (endX, endY), (255, 255, 0), 2)
-			cv2.circle(resized,(startX,startY), 40, (255,255,0), 5)
+			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (255,255,0), int(mapSliceSize/350.*5))
 
 			(startX, startY) = (int(self.odomMeasurement.position.x), int(self.odomMeasurement.position.y))
-			(endX, endY) = (int((self.odomMeasurement.position.x+40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+40*math.cos(self.odomAngle*0.0174533)) ))
+			(endX, endY) = (int((self.odomMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.odomAngle*0.0174533)) ))
 			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
-			cv2.circle(resized,(startX,startY), 40, (0,255,0), 5)
+			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,0), int(mapSliceSize/350.*5))
 
 			(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
-			(endX, endY) = (int((self.ceilingMeasurement.position.x+40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+40*math.cos(self.ceilingAngle*0.0174533)) ))
+			(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.ceilingAngle*0.0174533)) ))
 			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 255), 2)
-			cv2.circle(resized,(startX,startY), 40, (0,255,255), 5)
+			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*5))
 
 
 			self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
