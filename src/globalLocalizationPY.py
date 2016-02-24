@@ -35,42 +35,63 @@ tempt=template
 (tH, tW) = template.shape[:2]
 #cv2.imshow("Template", template)
 
-# loop over the images to find the template in
-for imagePath in np.linspace(0, 1,  1)[::-1]:
+def sign(x):
+    if x > 0:
+        return 1.
+    elif x < 0:
+        return -1.
+    elif x == 0:
+        return 0.
+    else:
+        return x
 
+image = cv2.imread("/home/aaron/ceiling/t.png")
 
-	# load the image, convert it to grayscale, and initialize the
-	# bookkeeping variable to keep track of the matched region
-	#image = cv2.imread(imagePath)
-	image = cv2.imread("/home/aaron/ceiling/t.png")
-	postingImage = np.copy(image)
-
-
-
-	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-	(rows,cols) = template.shape[:2]
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#image = cv2.Canny(image, 25, 50)
+imageCanny=cv2.Canny(image, 25, 50)
+postingImage = np.copy(image)
+(rows,cols) = template.shape[:2]
 
 class GL:
 
 
 	def __init__(self):
 		self.bridge = CvBridge()
-		self.pub = rospy.Publisher('/pose', Pose, queue_size=1)
+#		self.pub = rospy.Publisher('/pose', Pose, queue_size=1)
+		self.pubImage=rospy.Publisher('/localization/Image', Image, queue_size=1)
 		self.br= tf2_ros.TransformBroadcaster()
 #		self.tfPub = rospy.Publisher('/tf', TransformStamped, queue_size=1)
 		self.sub =rospy.Subscriber('/camera_up/image_raw', Image, self.callback)
 		self.sub2 =rospy.Subscriber('/odom',Odometry , self.odometryCB)
 		self.sub3 =rospy.Subscriber('/mobile_base/commands/velocity', Twist, self.twistCB)
 		self.pose = Pose()
-		self.pose.position.x=0
-		self.pose.position.y=0
+		self.pose.position.x=550
+		self.pose.position.y=550
 		self.sx=0
 		self.sy=0
 		self.angle=0
 		self.turning=0
 		self.signal=Twist()
-		self.init=False
+		self.init=True
+		self.kalmanRun=False
 
+		self.ceilingFlag=False
+		self.ceilingMeasurement = Pose()
+		self.ceilingMeasurement.position.x=550
+		self.ceilingMeasurement.position.y=550
+		self.ceilingAngle=0
+		self.ceilingConfidence=0
+
+		self.odomFlag=False
+		self.odomMeasurement = Pose()
+		self.odomMeasurement.position.x=550
+		self.odomMeasurement.position.y=550
+		self.odomAngle=0
+
+		self.lastPoseX=0
+		self.lastPoseY=0
+		self.lastPoseAngle=0;
 		self.lastOdomX=0
 		self.lastOdomY=0
 		self.lastQuaternion = type('Quaternion', (), {})()
@@ -82,7 +103,11 @@ class GL:
 
 	def odometryCB(self,data):
 ##UPDATE POSE MESSAGES
+		self.odomFlag=True
 		if self.lastOdomX is 0 and self.lastOdomY is 0 and self.lastYaw is 0:
+			self.lastPoseX=self.pose.position.x
+			self.lastPoseY=self.pose.position.y
+			self.lastPoseAngle=self.angle
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
 			self.lastQuaternion.z=data.pose.pose.orientation.z
@@ -90,14 +115,19 @@ class GL:
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
 			self.lastYaw = yaw
 		else:
-			self.pose.position.x+=math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			self.pose.position.y+=math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.x+=sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.y+=sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.odomMeasurement.position.x=self.lastPoseX+sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.odomMeasurement.position.y=self.lastPoseY+sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.lastPoseX=self.pose.position.x
+			self.lastPoseY=self.pose.position.y
 			self.lastOdomX = data.pose.pose.position.x
 			self.lastOdomY = data.pose.pose.position.y
 			self.lastQuaternion.z=data.pose.pose.orientation.z
 			self.lastQuaternion.w=data.pose.pose.orientation.w
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
-			self.angle+=57.2958*(yaw-self.lastYaw)
+			self.odomAngle=self.lastPoseAngle+57.2958*(yaw-self.lastYaw)
+			self.lastPoseAngle=self.angle
 			self.lastYaw = yaw
 
 
@@ -114,25 +144,17 @@ class GL:
 		self.t.transform.rotation.z = self.q[2]
 		self.t.transform.rotation.w = self.q[3]
 		self.br.sendTransform(self.t)
-		self.pub.publish(self.pose)
 		
-		(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
-		(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
+#		(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
+#		(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
 
-		postingImage = np.copy(image)
-		resized=postingImage
+#		postingImage = np.copy(image)
+#		resized=postingImage
 
-		cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
-		cv2.circle(resized,(startX,startY), 40, (0,255,0), 5)
-		cv2.imshow("Image", postingImage)
-		cv2.waitKey(1)
-
-
-
-
-
-
-
+#		cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
+#		cv2.circle(resized,(startX,startY), 40, (0,255,0), 5)
+#		cv2.imshow("Image", postingImage)
+#		cv2.waitKey(1)
 
 
 
@@ -147,6 +169,7 @@ class GL:
 
 
 	def callback(self,data):
+		self.ceilingFlag=True
 		self.init=True
 		self.start = time.time()
 		if time.time()-self.turning > 2:
@@ -166,7 +189,7 @@ class GL:
 
 		found2 = None
 		postingImage = np.copy(image)
-		resized=postingImage
+		resized=np.copy(imageCanny)
 
 		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
 			resized=resized[(self.pose.position.y*2-350)/2:(self.pose.position.y*2-350)/2+350, (self.pose.position.x*2-350)/2:350+(self.pose.position.x*2-350)/2]
@@ -177,52 +200,26 @@ class GL:
 			M = cv2.getRotationMatrix2D((cols/2,rows/2),scale,1)
 			template = cv2.warpAffine(tempt,M,(cols,rows))
 			template = template[(rows-250)/2:(rows-250)/2+250, (cols-250)/2:250+(cols-250)/2]
-			# if the resized image is smaller than the template, then break
-			# from the loop
-
-			# detect edges in the resized, grayscale image and apply template
-			# matching to find the template in the image
-			edged = cv2.Canny(resized, 25, 50)
-
-
+			edged=resized
 			result = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF)
 			(_, maxVal, _, maxLoc) = cv2.minMaxLoc(result)
-			# if we have found a new maximum correlation value, then ipdate
-			# the bookkeeping variable
 			if found2 is None or maxVal > found2[0]:
 				found2 = (maxVal, maxLoc, scale)
 
-
-		# unpack the bookkeeping varaible and compute the (x, y) coordinates
-		# of the bounding box based on the resized ratio
 		(maxVal, maxLoc, maxScale) = found2
 		(startX, startY) = (int(maxLoc[0]  +125), int(maxLoc[1]+125 ))
 		(endX, endY) = (int((maxLoc[0] +125+40*math.sin(maxScale*0.0174533)) ), int((maxLoc[1] +125+40*math.cos(maxScale*0.0174533)) ))
-
-		# draw a bounding box around the detected result and display the image
-
-
-		cv2.line(resized, (startX, startY), (endX, endY), (0, 0, 255), 2)
-		cv2.circle(resized,(startX,startY), 40, (0,0,255), 5)
-
-
-		if self.pose.position.x is not 0 and self.pose.position.y is not 0 and self.pose.position.x > 176 and self.pose.position.y> 176:
-			#image=image[(self.y*2-350)/2:(self.y*2-350)/2+350, (self.x*2-350)/2:350+(self.x*2-350)/2]
-			self.pose.position.x+=-175+startX#-175+startX
-			self.pose.position.y+=-175+startY#175+startY
+		if self.pose.position.x is not 550 and self.pose.position.y is not 550 and self.pose.position.x > 176 and self.pose.position.y> 176:
+			self.ceilingMeasurement.position.x=self.pose.position.x-175+startX
+			self.ceilingMeasurement.position.y=self.pose.position.y-175+startY
 		else:
-			self.pose.position.x=startX#-175+startX
-			self.pose.position.y=startY#175+startY
-		self.angle=maxScale
+			self.pose.position.x=startX
+			self.pose.position.y=startY
+		self.ceilingAngle=maxScale
 
-
-
-
-
-		cv2.imshow("Image", postingImage)
-		cv2.imshow("Image2", template)
-		cv2.imshow("Image3", edged)
-		cv2.waitKey(1)
+#		cv2.imshow("Image2", template)
+#		cv2.imshow("Image3", edged)
+#		cv2.waitKey(1)
 
 		self.t.header.stamp= rospy.Time.now()
 		self.t.header.frame_id = "map";
@@ -235,25 +232,60 @@ class GL:
 		self.t.transform.rotation.z = self.q[2]
 		self.t.transform.rotation.w = self.q[3]
 		self.br.sendTransform(self.t)
-		self.pub.publish(self.pose)
+		self.ceilingConfidence=maxVal/60000000.
+
+		if self.ceilingConfidence>1:
+			self.ceilingConfidence=1.0
+
 
 
 	def kalman(self):
-		while True and self.init is True:
-			self.pose.position.x+=math.sin(self.angle*0.0174533)*self.signal.linear.x*4.
-			self.pose.position.y+=math.cos(self.angle*0.0174533)*self.signal.linear.x*4.
-			self.angle+=self.signal.angular.z
+		while not rospy.is_shutdown():
+#			self.pose.position.x+=math.sin(self.angle*0.0174533)*self.signal.linear.x*4.
+#			self.pose.position.y+=math.cos(self.angle*0.0174533)*self.signal.linear.x*4.
+#			self.angle+=self.signal.angular.z
+
+			if self.ceilingFlag is True:
+				self.pose.position.x=self.pose.position.x+self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
+				self.pose.position.y=self.pose.position.y+self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
+				self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
+				print str(self.ceilingConfidence)
+				self.ceilingFlag=False
+
+#			if self.odomFlag is True:
+#				print str(self.pose.position.x-self.odomMeasurement.position.x)
+#				self.pose.position.x=self.pose.position.x+.8*(-self.pose.position.x+self.odomMeasurement.position.x)
+#				self.pose.position.y=self.pose.position.y+.8*(-self.pose.position.y+self.odomMeasurement.position.y)
+#				self.angle=self.angle+.5*(-self.angle+self.odomAngle)
+#				self.lastPoseX=self.pose.position.x
+#				self.lastPoseY=self.pose.position.y
+#				self.lastPoseAngle=self.angle
+#				self.odomFlag=False
+
 
 			postingImage = np.copy(image)
 			resized=postingImage
 
 			(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
 			(endX, endY) = (int((self.pose.position.x+40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+40*math.cos(self.angle*0.0174533)) ))
+			cv2.line(resized, (startX, startY), (endX, endY), (255, 255, 0), 2)
+			cv2.circle(resized,(startX,startY), 40, (255,255,0), 5)
 
-			cv2.line(resized, (startX, startY), (endX, endY), (255, 0, 0), 2)
-			cv2.circle(resized,(startX,startY), 40, (255,0,0), 5)
-			cv2.imshow("Image", postingImage)
+			(startX, startY) = (int(self.odomMeasurement.position.x), int(self.odomMeasurement.position.y))
+			(endX, endY) = (int((self.odomMeasurement.position.x+40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+40*math.cos(self.odomAngle*0.0174533)) ))
+			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
+			cv2.circle(resized,(startX,startY), 40, (0,255,0), 5)
+
+			(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
+			(endX, endY) = (int((self.ceilingMeasurement.position.x+40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+40*math.cos(self.ceilingAngle*0.0174533)) ))
+			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 255), 2)
+			cv2.circle(resized,(startX,startY), 40, (0,255,255), 5)
+
+
+			self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
+#			cv2.imshow("Image", postingImage)
 			cv2.waitKey(10)
+#			self.pub.publish(self.pose)
 
 
 
@@ -263,6 +295,7 @@ def main(args):
 	gl = GL()
 	gl.kalman()
 	try:
+
 		rospy.spin()
 	except KeyboardInterrupt:
 		print("Shutting down")
@@ -272,6 +305,4 @@ def main(args):
 
 if __name__ == '__main__':
 	main(sys.argv)
-
-
 
