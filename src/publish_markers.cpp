@@ -3,14 +3,24 @@
 #include <tf2_ros/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 
-double ball_diameter = .0254; // in meters
-double arm_diameter = .03;
-double arm_1_length = .102;
-double arm_2_length = .076;
-double claw_length = .15;
-double camera_thickness = .04;
-double camera_width = .07;
-double camera_height = .05;
+double inches_to_meters = 0.0254;
+double baseline_length = 9.5*inches_to_meters;
+double camera_forward_from_center = 2.0*inches_to_meters; // in x direction
+double camera_up_from_center = 3.0*inches_to_meters; // in x direction
+double arm_base_forward = 7.0*inches_to_meters;
+double arm_base_up = 7.0*inches_to_meters;
+double arm_diameter = 2.0*inches_to_meters;
+double arm_1_length = 3.75*inches_to_meters;
+double arm_2_length = 4.75*inches_to_meters;
+double claw_length = 3.75*inches_to_meters;
+
+double ball_diameter = 1.125*inches_to_meters; // in meters
+double camera_thickness = .88*inches_to_meters;
+double camera_width = 3.5*inches_to_meters;
+double camera_height = 1.0*inches_to_meters;
+double camera_down_thickness = 0.55*inches_to_meters;
+double camera_down_width = 2.6*inches_to_meters;
+double camera_down_height = 1.3*inches_to_meters;
 
 int main(int argc, char **argv) {
 
@@ -85,9 +95,9 @@ int main(int argc, char **argv) {
 	camera_down_marker.pose.orientation.y = 0.0;
 	camera_down_marker.pose.orientation.z = 0.0;
 	camera_down_marker.pose.orientation.w = 1.0;
-	camera_down_marker.scale.x = camera_thickness;
-	camera_down_marker.scale.y = camera_width;
-	camera_down_marker.scale.z = camera_height;
+	camera_down_marker.scale.x = camera_down_thickness;
+	camera_down_marker.scale.y = camera_down_width;
+	camera_down_marker.scale.z = camera_down_height;
 	camera_down_marker.color.a = 1.0; // Don't forget to set the alpha!
 	camera_down_marker.color.r = 0.0;
 	camera_down_marker.color.g = 0.0;
@@ -111,7 +121,7 @@ int main(int argc, char **argv) {
 	ball_marker.scale.z = ball_diameter;
 	ball_marker.color.a = 1.0; // Don't forget to set the alpha!
 	ball_marker.color.r = 1.0;
-	ball_marker.color.g = 0.6;
+	ball_marker.color.g = 0.0;
 	ball_marker.color.b = 0.0;
 	ball_marker.lifetime = ros::Duration();
 

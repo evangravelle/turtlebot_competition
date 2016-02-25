@@ -31,7 +31,7 @@ public:
 
     snes_joy_handler() {
         joy_sub  = nodeh.subscribe<sensor_msgs::Joy>("/joy", 1, &snes_joy_handler::joy_receive, this);
-        twist_pub = nodeh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+        twist_pub = nodeh.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1);
         motor_pub = nodeh.advertise<coconuts_common::ArmMovement>("/motor_control", 1);
 
         //pn.param<double>("max_ang_vel", max_ang_vel_, 1.0);
