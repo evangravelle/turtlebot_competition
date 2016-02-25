@@ -6,7 +6,6 @@
 #include <std_msgs/Float64.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/Twist.h"
-// #include <turtlebot_deployment/PoseWithName.h>
 #include <tf/tf.h>
 #include <math.h>
 #include <termios.h>
@@ -39,49 +38,46 @@ geometry_msgs::Twist twist;
 
 int main(int argc, char **argv)
 {
-ros::init(argc, argv, "centroidKeyboard");
-cenx=300;
-ceny=200;
-r=75;
+  ros::init(argc, argv, "centroidKeyboard");
+  cenx=300;
+  ceny=200;
+  r=75;
 
-ros::NodeHandle ph_("~"), nh_;
-ros::Publisher cen_pub_;
-geometry_msgs::Twist cmd_vel_;
-// turtlebot_deployment::PoseWithName cenPose;
-// cenPose.pose.position.x=cenx;
-// cenPose.pose.position.y=ceny;
-cen_pub_ = nh_.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 5, true);
+  ros::NodeHandle ph_("~"), nh_;
+  ros::Publisher cen_pub_;
+  geometry_msgs::Twist cmd_vel_;
+  cen_pub_ = nh_.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 5, true);
 
-double k=1.75;
-double u1=robVel_;
-double u2=robVel_/r;
-OmegaC=2;
-OmegaD=1;
-std::cout<<"Exiting Main Sequence: \n";
-while(1==1){
+  double k=1.75;
+  double u1=robVel_;
+  double u2=robVel_/r;
+  OmegaC=2;
+  OmegaD=1;
+  std::cout<<"Exiting Main Sequence: \n";
+  while(1==1){
 
-twist.linear.x=0;
-twist.angular.z=0;
+    twist.linear.x=0;
+    twist.angular.z=0;
 
-	int c = getch();   // call your non-blocking input function
-  if (c == 'd'){
-    twist.angular.z=-.5;}
-  else if (c == 'w'){
-    twist.linear.x=.1;}
-    else if (c == 's'){
-    twist.linear.x=-.1;}
-    else if (c == 'a'){
-    twist.angular.z=.5;}
-  else if (c == 'q'){
-    twist.linear.x=.1;
-    twist.angular.z=.5;}
-  else if (c == 'e'){
-    twist.linear.x=.1;
-    twist.angular.z=-.5;}
+    	int c = getch();   // call your non-blocking input function
+      if (c == 'd'){
+        twist.angular.z=-.5;}
+      else if (c == 'w'){
+        twist.linear.x=.1;}
+        else if (c == 's'){
+        twist.linear.x=-.1;}
+        else if (c == 'a'){
+        twist.angular.z=.5;}
+      else if (c == 'q'){
+        twist.linear.x=.1;
+        twist.angular.z=.5;}
+      else if (c == 'e'){
+        twist.linear.x=.1;
+        twist.angular.z=-.5;}
 
-cen_pub_.publish(twist);
-    usleep(100);
-}	
+    cen_pub_.publish(twist);
+        usleep(100);
+  }	
 }
 
     
