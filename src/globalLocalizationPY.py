@@ -82,6 +82,8 @@ class GL:
 		self.signal=Twist()
 		self.init=True
 		self.kalmanRun=False
+                self.averageTime=[30]*5
+                self.averageConfidence=[1]*30
 
 #Associated to ceiling
 		self.ceilingFlag=False
@@ -234,7 +236,17 @@ class GL:
 
 		if self.ceilingConfidence>1:
 			self.ceilingConfidence=1.0
-		print "Can Handle: "+str(1/(time.time()-self.start))
+
+#               del self.averageTime[0]
+#               self.averageTime.append(1/(time.time()-self.start))
+#               if sum(self.averageTime) < 150:         
+#               print "Average Frequency: " + str(sum(self.averageTime)/5.)
+#               del self.averageConfidence[0]
+#               self.averageConfidence.append(self.ceilingConfidence)
+#               print "Average Confidence: " + str(sum(self.averageConfidence)/30.)
+
+#               print "Average Map (Edged): "+ str(np.average(edged))
+#               print "Average template (Edged):"+str(np.average(template))
 
 
 # fusion of measurements and output
