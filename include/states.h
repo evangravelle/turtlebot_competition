@@ -1,0 +1,1 @@
+#define INIT 0
