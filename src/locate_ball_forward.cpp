@@ -37,11 +37,11 @@ void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 int main(int argc, char **argv) {
 
-	ros::init(argc, argv, "locate_ball"); // Ros Initialize
+	ros::init(argc, argv, "locate_ball_forward"); // Ros Initialize
 
 	ros::NodeHandle nh;
 
-	ros::Subscriber image_sub = nh.subscribe<geometry_msgs::Point>("/forward_image_ball_pixel", 1, forwardLocationCallback);
+	ros::Subscriber image_sub = nh.subscribe<geometry_msgs::Point>("/detect_objects_forward/ball_pixel", 1, forwardLocationCallback);
 	// ros::Subscriber right_image_sub = nh.subscribe<geometry_msgs::Point>("/right_image_ball_pixel", 1, rightLocationCallback);
 	// location_pub = nh.advertise<geometry_msgs::Pose>("/ball_location", 1, true);
 
@@ -49,15 +49,15 @@ int main(int argc, char **argv) {
 	image_width = 640;
 	image_height = 480;
 
-	nh.getParam("/usb_cam/image_width", image_width);
-	nh.getParam("/usb_cam/image_height", image_height);
+	nh.getParam("/camera_forward/image_width", image_width);
+	nh.getParam("/camera_forward/image_height", image_height);
 	nh.setParam("/baseline_length", baseline_length); 
 
 	forward_image_pixel.x = image_width/2.0;
 	forward_image_pixel.y = image_height/2.0;
 
 	ball.header.frame_id = "camera_forward";
-	ball.child_frame_id = "ball";
+	ball.child_frame_id = "ball_forward";
 	ball.transform.translation.x = 0.0;
 	ball.transform.translation.y = 0.0;
 	ball.transform.translation.z = -camera_forward_dist_from_ground + ball_diameter/2.0;

@@ -12,14 +12,14 @@
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub;
 
-ros::Publisher ball_pixel_pub;
+ros::Publisher ball_pixel_pub, bucket_pixel_pub;
 geometry_msgs::Point ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball_forward/image_raw";
-static const char WINDOW2[] = "/detect_ball_forward/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball_forward/after_erode";
-static const char WINDOW4[] = "/detect_ball_forward/after_dilate";
+static const char WINDOW1[] = "/detect_objects_forward/image_raw";
+static const char WINDOW2[] = "/detect_objects_forward/hsv_thresh";
+static const char WINDOW3[] = "/detect_objects_forward/after_erode";
+static const char WINDOW4[] = "/detect_objects_forward/after_dilate";
 //static const char WINDOW5[] = "/detect_ball/hsv_thresh";
 
 // Initialize variables
@@ -100,7 +100,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
-    //Convert the CvImage to a ROS image message and publish it on the "camera/image_processed" topic.
+    //Convert the CvImage to a ROS image message and publish it
     it_pub.publish(cv_ptr_raw->toImageMsg());
 
 }
@@ -114,17 +114,18 @@ int main(int argc, char **argv)
 
     image_transport::ImageTransport it(nh);
 
-    nh.getParam("/detect_ball/h_min", H_MIN);
-    nh.getParam("/detect_ball/h_max", H_MAX);
-    nh.getParam("/detect_ball/s_min", S_MIN);
-    nh.getParam("/detect_ball/s_max", S_MAX);
-    nh.getParam("/detect_ball/v_min", V_MIN);
-    nh.getParam("/detect_ball/v_max", V_MAX);
+    nh.getParam("/detect_objects_forward/h_min", H_MIN);
+    nh.getParam("/detect_objects_forward/h_max", H_MAX);
+    nh.getParam("/detect_objects_forward/s_min", S_MIN);
+    nh.getParam("/detect_objects_forward/s_max", S_MAX);
+    nh.getParam("/detect_objects_forward/v_min", V_MIN);
+    nh.getParam("/detect_objects_forward/v_max", V_MAX);
 
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/forward_image_ball_pixel",1,true);
-    it_pub = it.advertise("/detect_ball_forward/circles", 1);
+    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("bucket_pixel",1,true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("ball_pixel",1,true);
+    it_pub = it.advertise("ball_circles", 1);
 
 	ros::spin();
 
