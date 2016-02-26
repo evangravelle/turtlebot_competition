@@ -28,18 +28,19 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle nh;
 
-	visualization_msgs::Marker ball_marker, arm_1_marker, arm_2_marker, claw_marker, camera_forward_marker, camera_up_marker, camera_down_marker;
+	visualization_msgs::Marker ball_forward_marker, ball_down_marker, arm_1_marker, arm_2_marker, claw_marker;
+	visualization_msgs::Marker camera_forward_marker, camera_up_marker, camera_down_marker;
 	//geometry_msgs::TransformStamped ball, arm_1, arm_2, claw;
 	tf2_ros::Buffer tf_buffer;
 	tf2_ros::TransformListener tf_listener(tf_buffer);
- 	ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("/ball_marker", 1000, true);
+ 	ros::Publisher ball_forward_pub = nh.advertise<visualization_msgs::Marker>("/ball_forward_marker", 1000, true);
+ 	ros::Publisher ball_down_pub = nh.advertise<visualization_msgs::Marker>("/ball_down_marker", 1000, true);
  	ros::Publisher arm_1_pub = nh.advertise<visualization_msgs::Marker>("/arm_1_marker", 1000, true);
  	ros::Publisher arm_2_pub = nh.advertise<visualization_msgs::Marker>("/arm_2_marker", 1000, true);
  	ros::Publisher claw_pub = nh.advertise<visualization_msgs::Marker>("/claw_marker", 1000, true);
  	ros::Publisher camera_forward_pub = nh.advertise<visualization_msgs::Marker>("/camera_forward_marker", 1000, true);
  	ros::Publisher camera_up_pub = nh.advertise<visualization_msgs::Marker>("/camera_up_marker", 1000, true);
   	ros::Publisher camera_down_pub = nh.advertise<visualization_msgs::Marker>("/camera_down_marker", 1000, true);
-	ros::Rate rate(10.0);
 
 	camera_forward_marker.header.frame_id = "camera_forward";
 	camera_forward_marker.header.stamp = ros::Time();
@@ -104,26 +105,47 @@ int main(int argc, char **argv) {
 	camera_down_marker.color.b = 0.0;
 	camera_down_marker.lifetime = ros::Duration();
 
-	ball_marker.header.frame_id = "ball";
-	ball_marker.header.stamp = ros::Time();
-	ball_marker.id = 0;
-	ball_marker.type = visualization_msgs::Marker::SPHERE;
-	ball_marker.action = visualization_msgs::Marker::ADD;
-	ball_marker.pose.position.x = 0;
-	ball_marker.pose.position.y = 0;
-	ball_marker.pose.position.z = 0;
-	ball_marker.pose.orientation.x = 0.0;
-	ball_marker.pose.orientation.y = 0.0;
-	ball_marker.pose.orientation.z = 0.0;
-	ball_marker.pose.orientation.w = 1.0;
-	ball_marker.scale.x = ball_diameter;
-	ball_marker.scale.y = ball_diameter;
-	ball_marker.scale.z = ball_diameter;
-	ball_marker.color.a = 1.0; // Don't forget to set the alpha!
-	ball_marker.color.r = 1.0;
-	ball_marker.color.g = 0.0;
-	ball_marker.color.b = 0.0;
-	ball_marker.lifetime = ros::Duration();
+	ball_forward_marker.header.frame_id = "ball_forward";
+	ball_forward_marker.header.stamp = ros::Time();
+	ball_forward_marker.id = 0;
+	ball_forward_marker.type = visualization_msgs::Marker::SPHERE;
+	ball_forward_marker.action = visualization_msgs::Marker::ADD;
+	ball_forward_marker.pose.position.x = 0;
+	ball_forward_marker.pose.position.y = 0;
+	ball_forward_marker.pose.position.z = 0;
+	ball_forward_marker.pose.orientation.x = 0.0;
+	ball_forward_marker.pose.orientation.y = 0.0;
+	ball_forward_marker.pose.orientation.z = 0.0;
+	ball_forward_marker.pose.orientation.w = 1.0;
+	ball_forward_marker.scale.x = ball_diameter;
+	ball_forward_marker.scale.y = ball_diameter;
+	ball_forward_marker.scale.z = ball_diameter;
+	ball_forward_marker.color.a = 1.0; // Don't forget to set the alpha!
+	ball_forward_marker.color.r = 1.0;
+	ball_forward_marker.color.g = 0.0;
+	ball_forward_marker.color.b = 0.0;
+	ball_forward_marker.lifetime = ros::Duration();
+
+	ball_down_marker.header.frame_id = "ball_down";
+	ball_down_marker.header.stamp = ros::Time();
+	ball_down_marker.id = 0;
+	ball_down_marker.type = visualization_msgs::Marker::SPHERE;
+	ball_down_marker.action = visualization_msgs::Marker::ADD;
+	ball_down_marker.pose.position.x = 0;
+	ball_down_marker.pose.position.y = 0;
+	ball_down_marker.pose.position.z = 0;
+	ball_down_marker.pose.orientation.x = 0.0;
+	ball_down_marker.pose.orientation.y = 0.0;
+	ball_down_marker.pose.orientation.z = 0.0;
+	ball_down_marker.pose.orientation.w = 1.0;
+	ball_down_marker.scale.x = ball_diameter;
+	ball_down_marker.scale.y = ball_diameter;
+	ball_down_marker.scale.z = ball_diameter;
+	ball_down_marker.color.a = 1.0; // Don't forget to set the alpha!
+	ball_down_marker.color.r = 1.0;
+	ball_down_marker.color.g = 0.0;
+	ball_down_marker.color.b = 0.0;
+	ball_down_marker.lifetime = ros::Duration();
 
 	arm_1_marker.header.frame_id = "arm_1";
 	arm_1_marker.header.stamp = ros::Time();
@@ -188,6 +210,8 @@ int main(int argc, char **argv) {
 	claw_marker.color.b = 0.0;
 	claw_marker.lifetime = ros::Duration();
 
+
+	ros::Rate rate(10.0);
 	while(ros::ok()) {
 
 		// try {
@@ -201,7 +225,8 @@ int main(int argc, char **argv) {
         //	 continue;
     	// }
 
-		marker_pub.publish(ball_marker);
+		ball_forward_pub.publish(ball_forward_marker);
+		ball_down_pub.publish(ball_down_marker);
 		arm_1_pub.publish(arm_1_marker);
 		arm_2_pub.publish(arm_2_marker);
 		claw_pub.publish(claw_marker);

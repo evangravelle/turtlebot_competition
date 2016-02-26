@@ -16,10 +16,10 @@ ros::Publisher ball_location_pub;
 geometry_msgs::Pose ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball/image_raw";
-static const char WINDOW2[] = "/detect_ball/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball/after_erode";
-static const char WINDOW4[] = "/detect_ball/after_dilate";
+static const char WINDOW1[] = "/detect_objects_forward/image_raw";
+static const char WINDOW2[] = "/detect_objects_forward/hsv_thresh";
+static const char WINDOW3[] = "/detect_objects_forward/after_erode";
+static const char WINDOW4[] = "/detect_objects_forward/after_dilate";
 
 // Initialize variables
 ros::Time current_time;
@@ -28,8 +28,6 @@ int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
-
-//guess is 0 50 120 255 0 255
 
 void on_trackbar(int,void*) {}
 
@@ -51,8 +49,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
         return;
     }
-
-    cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
 
@@ -102,6 +98,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
     }
 
+    cv::imshow(WINDOW1, cv_ptr_raw->image);
+
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
@@ -129,12 +127,12 @@ int main(int argc, char **argv)
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
-    nh.getParam("/detect_ball/h_min", H_MIN);
-    nh.getParam("/detect_ball/h_max", H_MAX);
-    nh.getParam("/detect_ball/s_min", S_MIN);
-    nh.getParam("/detect_ball/s_max", S_MAX);
-    nh.getParam("/detect_ball/v_min", V_MIN);
-    nh.getParam("/detect_ball/v_max", V_MAX);
+    nh.getParam("/detect_objects_forward/h_min", H_MIN);
+    nh.getParam("/detect_objects_forward/h_max", H_MAX);
+    nh.getParam("/detect_objects_forward/s_min", S_MIN);
+    nh.getParam("/detect_objects_forward/s_max", S_MAX);
+    nh.getParam("/detect_objects_forward/v_min", V_MIN);
+    nh.getParam("/detect_objects_forward/v_max", V_MAX);
 
     cv::namedWindow("trackbars",0);
 
@@ -149,12 +147,12 @@ int main(int argc, char **argv)
 	   ros::spin();
     }
 
-    nh.setParam("/detect_ball/h_min", H_MIN);
-    nh.setParam("/detect_ball/h_max", H_MAX);
-    nh.setParam("/detect_ball/s_min", S_MIN);
-    nh.setParam("/detect_ball/s_max", S_MAX);
-    nh.setParam("/detect_ball/v_min", V_MIN);
-    nh.setParam("/detect_ball/v_max", V_MAX);
+    nh.setParam("/detect_objects_forward/h_min", H_MIN);
+    nh.setParam("/detect_objects_forward/h_max", H_MAX);
+    nh.setParam("/detect_objects_forward/s_min", S_MIN);
+    nh.setParam("/detect_objects_forward/s_max", S_MAX);
+    nh.setParam("/detect_objects_forward/v_min", V_MIN);
+    nh.setParam("/detect_objects_forward/v_max", V_MAX);
 
 	//cv::destroyWindow(WINDOW1);
     cv::destroyWindow(WINDOW2);
