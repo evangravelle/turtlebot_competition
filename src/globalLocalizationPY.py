@@ -77,7 +77,9 @@ class GL:
 		self.signal=Twist()
 		self.init=True
 		self.kalmanRun=False
-
+		self.averageTime=[30]*5	
+		self.averageConfidence=[1]*30		
+	
 		self.ceilingFlag=False
 		self.ceilingMeasurement = Pose()
 		self.ceilingMeasurement.position.x=startingX
@@ -168,7 +170,7 @@ class GL:
 
 #		cv2.waitKey(1)
 		template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-		template = cv2.Canny(template, 25, 150)
+		template = cv2.Canny(template, 25, 100)
 		tempt=template
 
 		found2 = None
@@ -205,24 +207,31 @@ class GL:
 #		cv2.imshow("Image3", edged)
 #		cv2.waitKey(1)
 
-		self.t.header.stamp= rospy.Time.now()
-		self.t.header.frame_id = "map";
-		self.t.child_frame_id = "base_footprint";
-		self.t.transform.translation.x = self.pose.position.x/250.0;
-		self.t.transform.translation.y = self.pose.position.y/250.0;
-		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
-		self.t.transform.rotation.x = self.q[0]
-		self.t.transform.rotation.y = self.q[1]
-		self.t.transform.rotation.z = self.q[2]
-		self.t.transform.rotation.w = self.q[3]
-		self.br.sendTransform(self.t)
+#		self.t.header.stamp= rospy.Time.now()
+#		self.t.header.frame_id = "map";
+#		self.t.child_frame_id = "base_footprint";
+#		self.t.transform.translation.x = self.pose.position.x/250.0;
+#		self.t.transform.translation.y = self.pose.position.y/250.0;
+#		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
+#		self.t.transform.rotation.x = self.q[0]
+#		self.t.transform.rotation.y = self.q[1]
+#		self.t.transform.rotation.z = self.q[2]
+#		self.t.transform.rotation.w = self.q[3]
+#		self.br.sendTransform(self.t)
 		self.ceilingConfidence=maxVal/60000000.
 
 		if self.ceilingConfidence>1:
 			self.ceilingConfidence=1.0
-		print "Can Handle: "+str(1/(time.time()-self.start))
-
-
+#		del self.averageTime[0]
+#		self.averageTime.append(1/(time.time()-self.start))
+#		if sum(self.averageTime) < 150:		
+#		print "Average Frequency: " + str(sum(self.averageTime)/5.)
+#		del self.averageConfidence[0]
+#		self.averageConfidence.append(self.ceilingConfidence)
+#		print "Average Confidence: " + str(sum(self.averageConfidence)/30.)
+		
+#		print "Average Map (Edged): "+ str(np.average(edged))
+#		print "Average template (Edged):"+str(np.average(template))
 
 	def kalman(self):
 		while not rospy.is_shutdown():
@@ -230,7 +239,7 @@ class GL:
 #			self.pose.position.y+=math.cos(self.angle*0.0174533)*self.signal.linear.x*4.
 #			self.angle+=self.signal.angular.z
 
-			if self.ceilingFlag is True:
+			if self.ceilingFlag is True and self.ceilingConfidence > .04:
 				self.pose.position.x=self.pose.position.x+.8*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
 				self.pose.position.y=self.pose.position.y+.8*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
 				self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
@@ -260,11 +269,12 @@ class GL:
 			(endX, endY) = (int((self.odomMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.odomAngle*0.0174533)) ))
 			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 0), 2)
 			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,0), int(mapSliceSize/350.*5))
-
-			(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
-			(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.ceilingAngle*0.0174533)) ))
-			cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 255), 2)
-			cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*5))
+			
+			if self.ceilingConfidence > .04:
+				(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
+				(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.ceilingAngle*0.0174533)) ))
+				cv2.line(resized, (startX, startY), (endX, endY), (0, 255, 255), 2)
+				cv2.circle(resized,(startX,startY), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*5))
 
 
 
