@@ -221,17 +221,17 @@ class GL:
 #		cv2.imshow("Image3", edged)
 #		cv2.waitKey(1)
 
-		self.t.header.stamp= rospy.Time.now()
-		self.t.header.frame_id = "map";
-		self.t.child_frame_id = "base_footprint";
-		self.t.transform.translation.x = self.pose.position.x/250.0;
-		self.t.transform.translation.y = self.pose.position.y/250.0;
-		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
-		self.t.transform.rotation.x = self.q[0]
-		self.t.transform.rotation.y = self.q[1]
-		self.t.transform.rotation.z = self.q[2]
-		self.t.transform.rotation.w = self.q[3]
-		self.br.sendTransform(self.t)
+#		self.t.header.stamp= rospy.Time.now()
+#		self.t.header.frame_id = "map";
+#		self.t.child_frame_id = "base_footprint";
+#		self.t.transform.translation.x = self.pose.position.x/250.0;
+#		self.t.transform.translation.y = self.pose.position.y/250.0;
+#		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
+#		self.t.transform.rotation.x = self.q[0]
+#		self.t.transform.rotation.y = self.q[1]
+#		self.t.transform.rotation.z = self.q[2]
+#		self.t.transform.rotation.w = self.q[3]
+#		self.br.sendTransform(self.t)
 		self.ceilingConfidence=maxVal/60000000.
 
 		if self.ceilingConfidence>1:
