@@ -35,7 +35,7 @@
 
 #include "imu_visual.h"
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -100,5 +100,5 @@ void ImuVisual::setColor( float r, float g, float b, float a )
 }
 // END_TUTORIAL
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 

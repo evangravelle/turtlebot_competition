@@ -29,7 +29,7 @@
 #ifndef FLAG_H
 #define FLAG_H
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 class Flag: public rviz::Property

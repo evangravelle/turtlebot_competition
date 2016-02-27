@@ -41,7 +41,7 @@
 
 #include "plant_flag_tool.h"
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -85,7 +85,7 @@ PlantFlagTool::~PlantFlagTool()
 // set it invisible.
 void PlantFlagTool::onInitialize()
 {
-  flag_resource_ = "package://rviz_plugin_tutorials/media/flag.dae";
+  flag_resource_ = "package://coconuts_rviz_plugins/media/flag.dae";
 
   if( rviz::loadMeshFromResource( flag_resource_ ).isNull() )
   {
@@ -286,8 +286,8 @@ void PlantFlagTool::load( const rviz::Config& config )
 // namespace and then tell pluginlib about the class.  It is important
 // to do this in global scope, outside our package's namespace.
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(rviz_plugin_tutorials::PlantFlagTool,rviz::Tool )
+PLUGINLIB_EXPORT_CLASS(coconuts_rviz_plugins::PlantFlagTool,rviz::Tool )
 // END_TUTORIAL

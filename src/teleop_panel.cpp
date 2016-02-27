@@ -44,7 +44,7 @@
 #include <states.h>
 #include <coconuts_common/ControlState.h>
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -216,11 +216,11 @@ void TeleopPanel::load( const rviz::Config& config )
   }
 }
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 // Tell pluginlib about this class.  Every class which should be
 // loadable by pluginlib::ClassLoader must have these two lines
 // compiled in its .cpp file, outside of any namespace scope.
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(rviz_plugin_tutorials::TeleopPanel,rviz::Panel )
+PLUGINLIB_EXPORT_CLASS(coconuts_rviz_plugins::TeleopPanel,rviz::Panel )
 // END_TUTORIAL

@@ -31,7 +31,7 @@
 
 #include <QWidget>
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -84,7 +84,7 @@ protected:
 };
 // END_TUTORIAL
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 
 #endif // DRIVE_WIDGET_H

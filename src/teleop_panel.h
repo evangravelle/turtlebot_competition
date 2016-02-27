@@ -40,7 +40,7 @@
 class QLineEdit;
 class QPushButton;
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 class DriveWidget;
@@ -126,6 +126,6 @@ protected:
   // END_TUTORIAL
 };
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 #endif // TELEOP_PANEL_H

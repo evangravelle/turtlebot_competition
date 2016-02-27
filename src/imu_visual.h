@@ -43,7 +43,7 @@ namespace rviz
 class Arrow;
 }
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -92,6 +92,6 @@ private:
 };
 // END_TUTORIAL
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 #endif // IMU_VISUAL_H

@@ -42,7 +42,7 @@
 
 #include "imu_display.h"
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -152,10 +152,10 @@ void ImuDisplay::processMessage( const sensor_msgs::Imu::ConstPtr& msg )
   visuals_.push_back(visual);
 }
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 // Tell pluginlib about this class.  It is important to do this in
 // global scope, outside our package's namespace.
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(rviz_plugin_tutorials::ImuDisplay,rviz::Display )
+PLUGINLIB_EXPORT_CLASS(coconuts_rviz_plugins::ImuDisplay,rviz::Display )
 // END_TUTORIAL

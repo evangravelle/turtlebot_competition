@@ -51,7 +51,7 @@ class IntProperty;
 
 // All the source in this plugin is in its own namespace.  This is not
 // required but is good practice.
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 class ImuVisual;
@@ -113,7 +113,7 @@ private:
 };
 // END_TUTORIAL
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins
 
 #endif // IMU_DISPLAY_H
 // %EndTag(FULL_SOURCE)%

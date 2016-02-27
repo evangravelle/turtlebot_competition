@@ -35,7 +35,7 @@
 
 #include "drive_widget.h"
 
-namespace rviz_plugin_tutorials
+namespace coconuts_rviz_plugins
 {
 
 // BEGIN_TUTORIAL
@@ -247,4 +247,4 @@ void DriveWidget::stop()
 }
 // END_TUTORIAL
 
-} // end namespace rviz_plugin_tutorials
+} // end namespace coconuts_rviz_plugins

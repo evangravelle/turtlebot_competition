@@ -1,9 +1,9 @@
 ## BEGIN_TUTORIAL
-## This CMakeLists.txt file for rviz_plugin_tutorials builds both the TeleopPanel tutorial and the ImuDisplay tutorial.
+## This CMakeLists.txt file for coconuts_rviz_plugins builds both the TeleopPanel tutorial and the ImuDisplay tutorial.
 ##
 ## First start with some standard catkin stuff.
 cmake_minimum_required(VERSION 2.8.3)
-project(rviz_plugin_tutorials)
+project(coconuts_rviz_plugins)
 find_package(catkin REQUIRED COMPONENTS rviz coconuts_common)
 catkin_package()
 include_directories(include ${catkin_INCLUDE_DIRS})
@@ -39,7 +39,7 @@ set(SOURCE_FILES
 
 ## An rviz plugin is just a shared library, so here we declare the
 ## library to be called ``${PROJECT_NAME}`` (which is
-## "rviz_plugin_tutorials", or whatever your version of this project
+## "coconuts_rviz_plugins", or whatever your version of this project
 ## is called) and specify the list of source files we collected above
 ## in ``${SOURCE_FILES}``.
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
@@ -48,10 +48,10 @@ add_library(${PROJECT_NAME} ${SOURCE_FILES})
 ## the ``find_package(Qt4 ...)`` line above, and with whatever libraries
 ## catkin has included.
 ##
-## Although this puts "rviz_plugin_tutorials" (or whatever you have
+## Although this puts "coconuts_rviz_plugins" (or whatever you have
 ## called the project) as the name of the library, cmake knows it is a
 ## library and names the actual file something like
-## "librviz_plugin_tutorials.so", or whatever is appropriate for your
+## "libcoconuts_rviz_plugins.so", or whatever is appropriate for your
 ## particular OS.
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 ## END_TUTORIAL
