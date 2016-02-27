@@ -26,19 +26,22 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import TransformStamped
 
 
+
+
+#To be arguments for starting location and resolution parameters
 startingX=265/2 #550 for 640
 startingY=225/2
 mapSliceSize=175/2 #prev 350 for 640
 sliceSize=125/2 #prev 250
 
-
+# I dont know if I still need this
 template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
 (tH, tW) = template.shape[:2]
-#cv2.imshow("Template", template)
 
+#Returns the sign of a number
 def sign(x):
     if x > 0:
         return 1.
@@ -49,19 +52,21 @@ def sign(x):
     else:
         return x
 
-image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
 
+#Load the ceiling map
+image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 imageCanny=cv2.Canny(image, 25, 75)
 postingImage = np.copy(image)
 (rows,cols) = template.shape[:2]
 
+
+#Define a global localization class
 class GL:
 
 
 	def __init__(self):
 		self.bridge = CvBridge()
-#		self.pub = rospy.Publisher('/pose', Pose, queue_size=1)
 		self.pubImage=rospy.Publisher('/localization/Image', Image, queue_size=1)
 		self.br= tf2_ros.TransformBroadcaster()
 		self.sub =rospy.Subscriber('/camera_up/image_raw', Image, self.callback)
@@ -77,7 +82,10 @@ class GL:
 		self.signal=Twist()
 		self.init=True
 		self.kalmanRun=False
+                self.averageTime=[30]*5
+                self.averageConfidence=[1]*30
 
+#Associated to ceiling
 		self.ceilingFlag=False
 		self.ceilingMeasurement = Pose()
 		self.ceilingMeasurement.position.x=startingX
@@ -86,12 +94,12 @@ class GL:
 		self.ceilingConfidence=0
 		self.lastMeasurement=0
 
+#Associated with Odometry
 		self.odomFlag=False
 		self.odomMeasurement = Pose()
 		self.odomMeasurement.position.x=startingX
 		self.odomMeasurement.position.y
 		self.odomAngle=0
-
 		self.lastPoseX=0
 		self.lastPoseY=0
 		self.lastPoseAngle=0;
@@ -100,10 +108,13 @@ class GL:
 		self.lastQuaternion = type('Quaternion', (), {})()
 		self.lastQuaternion.__class__.__bases__
 		self.lastYaw=0
+
+#Transform to be published
 		self.t= TransformStamped()
 		self.q=[0,0,0,0]
 
 
+#Odometry subscriber and updater
 	def odometryCB(self,data):
 ##UPDATE POSE MESSAGES
 		self.odomFlag=True
@@ -135,6 +146,8 @@ class GL:
 
 
 
+
+#A simple subsriber to cmd_vel to determine the turtlebot is turning (To determine paramaters for angle in template matching)
 	def twistCB(self,data):
 		if data.angular.z is not 0:
 			self.turning = time.time()
@@ -144,15 +157,18 @@ class GL:
 
 
 
-
+#Template matching callback
 	def callback(self,data):
-		
+
+#	I used these to make sure we were only using new measurements, not needed anymore
 #		if data.header.stamp.nsecs-self.lastMeasurement < 20000000:
 #			return
 #		self.lastMeasurement=data.header.stamp.nsecs
 
 
-		
+
+
+#magic
 		self.ceilingFlag=True
 		self.init=True
 		self.start = time.time()
@@ -205,25 +221,35 @@ class GL:
 #		cv2.imshow("Image3", edged)
 #		cv2.waitKey(1)
 
-		self.t.header.stamp= rospy.Time.now()
-		self.t.header.frame_id = "map";
-		self.t.child_frame_id = "base_footprint";
-		self.t.transform.translation.x = self.pose.position.x/250.0;
-		self.t.transform.translation.y = self.pose.position.y/250.0;
-		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
-		self.t.transform.rotation.x = self.q[0]
-		self.t.transform.rotation.y = self.q[1]
-		self.t.transform.rotation.z = self.q[2]
-		self.t.transform.rotation.w = self.q[3]
-		self.br.sendTransform(self.t)
+#		self.t.header.stamp= rospy.Time.now()
+#		self.t.header.frame_id = "map";
+#		self.t.child_frame_id = "base_footprint";
+#		self.t.transform.translation.x = self.pose.position.x/250.0;
+#		self.t.transform.translation.y = self.pose.position.y/250.0;
+#		self.q= tf.transformations.quaternion_from_euler(0, 0, (self.angle+90)*0.0174533)
+#		self.t.transform.rotation.x = self.q[0]
+#		self.t.transform.rotation.y = self.q[1]
+#		self.t.transform.rotation.z = self.q[2]
+#		self.t.transform.rotation.w = self.q[3]
+#		self.br.sendTransform(self.t)
 		self.ceilingConfidence=maxVal/60000000.
 
 		if self.ceilingConfidence>1:
 			self.ceilingConfidence=1.0
-		print "Can Handle: "+str(1/(time.time()-self.start))
+
+#               del self.averageTime[0]
+#               self.averageTime.append(1/(time.time()-self.start))
+#               if sum(self.averageTime) < 150:         
+#               print "Average Frequency: " + str(sum(self.averageTime)/5.)
+#               del self.averageConfidence[0]
+#               self.averageConfidence.append(self.ceilingConfidence)
+#               print "Average Confidence: " + str(sum(self.averageConfidence)/30.)
+
+#               print "Average Map (Edged): "+ str(np.average(edged))
+#               print "Average template (Edged):"+str(np.average(template))
 
 
-
+# fusion of measurements and output
 	def kalman(self):
 		while not rospy.is_shutdown():
 #			self.pose.position.x+=math.sin(self.angle*0.0174533)*self.signal.linear.x*4.
@@ -289,7 +315,7 @@ class GL:
 
 
 
-
+# main
 def main(args):
 	rospy.init_node('image_converter', anonymous=True)
 	gl = GL()
