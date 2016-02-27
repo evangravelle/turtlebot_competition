@@ -77,8 +77,33 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // Control State Layout
   QHBoxLayout* control_state_layout = new QHBoxLayout;
   control_state_layout->addWidget( new QLabel( "Control State:" ));
+
   configuration_button_ = new QPushButton("Configuration", this);
   control_state_layout->addWidget( configuration_button_ ); 
+
+  start_button_ = new QPushButton("Start Derby", this);
+  control_state_layout->addWidget( start_button_ ); 
+
+  end_button_ = new QPushButton("End Derby", this);
+  control_state_layout->addWidget( end_button_ ); 
+
+  init_button_ = new QPushButton("Init", this);
+  control_state_layout->addWidget( init_button_ ); 
+
+  manual_button_ = new QPushButton("Manual Control", this);
+  control_state_layout->addWidget( manual_button_ ); 
+
+  find_goal_button_ = new QPushButton("Find goal", this);
+  control_state_layout->addWidget( find_goal_button_ ); 
+
+  move_to_goal_button_ = new QPushButton("Move To Goal", this);
+  control_state_layout->addWidget( move_to_goal_button_ ); 
+
+  find_ball_button_ = new QPushButton("Find Ball", this);
+  control_state_layout->addWidget( find_ball_button_ ); 
+
+  move_to_ball_button_ = new QPushButton("Move to Ball", this);
+  control_state_layout->addWidget( move_to_ball_button_ ); 
 
   // Then create the control widget.
   drive_widget_ = new DriveWidget;
@@ -102,9 +127,18 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   QTimer* output_timer = new QTimer( this );
 
   // Next we make signal/slot connections.
+  // SLOT connections cant be passed args likethis - TODO
   connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleConfigurationButton() ));
+  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleControlButton(CONFIG) ));
+  connect( start_button_, SIGNAL( released() ), this, SLOT( handleControlButton(START) ));
+  connect( end_button_, SIGNAL( released() ), this, SLOT( handleControlButton(END) ));
+  connect( init_button_, SIGNAL( released() ), this, SLOT( handleControlButton(INIT) ));
+  connect( manual_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MANUAL) ));
+  connect( find_goal_button_, SIGNAL( released() ), this, SLOT( handleControlButton(FIND_GOAL) ));
+  connect( move_to_goal_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MOVE_TO_GOAL) ));
+  connect( find_ball_button_, SIGNAL( released() ), this, SLOT( handleControlButton(FIND_BALL) ));
+  connect( move_to_ball_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MOVE_TO_BALL) ));
   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
 
   // Start the timer.
@@ -135,12 +169,12 @@ void TeleopPanel::updateTopic()
   setTopic( output_topic_editor_->text() );
 }
 
-void TeleopPanel::handleConfigurationButton()
+void TeleopPanel::handleControlButton(int behavior_state)
 {
   // Do the stuff to do
-  ROS_INFO("in handleConfigurationButton");
+  ROS_INFO("in handleControlButton");
   coconuts_common::ControlState control_state;
-  control_state.state = CONFIG;
+  control_state.state = behavior_state;
   control_state.sub_state = DEFAULT_SUB_STATE;
   control_state_publisher_.publish(control_state);
 }

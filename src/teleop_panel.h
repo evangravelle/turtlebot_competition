@@ -96,7 +96,7 @@ protected Q_SLOTS:
   // updateTopic() reads the topic name from the QLineEdit and calls
   // setTopic() with the result.
   void updateTopic();
-  void handleConfigurationButton();
+  void handleControlButton(int behavior_state);
 
   // Then we finish up with protected member variables.
 protected:
@@ -108,10 +108,17 @@ protected:
   QLineEdit* output_topic_editor_;
 
   QPushButton* configuration_button_;
+  QPushButton* start_button_;
+  QPushButton* end_button_;
+  QPushButton* init_button_;
+  QPushButton* manual_button_;
+  QPushButton* find_goal_button_;
+  QPushButton* move_to_goal_button_;
+  QPushButton* find_ball_button_;
+  QPushButton* move_to_ball_button_;
 
   // The current name of the output topic.
   QString output_topic_;
-  QString configuration_;
 
   // The ROS publisher for the command velocity.
   ros::Publisher velocity_publisher_;
