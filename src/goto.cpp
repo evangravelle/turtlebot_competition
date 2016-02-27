@@ -11,6 +11,7 @@ Go to a position function by Aaron Ma :DxD;))))
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <turtlebot_deployment/PoseWithName.h>
 #include <tf/tf.h>
+#include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
 #include <math.h>
 
@@ -60,7 +61,7 @@ gotInitialGoal=true;
 	cenx=x;
 	ceny=y;
 	}
-
+	
 }
 
 void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
@@ -70,8 +71,8 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 	orientation = tf::getYaw(tf->transforms[0].transform.rotation);
 	x1=cos(orientation);
 	y11=sin(orientation);
-	x=(tf->transforms[0].transform.translation.x; 
-	y=(tf->transforms[0]transform.translation.y;
+	x=tf->transforms[0].transform.translation.x; 
+	y=tf->transforms[0].transform.translation.y;
 
 	x2=cenx-x;
 	y22=ceny-y;
@@ -92,7 +93,7 @@ ros::Subscriber CTERM_sub;
 ros::Publisher u_pub_;
 
 pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
-cen_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal",1, goalCB);
+cen_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal_pose",1, goalCB);
 
 geometry_msgs::Twist finalVel;
 

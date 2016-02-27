@@ -152,6 +152,7 @@ add_executable(publishInfo src/publishInfo.cpp)
 add_executable(getDistance src/getDistance.cpp)
 add_executable(locate_ball_forward src/locate_ball_forward.cpp)
 add_executable(locate_ball_down src/locate_ball_forward.cpp)
+add_executable(motion src/goto.cpp)
 #add_executable(globalLocalization src/globalLocalization.cpp)
 #add_executable(globalLocalization src/globalLocalization.py)
 
@@ -169,6 +170,7 @@ add_dependencies(publishInfo ${catkin_EXPORTED_TARGETS})
 add_dependencies(getDistance ${catkin_EXPORTED_TARGETS})
 add_dependencies(locate_ball_forward ${catkin_EXPORTED_TARGETS})
 add_dependencies(locate_ball_down ${catkin_EXPORTED_TARGETS})
+add_dependencies(motion ${catkin_EXPORTED_TARGETS})
 #add_dependencies(globalLocalization ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
@@ -184,6 +186,7 @@ target_link_libraries(publishInfo ${catkin_LIBRARIES})
 target_link_libraries(getDistance ${catkin_LIBRARIES})
 target_link_libraries(locate_ball_forward ${catkin_LIBRARIES})
 target_link_libraries(locate_ball_down ${catkin_LIBRARIES})
+target_link_libraries(motion ${catkin_LIBRARIES})
 #target_link_libraries(globalLocalization ${catkin_LIBRARIES})
 #############
 ## Install ##
