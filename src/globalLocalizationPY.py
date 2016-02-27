@@ -24,7 +24,7 @@ from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import TransformStamped
-
+from geometry_msgs.msg import PoseStamped
 
 
 
@@ -84,6 +84,10 @@ class GL:
 		self.kalmanRun=False
                 self.averageTime=[30]*5
                 self.averageConfidence=[1]*30
+
+#For visualization (Comment out in Final)
+		self.poseAndroid=PoseStamped()
+		self.pubPoseAndroid=rospy.Publisher('/poseEstimation',PoseStamped,queue_size=1)		
 
 #Associated to ceiling
 		self.ceilingFlag=False
@@ -299,9 +303,9 @@ class GL:
 			self.t.header.stamp= rospy.Time.now()
 			self.t.header.frame_id = "map";
 			self.t.child_frame_id = "base_footprint";
-			self.t.transform.translation.x = self.pose.position.x/250.*350./mapSliceSize;
-			self.t.transform.translation.y = self.pose.position.y/250.*350./mapSliceSize;
-			self.q= tf.transformations.quaternion_from_euler(0, 0, self.angle*0.0174533)
+			self.t.transform.translation.x = self.pose.position.x/450.*350./mapSliceSize;
+			self.t.transform.translation.y = -self.pose.position.y/450.*350./mapSliceSize;
+			self.q= tf.transformations.quaternion_from_euler(0, 0, -(self.angle-90)*0.0174533)
 			self.t.transform.rotation.x = self.q[0]
 			self.t.transform.rotation.y = self.q[1]
 			self.t.transform.rotation.z = self.q[2]
@@ -311,7 +315,15 @@ class GL:
 			self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
 #			cv2.imshow("Image", postingImage)
 			cv2.waitKey(1)
-#			self.pub.publish(self.pose)
+#			self.poseAndroid.header.stamp=10
+			self.poseAndroid.header.frame_id="leonardo"
+			self.poseAndroid.pose.position.x=self.t.transform.translation.x
+			self.poseAndroid.pose.position.y=self.t.transform.translation.y
+			self.poseAndroid.pose.orientation.x=self.t.transform.rotation.x
+			self.poseAndroid.pose.orientation.y=self.t.transform.rotation.y
+			self.poseAndroid.pose.orientation.z=self.t.transform.rotation.z
+			self.poseAndroid.pose.orientation.w=self.t.transform.rotation.w
+			self.pubPoseAndroid.publish(self.poseAndroid)
 
 
 
@@ -331,4 +343,5 @@ def main(args):
 
 if __name__ == '__main__':
 	main(sys.argv)
+
 
