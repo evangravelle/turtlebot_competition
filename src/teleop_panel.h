@@ -96,7 +96,7 @@ protected Q_SLOTS:
   // updateTopic() reads the topic name from the QLineEdit and calls
   // setTopic() with the result.
   void updateTopic();
-  void handleCalibrationButton();
+  void handleConfigurationButton();
 
   // Then we finish up with protected member variables.
 protected:
@@ -107,14 +107,15 @@ protected:
   // One-line text editor for entering the outgoing ROS topic name.
   QLineEdit* output_topic_editor_;
 
-  QPushButton* calibration_button_;
+  QPushButton* configuration_button_;
 
   // The current name of the output topic.
   QString output_topic_;
-  QString calibration_;
+  QString configuration_;
 
   // The ROS publisher for the command velocity.
   ros::Publisher velocity_publisher_;
+  ros::Publisher control_state_publisher_;
 
   // The ROS node handle.
   ros::NodeHandle nh_;

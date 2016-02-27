@@ -41,6 +41,9 @@
 #include "drive_widget.h"
 #include "teleop_panel.h"
 
+#include <states.h>
+#include <coconuts_common/ControlState.h>
+
 namespace rviz_plugin_tutorials
 {
 
@@ -53,6 +56,9 @@ namespace rviz_plugin_tutorials
 // - Saving and restoring internal state from a config file.
 //
 // We start with the constructor, doing the standard Qt thing of
+//
+// #include <states.h>
+// #include <coconuts_common/ControlState.h>
 // passing the optional *parent* argument on to the superclass
 // constructor, and also zero-ing the velocities we will be
 // publishing.
@@ -68,11 +74,11 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   output_topic_editor_ = new QLineEdit;
   topic_layout->addWidget( output_topic_editor_ );
 
-  // Calibration Layout
-  QHBoxLayout* calibration_layout = new QHBoxLayout;
-  calibration_layout->addWidget( new QLabel( "Calibration:" ));
-  calibration_button_ = new QPushButton("Calibrate", this);
-  calibration_layout->addWidget( calibration_button_ ); 
+  // Control State Layout
+  QHBoxLayout* control_state_layout = new QHBoxLayout;
+  control_state_layout->addWidget( new QLabel( "Control State:" ));
+  configuration_button_ = new QPushButton("Configuration", this);
+  control_state_layout->addWidget( configuration_button_ ); 
 
   // Then create the control widget.
   drive_widget_ = new DriveWidget;
@@ -80,7 +86,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout( topic_layout );
-  layout->addLayout( calibration_layout );
+  layout->addLayout( control_state_layout );
   layout->addWidget( drive_widget_ );
   setLayout( layout );
 
@@ -98,7 +104,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // Next we make signal/slot connections.
   connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-  connect( calibration_button_, SIGNAL( released() ), this, SLOT( handleCalibrationButton() ));
+  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleConfigurationButton() ));
   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
 
   // Start the timer.
@@ -106,6 +112,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Make the control widget start disabled, since we don't start with an output topic.
   drive_widget_->setEnabled( false );
+
+  control_state_publisher_ = nh_.advertise<coconuts_common::ControlState>("/control_state_override", 1);
 }
 
 // setVel() is connected to the DriveWidget's output, which is sent
@@ -127,10 +135,14 @@ void TeleopPanel::updateTopic()
   setTopic( output_topic_editor_->text() );
 }
 
-void TeleopPanel::handleCalibrationButton()
+void TeleopPanel::handleConfigurationButton()
 {
   // Do the stuff to do
-  ROS_INFO("in handleCalibrationButton");
+  ROS_INFO("in handleConfigurationButton");
+  coconuts_common::ControlState control_state;
+  control_state.state = CONFIG;
+  control_state.sub_state = DEFAULT_SUB_STATE;
+  control_state_publisher_.publish(control_state);
 }
 
 // Set the topic name we are publishing to.
