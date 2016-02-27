@@ -16,6 +16,8 @@ double baseline_length = 10.5*inches_to_meters;
 double camera_forward_dist_from_ground = 16.0*inches_to_meters;
 int image_width, image_height;
 double xy_angle, dist;
+double view_width = 5.875*inches_to_meters;
+double view_height = 5.875*inches_to_meters;
 
 // Assumes a horizontal camera view of 90 degrees
 
@@ -28,8 +30,8 @@ void downLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 	forward_image_pixel.x = pointPtr->x;
 	forward_image_pixel.y = pointPtr->y;
 
-	ball.transform.translation.x = exp(8.1*pow(10,-6)*pow(forward_image_pixel.y,2) - 0.0091*forward_image_pixel.y + 5.1283)*inches_to_meters;
-	ball.transform.translation.y = ball.transform.translation.y * (forward_image_pixel.x - image_width/2.0)/(image_width/2.0);
+	ball.transform.translation.y = view_width/(image_width-1)*forward_image_pixel.x - view_width/2.0;
+	ball.transform.translation.z = -view_height/(image_width-1)*forward_image_pixel.y + view_height/2.0;
 
 	tf_br.sendTransform(ball);
 
@@ -56,9 +58,9 @@ int main(int argc, char **argv) {
 
 	ball.header.frame_id = "camera_down";
 	ball.child_frame_id = "ball_down";
-	ball.transform.translation.x = 0.0;
+	ball.transform.translation.x = -7.5*inches_to_meters + ball_diameter/2.0;
 	ball.transform.translation.y = 0.0;
-	ball.transform.translation.z = -camera_forward_dist_from_ground + ball_diameter/2.0;
+	ball.transform.translation.z = 0.0;
 	ball.transform.rotation.x = 0.0;
 	ball.transform.rotation.y = 0.0;
 	ball.transform.rotation.z = 0.0;
