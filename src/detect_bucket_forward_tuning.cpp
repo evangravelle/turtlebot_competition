@@ -12,14 +12,15 @@
 image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
 
-ros::Publisher ball_location_pub;
-geometry_msgs::Pose ball;
+ros::Publisher bucket_pixel_pub;
+geometry_msgs::Point bucket;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_objects_forward/image_raw";
-static const char WINDOW2[] = "/detect_objects_forward/hsv_thresh";
-static const char WINDOW3[] = "/detect_objects_forward/after_erode";
-static const char WINDOW4[] = "/detect_objects_forward/after_dilate";
+static const char WINDOW1[] = "/detect_bucket_forward/image_raw";
+static const char WINDOW2[] = "/detect_bucket_forward/hsv_thresh";
+static const char WINDOW3[] = "/detect_bucket_forward/after_erode";
+static const char WINDOW4[] = "/detect_bucket_forward/after_dilate";
+static const char WINDOW5[] = "/detect_bucket_forward/drawing";
 
 // Initialize variables
 ros::Time current_time;
@@ -46,7 +47,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     catch (cv_bridge::Exception& e)
     {
         //if there is an error during conversion, display it
-        ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
+        ROS_ERROR("detect_bucket::cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -73,30 +74,41 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     // Dilate then display
     cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-    cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
-    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
+    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 1, 1);
+    cv::imshow(WINDOW4, hsv_thresh);
 
-    // Use Hough tranform to search for circles
-    std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, hsv_thresh.rows/8, 100, 20);
+    cv::Mat canny_output;
+    std::vector<std::vector<cv::Point> > contours;
+    cv::Rect rectangle(50, 50, 1, 1), rectangle_temp;
+    std::vector<cv::Vec4i> hierarchy;
 
-    if(circles.size() > 0) {
-        int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
-        for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
-//        for(int current_circle = 0; current_circle < 1; ++current_circle) {
-            cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
-            int radius = std::floor(circles[current_circle][2]);
+    /// Detect edges using canny
+    int low_thresh = 100;
+    cv::Canny( hsv_thresh, canny_output, low_thresh, low_thresh*2, 3 );
+    /// Find contours
+    cv::findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-            cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
+    /// Draw contours
+    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
-		    ball.position.x=center.x;
-		    ball.position.y=center.y;
-		    ball_location_pub.publish(ball);
 
+    for( int i = 0; i< contours.size(); i++ ) {
+        cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+        rectangle_temp = cv::boundingRect(contours[i]);
+        if (rectangle_temp.area() > rectangle.area()) {
+            rectangle = rectangle_temp;
         }
-    }
+     }
+
+    cv::rectangle(drawing, rectangle, cv::Scalar( 255, 255, 0));
+
+    imshow(WINDOW5, drawing);
+
+	bucket.x = 1.5;
+	bucket.y = rectangle.x;
+	bucket_pixel_pub.publish(bucket);
 
     cv::imshow(WINDOW1, cv_ptr_raw->image);
 
@@ -111,7 +123,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-    ros::init(argc, argv, "detect_ball_tuning");
+    ros::init(argc, argv, "detect_bucket_forward_tuning");
 
     ros::NodeHandle nh;
 
@@ -121,18 +133,17 @@ int main(int argc, char **argv)
     cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW3, CV_WINDOW_AUTOSIZE);
     cv::namedWindow(WINDOW4, CV_WINDOW_AUTOSIZE);
+    cv::namedWindow(WINDOW5, CV_WINDOW_AUTOSIZE);
 
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
-    //image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
-	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
-    //pub = it.advertise("/detect_ball/hsv_image", 1);
+    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("bucket_pixel",1,true);
 
-    nh.getParam("/detect_objects_forward/h_min", H_MIN);
-    nh.getParam("/detect_objects_forward/h_max", H_MAX);
-    nh.getParam("/detect_objects_forward/s_min", S_MIN);
-    nh.getParam("/detect_objects_forward/s_max", S_MAX);
-    nh.getParam("/detect_objects_forward/v_min", V_MIN);
-    nh.getParam("/detect_objects_forward/v_max", V_MAX);
+    nh.getParam("/detect_bucket_forward/h_min", H_MIN);
+    nh.getParam("/detect_bucket_forward/h_max", H_MAX);
+    nh.getParam("/detect_bucket_forward/s_min", S_MIN);
+    nh.getParam("/detect_bucket_forward/s_max", S_MAX);
+    nh.getParam("/detect_bucket_forward/v_min", V_MIN);
+    nh.getParam("/detect_bucket_forward/v_max", V_MAX);
 
     cv::namedWindow("trackbars",0);
 
@@ -147,17 +158,18 @@ int main(int argc, char **argv)
 	   ros::spin();
     }
 
-    nh.setParam("/detect_objects_forward/h_min", H_MIN);
-    nh.setParam("/detect_objects_forward/h_max", H_MAX);
-    nh.setParam("/detect_objects_forward/s_min", S_MIN);
-    nh.setParam("/detect_objects_forward/s_max", S_MAX);
-    nh.setParam("/detect_objects_forward/v_min", V_MIN);
-    nh.setParam("/detect_objects_forward/v_max", V_MAX);
+    nh.setParam("/detect_bucket_forward/h_min", H_MIN);
+    nh.setParam("/detect_bucket_forward/h_max", H_MAX);
+    nh.setParam("/detect_bucket_forward/s_min", S_MIN);
+    nh.setParam("/detect_bucket_forward/s_max", S_MAX);
+    nh.setParam("/detect_bucket_forward/v_min", V_MIN);
+    nh.setParam("/detect_bucket_forward/v_max", V_MAX);
 
 	//cv::destroyWindow(WINDOW1);
     cv::destroyWindow(WINDOW2);
     cv::destroyWindow(WINDOW3);
     cv::destroyWindow(WINDOW4);
+    cv::destroyWindow(WINDOW5);
 
  }
 

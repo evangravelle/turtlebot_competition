@@ -16,10 +16,10 @@ ros::Publisher ball_location_pub;
 geometry_msgs::Pose ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball_down/image_raw";
-static const char WINDOW2[] = "/detect_ball_down/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball_down/after_erode";
-static const char WINDOW4[] = "/detect_ball_down/after_dilate";
+static const char WINDOW1[] = "/detect_ball_forward/image_raw";
+static const char WINDOW2[] = "/detect_ball_forward/hsv_thresh";
+static const char WINDOW3[] = "/detect_ball_forward/after_erode";
+static const char WINDOW4[] = "/detect_ball_forward/after_dilate";
 
 // Initialize variables
 ros::Time current_time;
@@ -28,8 +28,6 @@ int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
-
-//guess is 0 50 120 255 0 255
 
 void on_trackbar(int,void*) {}
 
@@ -52,37 +50,37 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         return;
     }
 
-    //cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
+    cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
 
     // remove some noise
     // cv::medianBlur(cv_ptr_raw->image, cv_ptr_raw->image, 3);
 
     // Convert to HSV
-    //cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
+    cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
     //cv::imshow(WINDOW1, hsv_image);
 
     // split HSV, then threshold
-    //cv::split(hsv_image, hsv_channels);
-    //cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-    //cv::imshow(WINDOW2, hsv_thresh);
+    cv::split(hsv_image, hsv_channels);
+    cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
+    cv::imshow(WINDOW2, hsv_thresh);
 
-    //cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
-    //cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
+    cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+    cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
     // Erode then display
-    //cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-    //cv::imshow(WINDOW3, hsv_thresh);
+    cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
+    cv::imshow(WINDOW3, hsv_thresh);
 
     // Dilate then display
-    //cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-    //cv::imshow(WINDOW4, hsv_thresh);
+    cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
 
     // Blur image
-    //cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
+    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
+    cv::imshow(WINDOW4, hsv_thresh);
 
     // Use Hough tranform to search for circles
     std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(cv_ptr_raw->image, circles, CV_HOUGH_GRADIENT, 2, cv_ptr_raw->image.rows/8, 100, 20);
+    cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, hsv_thresh.rows/8, 100, 20);
 
     if(circles.size() > 0) {
         int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
@@ -113,7 +111,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-    ros::init(argc, argv, "detect_ball_down_tuning");
+    ros::init(argc, argv, "detect_ball_tuning");
 
     ros::NodeHandle nh;
 
@@ -129,12 +127,12 @@ int main(int argc, char **argv)
 	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
-    nh.getParam("/detect_ball_down/h_min", H_MIN);
-    nh.getParam("/detect_ball_down/h_max", H_MAX);
-    nh.getParam("/detect_ball_down/s_min", S_MIN);
-    nh.getParam("/detect_ball_down/s_max", S_MAX);
-    nh.getParam("/detect_ball_down/v_min", V_MIN);
-    nh.getParam("/detect_ball_down/v_max", V_MAX);
+    nh.getParam("/detect_ball_forward/h_min", H_MIN);
+    nh.getParam("/detect_ball_forward/h_max", H_MAX);
+    nh.getParam("/detect_ball_forward/s_min", S_MIN);
+    nh.getParam("/detect_ball_forward/s_max", S_MAX);
+    nh.getParam("/detect_ball_forward/v_min", V_MIN);
+    nh.getParam("/detect_ball_forward/v_max", V_MAX);
 
     cv::namedWindow("trackbars",0);
 
@@ -149,12 +147,12 @@ int main(int argc, char **argv)
 	   ros::spin();
     }
 
-    nh.setParam("/detect_ball_down/h_min", H_MIN);
-    nh.setParam("/detect_ball_down/h_max", H_MAX);
-    nh.setParam("/detect_ball_down/s_min", S_MIN);
-    nh.setParam("/detect_ball_down/s_max", S_MAX);
-    nh.setParam("/detect_ball_down/v_min", V_MIN);
-    nh.setParam("/detect_ball_down/v_max", V_MAX);
+    nh.setParam("/detect_ball_forward/h_min", H_MIN);
+    nh.setParam("/detect_ball_forward/h_max", H_MAX);
+    nh.setParam("/detect_ball_forward/s_min", S_MIN);
+    nh.setParam("/detect_ball_forward/s_max", S_MAX);
+    nh.setParam("/detect_ball_forward/v_min", V_MIN);
+    nh.setParam("/detect_ball_forward/v_max", V_MAX);
 
 	//cv::destroyWindow(WINDOW1);
     cv::destroyWindow(WINDOW2);

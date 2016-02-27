@@ -21,6 +21,8 @@ double camera_height = 1.0*inches_to_meters;
 double camera_down_thickness = 0.55*inches_to_meters;
 double camera_down_width = 2.6*inches_to_meters;
 double camera_down_height = 1.3*inches_to_meters;
+double bucket_height = 6.375*inches_to_meters;
+double bucket_diameter = 8.5*inches_to_meters;
 
 int main(int argc, char **argv) {
 
@@ -28,13 +30,14 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle nh;
 
-	visualization_msgs::Marker ball_forward_marker, ball_down_marker, arm_1_marker, arm_2_marker, claw_marker;
+	visualization_msgs::Marker ball_forward_marker, ball_down_marker, bucket_forward_marker, arm_1_marker, arm_2_marker, claw_marker;
 	visualization_msgs::Marker camera_forward_marker, camera_up_marker, camera_down_marker;
 	//geometry_msgs::TransformStamped ball, arm_1, arm_2, claw;
 	tf2_ros::Buffer tf_buffer;
 	tf2_ros::TransformListener tf_listener(tf_buffer);
  	ros::Publisher ball_forward_pub = nh.advertise<visualization_msgs::Marker>("/ball_forward_marker", 1000, true);
  	ros::Publisher ball_down_pub = nh.advertise<visualization_msgs::Marker>("/ball_down_marker", 1000, true);
+ 	ros::Publisher bucket_forward_pub = nh.advertise<visualization_msgs::Marker>("/bucket_forward_marker", 1000, true);
  	ros::Publisher arm_1_pub = nh.advertise<visualization_msgs::Marker>("/arm_1_marker", 1000, true);
  	ros::Publisher arm_2_pub = nh.advertise<visualization_msgs::Marker>("/arm_2_marker", 1000, true);
  	ros::Publisher claw_pub = nh.advertise<visualization_msgs::Marker>("/claw_marker", 1000, true);
@@ -147,6 +150,27 @@ int main(int argc, char **argv) {
 	ball_down_marker.color.b = 0.0;
 	ball_down_marker.lifetime = ros::Duration();
 
+	bucket_forward_marker.header.frame_id = "bucket_forward";
+	bucket_forward_marker.header.stamp = ros::Time();
+	bucket_forward_marker.id = 0;
+	bucket_forward_marker.type = visualization_msgs::Marker::CYLINDER;
+	bucket_forward_marker.action = visualization_msgs::Marker::ADD;
+	bucket_forward_marker.pose.position.x = 0;
+	bucket_forward_marker.pose.position.y = 0;
+	bucket_forward_marker.pose.position.z = 0;
+	bucket_forward_marker.pose.orientation.x = 0.0;
+	bucket_forward_marker.pose.orientation.y = 0.0;
+	bucket_forward_marker.pose.orientation.z = 0.0;
+	bucket_forward_marker.pose.orientation.w = 1.0;
+	bucket_forward_marker.scale.x = bucket_height;
+	bucket_forward_marker.scale.y = bucket_diameter;
+	bucket_forward_marker.scale.z = bucket_diameter;
+	bucket_forward_marker.color.a = 1.0; // Don't forget to set the alpha!
+	bucket_forward_marker.color.r = 0.86;
+	bucket_forward_marker.color.g = 0.44;
+	bucket_forward_marker.color.b = 0.58;
+	bucket_forward_marker.lifetime = ros::Duration();
+
 	arm_1_marker.header.frame_id = "arm_1";
 	arm_1_marker.header.stamp = ros::Time();
 	arm_1_marker.id = 1;
@@ -227,6 +251,7 @@ int main(int argc, char **argv) {
 
 		ball_forward_pub.publish(ball_forward_marker);
 		ball_down_pub.publish(ball_down_marker);
+		bucket_forward_pub.publish(bucket_forward_marker);
 		arm_1_pub.publish(arm_1_marker);
 		arm_2_pub.publish(arm_2_marker);
 		claw_pub.publish(claw_marker);
