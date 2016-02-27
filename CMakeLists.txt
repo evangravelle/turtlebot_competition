@@ -51,6 +51,7 @@ add_message_files(
   MotorPosition.msg
   ArmMovement.msg
   ArmStatus.msg
+  ControlState.msg
 )
 
 ## Generate services in the 'srv' folder
