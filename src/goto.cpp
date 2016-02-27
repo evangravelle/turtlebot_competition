@@ -68,9 +68,9 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 {
 
 
-	orientation = tf::getYaw(tf->transforms[0].transform.rotation);
-	x1=cos(orientation);
-	y11=sin(orientation);
+	orientation = tf::getYaw(tf->transforms[0].transform.rotation)+3.14/2;
+	x1=sin(orientation);
+	y11=cos(orientation);
 	x=tf->transforms[0].transform.translation.x; 
 	y=tf->transforms[0].transform.translation.y;
 
@@ -120,13 +120,8 @@ while(ros::ok()){
 
 		angle = atan2(det, dot);
 
-		dot = x1*x3 + y11*y33;
-		det = x1*y33 - y11*x3;
-
-		cdotAngle = -atan2(det, dot);
-
 			v=cos(angle)*V;
-			if (dist<.02){
+			if (dist<.3){
 				v=0;
 			}
 			else if (dist< .2){
@@ -147,7 +142,7 @@ while(ros::ok()){
 		}
 		else if (angle*180/3.14>90){
 			if (abs(angle*180/3.14)>135){
-				a=A*(angle-3.14);
+				a=-A*(angle-3.14);
 			}
 			else{
 				a=A;
@@ -155,7 +150,7 @@ while(ros::ok()){
 		}
 		else if (angle*180/3.14<-90){
 			if (abs(angle*180/3.14)>135){
-				a=A*(angle+3.14);
+				a=-A*(angle+3.14);
 			}
 			else{
 				a=A;
@@ -164,38 +159,15 @@ while(ros::ok()){
 	
 
 
-
-
-
 		if (dist<.01){
 			a=0;
 		}
 
-		cdotContribution=CTERM*cos(cdotAngle)*cdotMag; //4
 
-		if (cdotContribution>.5){
-			cdotContribution=.5;						
-		}
-		else if (cdotContribution<-.5){
-			cdotContribution=-.5;						
-		}
-
-		if (abs(cos(cdotAngle))>.9){
-			finalVel.linear.x=KTERM*v+cdotContribution;
-			finalVel.angular.z=a;
-		}
-		else{
 			finalVel.linear.x=KTERM*v;
-			if (cdotContribution>.02){
-			finalVel.angular.z=a+CANGLETERM*(cdotAngle-lastcdotAngle);
-			}else{
 			finalVel.angular.z=a;
-			}
 
 		}
-		
-		lastcdotAngle=cdotAngle;
-
 
 		//FILTERING
 		if (finalVel.linear.x>.3){
@@ -234,27 +206,14 @@ while(ros::ok()){
 		if (abs(finalVel.angular.z)<.0001){
 		finalVel.angular.z=0;			
 		}
-		
-
-		//cout << "distance: " << dist<< "\n";
-		/*if (got_cdot==true){
-
-		cout << "pow: " << cos(cdotAngle)*cdotMag<< "\n";
-		}*/
-
-		
-
-
-		
 
 		lastVel=finalVel;
+		finalVel.linear.x=finalVel.linear.x/2;
+		finalVel.angular.z=-finalVel.angular.z/2;
+		std::cout << "angular"<< angle <<"\n";
+		std::cout << "linear"<< finalVel.linear.x << "\n";
 		u_pub_.publish(finalVel);
 		loop_rate.sleep();
-
-	}
-	else{
-		sleep(1);
-	}
 
 }
 
