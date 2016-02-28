@@ -26,7 +26,7 @@ double dist=0;
 double v=0;
 double V=.5;
 double a=0;
-double A=3;
+double A=1;
 double transformScale=900;
 double cdotContribution=0;
 double transformX=301;
@@ -67,7 +67,7 @@ gotInitialGoal=true;
 void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 {
 
-
+	if (tf->transforms[0].child_frame_id=="base_footprint" && tf->transforms[0].header.frame_id=="map"){
 	orientation = tf::getYaw(tf->transforms[0].transform.rotation)+3.14/2;
 	x1=sin(orientation);
 	y11=cos(orientation);
@@ -76,6 +76,8 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 
 	x2=cenx-x;
 	y22=ceny-y;
+	}
+
 }
 
 
@@ -121,47 +123,42 @@ while(ros::ok()){
 		angle = atan2(det, dot);
 
 			v=cos(angle)*V;
-			if (dist<.3){
+			if (dist<.1){
 				v=0;
 			}
-			else if (dist< .2){
-				v=v*dist/.2;
-			}
-			else{
-
-			}
 	
 
-		if (cos(angle)>0){
-			if (abs(angle*180/3.14)<45){
-				a=A*angle;
-			}
-			else{
-				a=A;
-			}
-		}
-		else if (angle*180/3.14>90){
-			if (abs(angle*180/3.14)>135){
-				a=-A*(angle-3.14);
-			}
-			else{
-				a=A;
-			}
-		}
-		else if (angle*180/3.14<-90){
-			if (abs(angle*180/3.14)>135){
-				a=-A*(angle+3.14);
-			}
-			else{
-				a=A;
-			}
-		}
-	
+//		if (cos(angle)>0){
+//			if (abs(angle*180/3.14)<45){
+//				a=A*angle;
+//			}
+//			else{
+//				a=A;
+//			}
+//		}
+//		else if (angle*180/3.14>90){
+//			if (abs(angle*180/3.14)>135){
+//				a=-A*(angle-3.14);
+//			}
+//			else{
+//				a=A;
+//			}
+//		}
+//		else if (angle*180/3.14<-90){
+//			if (abs(angle*180/3.14)>135){
+//				a=-A*(angle+3.14);
+//			}
+//			else{
+//				a=A;
+//			}
+//		}
+//	
+a=A*angle;
 
 
-		if (dist<.01){
-			a=0;
-		}
+//		if (dist<.01){
+//			a=0;
+//		}
 
 
 			finalVel.linear.x=KTERM*v;
@@ -169,16 +166,7 @@ while(ros::ok()){
 
 		}
 
-		//FILTERING
-		if (finalVel.linear.x>.3){
-			finalVel.linear.x=.3;
-		}
-		else if  (finalVel.linear.x<-.3){
-			finalVel.linear.x=-.3;
-		}
-
-
-		if (dist < .2){
+		if (dist < .25){
 				if ((finalVel.linear.x-lastVel.linear.x)>.01){
 					finalVel.linear.x=lastVel.linear.x+.02;
 				}	
@@ -196,11 +184,11 @@ while(ros::ok()){
 		}
 				
 
-		if ((finalVel.angular.z-lastVel.angular.z)>.025){
-					finalVel.angular.z=lastVel.angular.z+.025;
+		if ((finalVel.angular.z-lastVel.angular.z)>.001){
+					finalVel.angular.z=lastVel.angular.z+.001;
 				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.025){
-					finalVel.angular.z=lastVel.angular.z-.025;
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
+					finalVel.angular.z=lastVel.angular.z-.001;
 				}
 		
 		if (abs(finalVel.angular.z)<.0001){
@@ -209,8 +197,33 @@ while(ros::ok()){
 
 		lastVel=finalVel;
 		finalVel.linear.x=finalVel.linear.x/2;
-		finalVel.angular.z=-finalVel.angular.z/2;
-		std::cout << "angular"<< angle <<"\n";
+
+		if (a>.5){
+			a=.5;
+		}else if (a<-.5){
+			a=-.5;
+		}
+
+		if (finalVel.linear.x>.2){
+			finalVel.linear.x=.2;
+		}else if (finalVel.linear.x<0){
+			finalVel.linear.x=0;
+		}
+
+		finalVel.angular.z=a;
+
+
+		finalVel.angular.z=-finalVel.angular.z;
+
+		std::cout << "\n\n\n";
+		std::cout << "x2: " << x2 << "\n";
+		std::cout << "x1: " << x1 << "\n";
+		std::cout << "y2: " << y22 << "\n";
+		std::cout << "y1: " << y11 << "\n";
+		std::cout << "ceny: " << ceny << "\n";
+		std::cout << "cenx: " << cenx << "\n";
+		std::cout << "angle: " << angle << "\n";
+		std::cout << "angular"<< a <<"\n";
 		std::cout << "linear"<< finalVel.linear.x << "\n";
 		u_pub_.publish(finalVel);
 		loop_rate.sleep();
