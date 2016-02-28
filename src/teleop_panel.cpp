@@ -32,6 +32,7 @@
 #include <QPainter>
 #include <QLineEdit>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTimer>
@@ -75,7 +76,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   topic_layout->addWidget( output_topic_editor_ );
 
   // Control State Layout
-  QHBoxLayout* control_state_layout = new QHBoxLayout;
+  QGridLayout* control_state_layout = new QGridLayout;
   control_state_layout->addWidget( new QLabel( "Control State:" ));
 
   configuration_button_ = new QPushButton("Configuration", this);
@@ -110,9 +111,9 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
-  layout->addLayout( topic_layout );
   layout->addLayout( control_state_layout );
   layout->addWidget( drive_widget_ );
+  layout->addLayout( topic_layout );
   setLayout( layout );
 
   // Create a timer for sending the output.  Motor controllers want to
@@ -130,15 +131,15 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // SLOT connections cant be passed args likethis - TODO
   connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleControlButton(CONFIG) ));
-  connect( start_button_, SIGNAL( released() ), this, SLOT( handleControlButton(START) ));
-  connect( end_button_, SIGNAL( released() ), this, SLOT( handleControlButton(END) ));
-  connect( init_button_, SIGNAL( released() ), this, SLOT( handleControlButton(INIT) ));
-  connect( manual_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MANUAL) ));
-  connect( find_goal_button_, SIGNAL( released() ), this, SLOT( handleControlButton(FIND_GOAL) ));
-  connect( move_to_goal_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MOVE_TO_GOAL) ));
-  connect( find_ball_button_, SIGNAL( released() ), this, SLOT( handleControlButton(FIND_BALL) ));
-  connect( move_to_ball_button_, SIGNAL( released() ), this, SLOT( handleControlButton(MOVE_TO_BALL) ));
+  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleConfigurationButton() ));
+  connect( start_button_, SIGNAL( released() ), this, SLOT( handleStartButton() ));
+  connect( end_button_, SIGNAL( released() ), this, SLOT( handleEndButton() ));
+  connect( init_button_, SIGNAL( released() ), this, SLOT( handleInitButton() ));
+  connect( manual_button_, SIGNAL( released() ), this, SLOT( handleManualButton() ));
+  connect( find_goal_button_, SIGNAL( released() ), this, SLOT( handleFindGoalButton() ));
+  connect( move_to_goal_button_, SIGNAL( released() ), this, SLOT( handleMoveToGoalButton() ));
+  connect( find_ball_button_, SIGNAL( released() ), this, SLOT( handleFindBallButton() ));
+  connect( move_to_ball_button_, SIGNAL( released() ), this, SLOT( handleMoveToBallButton() ));
   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
 
   // Start the timer.
@@ -169,10 +170,47 @@ void TeleopPanel::updateTopic()
   setTopic( output_topic_editor_->text() );
 }
 
-void TeleopPanel::handleControlButton(int behavior_state)
+
+void TeleopPanel::handleConfigurationButton() {
+    sendControlUpdate(CONFIG);
+}
+
+void TeleopPanel::handleStartButton() {
+    sendControlUpdate(START);
+}
+
+void TeleopPanel::handleEndButton() {
+    sendControlUpdate(END);
+}
+
+void TeleopPanel::handleInitButton() {
+    sendControlUpdate(INIT);
+}
+
+void TeleopPanel::handleManualButton() {
+    sendControlUpdate(MANUAL);
+}
+
+void TeleopPanel::handleFindGoalButton() {
+    sendControlUpdate(FIND_GOAL);
+}
+
+void TeleopPanel::handleMoveToGoalButton() {
+    sendControlUpdate(MOVE_TO_GOAL);
+}
+
+void TeleopPanel::handleFindBallButton() {
+    sendControlUpdate(FIND_BALL);
+}
+
+void TeleopPanel::handleMoveToBallButton() {
+    sendControlUpdate(MOVE_TO_BALL);
+}
+
+void TeleopPanel::sendControlUpdate(int behavior_state)
 {
   // Do the stuff to do
-  ROS_INFO("in handleControlButton");
+  ROS_INFO("in sendControlUpdate");
   coconuts_common::ControlState control_state;
   control_state.state = behavior_state;
   control_state.sub_state = DEFAULT_SUB_STATE;

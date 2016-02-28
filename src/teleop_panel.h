@@ -96,7 +96,16 @@ protected Q_SLOTS:
   // updateTopic() reads the topic name from the QLineEdit and calls
   // setTopic() with the result.
   void updateTopic();
-  void handleControlButton(int behavior_state);
+  void handleConfigurationButton();
+  void handleStartButton();
+  void handleEndButton();
+  void handleInitButton();
+  void handleManualButton();
+  void handleFindGoalButton();
+  void handleMoveToGoalButton();
+  void handleFindBallButton();
+  void handleMoveToBallButton();
+  void sendControlUpdate(int status);
 
   // Then we finish up with protected member variables.
 protected:
