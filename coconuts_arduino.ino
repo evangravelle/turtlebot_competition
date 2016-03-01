@@ -14,6 +14,7 @@ e.g.
 // #include "utility/Adafruit_MS_PWMServoDriver.h"
 #include "JointController.h"
 #include "CommandQueue.h"
+#include "SonarSensor.h"
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -30,6 +31,15 @@ JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
 
 #define BUF_SIZE 16
 char buffer[BUF_SIZE];
+
+SonarSensor sensors[] = {
+  SonarSensor(13,12), 
+  SonarSensor(10,11), 
+  SonarSensor(9,8), 
+  SonarSensor(7,6), 
+  SonarSensor(4,5)
+  };
+#define NUM_SONAR (sizeof(sensors) / sizeof(SonarSensor))
 
 CommandQueue cmd_queue;
 
@@ -66,6 +76,14 @@ uint8_t waiting_mode = 0;
 JointCmd current_cmd;
 
 void loop() {
+  for(i=0;i<NUM_SONAR;i++){
+    sensors[i].get_distance();
+    // Serial.print(i);
+    // Serial.print("  ");
+    // Serial.println(sensors[i].get_distance());
+  }
+  
+  // delay(500);
   // Serial.println("hello from the other side");
   if (Serial.available()) {
     int read = readUntilPipe(buffer, BUF_SIZE);
