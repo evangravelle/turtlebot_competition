@@ -52,6 +52,8 @@ add_message_files(
   ArmMovement.msg
   ArmStatus.msg
   ControlState.msg
+  SensorReading.msg
+  SensorStatus.msg
 )
 
 ## Generate services in the 'srv' folder
