@@ -9,7 +9,6 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Float64.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include <turtlebot_deployment/PoseWithName.h>
 #include <tf/tf.h>
 #include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
@@ -46,7 +45,6 @@ using namespace std;
 
 geometry_msgs::Twist robVel;
 geometry_msgs::Twist lastVel;
-turtlebot_deployment::PoseWithName Pose;
 
 bool got_vel_;
 bool gotInitialGoal=false;
