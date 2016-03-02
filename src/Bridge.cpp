@@ -4,6 +4,8 @@
 #include <coconuts_common/ArmMovement.h>
 #include <coconuts_common/MotorPosition.h>
 #include <coconuts_common/ArmStatus.h>
+#include <coconuts_common/SensorStatus.h>
+#include <coconuts_common/SensorReading.h>
 
 #include <serial/serial.h>
 #include <sstream>
@@ -97,6 +99,7 @@ int main(int argc, char **argv) {
    	// Maybe reduce this so we dont buffer commands?
 	ros::Subscriber motor_sub = n.subscribe("motor_control",1, &movementCallback);
 	ros::Publisher arm_status_pub = n.advertise<coconuts_common::ArmStatus>("/arm_status",1);
+	ros::Publisher sensor_status_pub = n.advertise<coconuts_common::SensorStatus>("/sensor_status",1);
     	
 
 	// Get Parameters
@@ -147,6 +150,7 @@ int main(int argc, char **argv) {
 	while(ros::ok()) {
 
 		coconuts_common::ArmStatus arm_status;
+		coconuts_common::SensorStatus sensor_status;
 
 		// TODO:
 		// Parsing logic is too fragile, can be garbage till "hello"
@@ -171,21 +175,30 @@ int main(int argc, char **argv) {
 
 					bool looking = true;
 					coconuts_common::MotorPosition motor_position;
+                    coconuts_common::SensorReading sensor_reading;
 					
 					int loops = 0;
 				    while (looking && loops < 10) {	
 						if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
-							motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
-							motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
-							ROS_DEBUG("BEFORE: [%s].", status.c_str());
-							status = status.erase(0, status.find("|") + 1);
-							ROS_DEBUG("AFTER: [%s].", status.c_str());
-							arm_status.motor_positions.push_back(motor_position);
+                            // If Sensor Reading
+                            if ( (status.at(0)) == 'S' ) {
+                                sensor_reading.sensor = atoi(status.substr(status.find("S") + 1, status.find(" ")).c_str() );
+                                sensor_reading.reading = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+                                status = status.erase(0, status.find("|") + 1);
+                                sensor_status.sensor_readings.push_back(sensor_reading);
+                            } else {
+                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
+                                motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+                                ROS_DEBUG("BEFORE: [%s].", status.c_str());
+                                status = status.erase(0, status.find("|") + 1);
+                                ROS_DEBUG("AFTER: [%s].", status.c_str());
+                                arm_status.motor_positions.push_back(motor_position);
 
-							// Copy values locally for relative movement
-							motors[motor_position.motor]["position"] = motor_position.position;
+                                // Copy values locally for relative movement
+                                motors[motor_position.motor]["position"] = motor_position.position;
 
-							ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
+                                ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
+                            }
 						} else {
 							looking = false;
 							ROS_DEBUG("Done looking [%s].", status.c_str());
@@ -193,6 +206,7 @@ int main(int argc, char **argv) {
 						loops++;
 					}
 					arm_status_pub.publish(arm_status);
+					sensor_status_pub.publish(sensor_status);
 				} else {
 					ROS_INFO("Found out of sequence request [%s].", status.c_str());
 				}

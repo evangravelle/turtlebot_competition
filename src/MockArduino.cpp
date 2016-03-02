@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
 	ros::Rate loop_rate(10);
 	std::string movement_request;
 	std::string prev_movement_request = "1 100|2 100|3 100|4 100";
+    std::string sensor_readings = "S1 10|S2 20|S3 30|S4 40|";
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
 
 	// Open Serial port for R/W 
@@ -73,6 +74,8 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < motor_count; i++) {
 		pot_status << i << " " << motors[i]["status"] << "|";
 	}
+
+    pot_status << sensor_readings;
 
 	int count=0;
 	while(ros::ok()) {
@@ -115,6 +118,8 @@ int main(int argc, char **argv) {
 				for (int i = 0; i < motor_count; i++) {
 					pot_status << i << " " << motors[i]["status"] << "|";
 				}
+
+                pot_status << sensor_readings;
 
 				// Write back previous movement request...
 				if (send_status == true ) {
