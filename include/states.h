@@ -13,6 +13,8 @@
 #define 	MOVE_TO_GOAL				50
 
 #define 	FIND_BALL					60
+#define         SEARCH_FOR_BALL         61
+#define         BALL_FOUND              62
 
 #define 	MOVE_TO_BALL				70
 
