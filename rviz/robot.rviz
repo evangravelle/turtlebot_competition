@@ -65,6 +65,27 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_rgb_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_rgb_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         caster_back_link:
           Alpha: 1
           Show Axes: false
@@ -91,12 +112,22 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        mount_asus_xtion_pro_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         plate_bottom_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         plate_middle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        plate_top_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -131,6 +162,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        pole_kinect_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pole_kinect_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         pole_middle_0_link:
           Alpha: 1
           Show Axes: false
@@ -151,12 +192,32 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        pole_top_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pole_top_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         pole_top_2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         pole_top_3_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -178,13 +239,27 @@ Visualization Manager:
           Value: true
         arm_base:
           Value: true
+        ball_forward:
+          Value: true
         base_footprint:
           Value: true
         base_link:
           Value: true
+        bucket_forward:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_depth_optical_frame:
+          Value: true
         camera_down:
           Value: true
         camera_forward:
+          Value: true
+        camera_link:
+          Value: true
+        camera_rgb_frame:
+          Value: true
+        camera_rgb_optical_frame:
           Value: true
         camera_up:
           Value: true
@@ -202,9 +277,13 @@ Visualization Manager:
           Value: true
         gyro_link:
           Value: true
+        mount_asus_xtion_pro_link:
+          Value: true
         plate_bottom_link:
           Value: true
         plate_middle_link:
+          Value: true
+        plate_top_link:
           Value: true
         pole_bottom_0_link:
           Value: true
@@ -218,6 +297,10 @@ Visualization Manager:
           Value: true
         pole_bottom_5_link:
           Value: true
+        pole_kinect_0_link:
+          Value: true
+        pole_kinect_1_link:
+          Value: true
         pole_middle_0_link:
           Value: true
         pole_middle_1_link:
@@ -225,6 +308,10 @@ Visualization Manager:
         pole_middle_2_link:
           Value: true
         pole_middle_3_link:
+          Value: true
+        pole_top_0_link:
+          Value: true
+        pole_top_1_link:
           Value: true
         pole_top_2_link:
           Value: true
@@ -245,6 +332,14 @@ Visualization Manager:
                 claw:
                   {}
           base_link:
+            camera_rgb_frame:
+              camera_depth_frame:
+                camera_depth_optical_frame:
+                  {}
+              camera_link:
+                {}
+              camera_rgb_optical_frame:
+                {}
             caster_back_link:
               {}
             caster_front_link:
@@ -257,9 +352,13 @@ Visualization Manager:
               {}
             gyro_link:
               {}
+            mount_asus_xtion_pro_link:
+              {}
             plate_bottom_link:
               {}
             plate_middle_link:
+              {}
+            plate_top_link:
               {}
             pole_bottom_0_link:
               {}
@@ -273,6 +372,10 @@ Visualization Manager:
               {}
             pole_bottom_5_link:
               {}
+            pole_kinect_0_link:
+              {}
+            pole_kinect_1_link:
+              {}
             pole_middle_0_link:
               {}
             pole_middle_1_link:
@@ -281,12 +384,19 @@ Visualization Manager:
               {}
             pole_middle_3_link:
               {}
+            pole_top_0_link:
+              {}
+            pole_top_1_link:
+              {}
             pole_top_2_link:
               {}
             pole_top_3_link:
               {}
           camera_forward:
-            {}
+            ball_forward:
+              {}
+            bucket_forward:
+              {}
           camera_up:
             {}
       Update Interval: 0
@@ -328,10 +438,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: ball_marker
-      Name: BallMarker
+      Marker Topic: ball_forward_marker
+      Name: BallForwardMarker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -354,6 +464,14 @@ Visualization Manager:
       Enabled: true
       Marker Topic: camera_down_marker
       Name: CameraDownMarker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: bucket_forward_marker
+      Name: BucketForwardMarker
       Namespaces:
         "": true
       Queue Size: 100
@@ -382,22 +500,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.42677
+      Distance: 0.588883
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 0.341388
+        Y: 0.334532
+        Z: 0.371559
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.415398
+      Pitch: 0.725398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.3004
+      Yaw: 3.1454
     Saved: ~
 Window Geometry:
   Displays:
@@ -417,5 +535,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1445
-  X: 371
-  Y: 92
+  X: 351
+  Y: 72

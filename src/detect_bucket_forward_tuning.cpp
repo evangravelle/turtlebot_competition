@@ -6,7 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <tf/transform_broadcaster.h>
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Point.h>
 
 // Create publishers
 image_transport::Publisher pub;
@@ -24,7 +24,6 @@ static const char WINDOW5[] = "/detect_bucket_forward/drawing";
 
 // Initialize variables
 ros::Time current_time;
-const int max_circles = 1; // Maximum number of circles to draw
 int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
@@ -106,8 +105,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     imshow(WINDOW5, drawing);
 
-	bucket.x = 1.5;
-	bucket.y = rectangle.x;
+	bucket.x = rectangle.x;
+	bucket.y = rectangle.y;
 	bucket_pixel_pub.publish(bucket);
 
     cv::imshow(WINDOW1, cv_ptr_raw->image);
@@ -136,7 +135,7 @@ int main(int argc, char **argv)
     cv::namedWindow(WINDOW5, CV_WINDOW_AUTOSIZE);
 
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
-    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("bucket_pixel",1,true);
+    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward_tuning/bucket_pixel",1,true);
 
     nh.getParam("/detect_bucket_forward/h_min", H_MIN);
     nh.getParam("/detect_bucket_forward/h_max", H_MAX);

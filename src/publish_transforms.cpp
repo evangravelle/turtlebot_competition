@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 	arm_base.transform.rotation.z = 0;
 	arm_base.transform.rotation.w = 1;
 
-	arm_1_quat.setRPY(0, M_PI/8.0, 0);
+	arm_1_quat.setRPY(0, 1.49, 0);
 	arm_1.header.stamp = ros::Time::now();
 	arm_1.header.frame_id = "arm_base";
 	arm_1.child_frame_id = "arm_1";
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 	arm_1.transform.rotation.z = arm_1_quat.z();
 	arm_1.transform.rotation.w = arm_1_quat.w();
 
-	arm_2_quat.setRPY(0, M_PI/3.0, 0);
+	arm_2_quat.setRPY(0, 1.39, 0);
 	arm_2.header.stamp = ros::Time::now();
 	arm_2.header.frame_id = "arm_1";
 	arm_2.child_frame_id = "arm_2";
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 	arm_2.transform.rotation.z = arm_2_quat.z();
 	arm_2.transform.rotation.w = arm_2_quat.w();
 
-	claw_quat.setRPY(0, M_PI/16.0, 0);
+	claw_quat.setRPY(0, -0.69, 0);
 	claw.header.stamp = ros::Time::now();
 	claw.header.frame_id = "arm_2";
 	claw.child_frame_id = "claw";
