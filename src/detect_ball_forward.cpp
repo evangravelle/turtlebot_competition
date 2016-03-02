@@ -73,6 +73,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     // Blur image
     cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
 
+/*
     // Use Hough tranform to search for circles
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, hsv_thresh.rows/8, 100, 20, 10, 60);
@@ -92,7 +93,41 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         }
     }
+*/
 
+    cv::Mat canny_output;
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::Point2f enclosing_circle_center;
+    float enclosing_circle_radius;
+    double contour_area;
+
+    /// Detect edges using canny
+    int low_thresh = 100;
+    cv::Canny(hsv_thresh, canny_output, low_thresh, low_thresh*2, 3 );
+    /// Find contours
+    cv::findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+
+    /// Draw contours
+    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
+
+    cv::Point2f best_circle_center;
+    double best_circle_radius;
+    double best_error = 1.0;
+    double current_error;
+    for(int i = 0; i < contours.size(); i++) {
+        cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+        cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
+        contour_area = cv::contourArea(contours[i]);
+        current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
+        if (current_error < best_error) {
+            best_error = current_error;
+            best_circle_radius = enclosing_circle_radius;
+            best_circle_center = enclosing_circle_center;
+        }
+     }
+
+    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
     //cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
