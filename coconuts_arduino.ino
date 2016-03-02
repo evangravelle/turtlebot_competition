@@ -33,12 +33,13 @@ JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
 char buffer[BUF_SIZE];
 
 SonarSensor sensors[] = {
-  SonarSensor(13,12), 
-  SonarSensor(10,11), 
-  SonarSensor(9,8), 
-  SonarSensor(7,6), 
-  SonarSensor(4,5)
-  };
+  SonarSensor(13,12),   //FRONT
+  SonarSensor(10,11),   //RIGHT
+  SonarSensor(9,8)      //LEFT
+  // SonarSensor(7,6), 
+  // SonarSensor(4,5)
+};
+
 #define NUM_SONAR (sizeof(sensors) / sizeof(SonarSensor))
 
 CommandQueue cmd_queue;
@@ -76,12 +77,6 @@ uint8_t waiting_mode = 0;
 JointCmd current_cmd;
 
 void loop() {
-  for(i=0;i<NUM_SONAR;i++){
-    sensors[i].get_distance();
-    // Serial.print(i);
-    // Serial.print("  ");
-    // Serial.println(sensors[i].get_distance());
-  }
   
   // delay(500);
   // Serial.println("hello from the other side");
@@ -91,7 +86,7 @@ void loop() {
       return;
 
     if(buffer[0]=='a' || buffer[0]=='A'){
-      //dump analog
+      //Dump analog readings from trimpots
       for(i=0; i<NUM_MOTORS; i++){
         Serial.print(i);
         Serial.print(" ");
@@ -99,10 +94,20 @@ void loop() {
         Serial.print("|");
       }
     }else if(buffer[0]=='w' || buffer[0]=='W'){
+      //Add a wait command to the queue
       current_cmd.select=-1;
       current_cmd.set_point=-1;
       current_cmd.wait = 1;
       cmd_queue.enq(current_cmd);
+    }else if(buffer[0]=='s' || buffer[0]=='S'){
+      //Get readings from sonar sensors
+      for(int i=0;i<NUM_SONAR;i++){
+        Serial.print("s");
+        Serial.print(i);
+        Serial.print(" ");
+        Serial.print(sensors[i].get_distance());
+        Serial.print("|");
+      }
     }else{
       //enqueue motor commands
       select = atoi(buffer);
