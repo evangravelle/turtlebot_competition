@@ -100,8 +100,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
     //imshow(WINDOW5, drawing);
 
-    bucket.x = 1.5;
-    bucket.y = rectangle.x;
+    bucket.x = rectangle.x;
+    bucket.y = rectangle.y;
     bucket_pixel_pub.publish(bucket);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
