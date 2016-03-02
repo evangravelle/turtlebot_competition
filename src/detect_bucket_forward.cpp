@@ -13,20 +13,18 @@ image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub;
 
 ros::Publisher ball_pixel_pub, bucket_pixel_pub;
-geometry_msgs::Point ball;
+geometry_msgs::Point bucket;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_objects_forward/image_raw";
-static const char WINDOW2[] = "/detect_objects_forward/hsv_thresh";
-static const char WINDOW3[] = "/detect_objects_forward/after_erode";
-static const char WINDOW4[] = "/detect_objects_forward/after_dilate";
+//static const char WINDOW1[] = "/detect_bucket_forward/image_raw";
+//static const char WINDOW2[] = "/detect_bucket_forward/hsv_thresh";
+//static const char WINDOW3[] = "/detect_bucket_forward/after_erode";
+//static const char WINDOW4[] = "/detect_bucket_forward/after_dilate";
 //static const char WINDOW5[] = "/detect_ball/hsv_thresh";
 
 // Initialize variables
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
-
-void on_trackbar(int,void*) {}
 
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
@@ -43,7 +41,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     catch (cv_bridge::Exception& e)
     {
         //if there is an error during conversion, display it
-        ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
+        ROS_ERROR("detect_bucket::cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -73,63 +71,67 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     //cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
-    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
+    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 1, 1);
 
-    // Use Hough tranform to search for circles
-    std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, hsv_thresh.rows/8, 100, 20);
+    cv::Mat canny_output;
+    std::vector<std::vector<cv::Point> > contours;
+    cv::Rect rectangle(50, 50, 1, 1), rectangle_temp;
+    std::vector<cv::Vec4i> hierarchy;
 
-    if(circles.size() > 0) {
-        int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
-        for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
-//        for(int current_circle = 0; current_circle < 1; ++current_circle) {
-            cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
-            int radius = std::floor(circles[current_circle][2]);
+    /// Detect edges using canny
+    int low_thresh = 100;
+    cv::Canny( hsv_thresh, canny_output, low_thresh, low_thresh*2, 3 );
+    /// Find contours
+    cv::findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-            cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
+    /// Draw contours
+    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
-		    ball.x=center.x;
-		    ball.y=center.y;
-		    ball_pixel_pub.publish(ball);
 
+    for( int i = 0; i< contours.size(); i++ ) {
+        cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+        rectangle_temp = cv::boundingRect(contours[i]);
+        if (rectangle_temp.area() > rectangle.area()) {
+            rectangle = rectangle_temp;
         }
-    }
+     }
 
-    //cv::imshow(WINDOW1, cv_ptr_raw->image);
+    cv::rectangle(drawing, rectangle, cv::Scalar( 255, 255, 0));
+
+    //imshow(WINDOW5, drawing);
+
+    bucket.x = 1.5;
+    bucket.y = rectangle.x;
+    bucket_pixel_pub.publish(bucket);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
     //Convert the CvImage to a ROS image message and publish it
-    it_pub.publish(cv_ptr_raw->toImageMsg());
+    //it_pub.publish(cv_ptr_raw->toImageMsg());
 
 }
 
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "detect_ball_forward");
+	ros::init(argc, argv, "detect_bucket_forward");
 	
 	ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
 
-    nh.getParam("/detect_objects_forward/h_min", H_MIN);
-    nh.getParam("/detect_objects_forward/h_max", H_MAX);
-    nh.getParam("/detect_objects_forward/s_min", S_MIN);
-    nh.getParam("/detect_objects_forward/s_max", S_MAX);
-    nh.getParam("/detect_objects_forward/v_min", V_MIN);
-    nh.getParam("/detect_objects_forward/v_max", V_MAX);
+    nh.getParam("/detect_bucket_forward/h_min", H_MIN);
+    nh.getParam("/detect_bucket_forward/h_max", H_MAX);
+    nh.getParam("/detect_bucket_forward/s_min", S_MIN);
+    nh.getParam("/detect_bucket_forward/s_max", S_MAX);
+    nh.getParam("/detect_bucket_forward/v_min", V_MIN);
+    nh.getParam("/detect_bucket_forward/v_max", V_MAX);
 
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
-    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("bucket_pixel",1,true);
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("ball_pixel",1,true);
-    it_pub = it.advertise("ball_circles", 1);
+    bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1,true);
 
 	ros::spin();
-
-    //cv::destroyWindow(WINDOW2);
-    //cv::destroyWindow(WINDOW4);
 
  }
