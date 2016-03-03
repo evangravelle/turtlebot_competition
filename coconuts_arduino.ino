@@ -76,8 +76,11 @@ uint8_t waiting_mode = 0;
 
 JointCmd current_cmd;
 
+uint8_t arm_is_resting = 0;
+
 void loop() {
-  
+  // last_loop_time = millis();
+
   // delay(500);
   // Serial.println("hello from the other side");
   if (Serial.available()) {
@@ -93,6 +96,10 @@ void loop() {
         joints[i]->dump();
         Serial.print("|");
       }
+      Serial.print("m ");
+      //Print 1 if arm is moving
+      Serial.print(!(arm_is_resting && cmd_queue.size()==0));
+      Serial.print("|");
     }else if(buffer[0]=='w' || buffer[0]=='W'){
       //Add a wait command to the queue
       current_cmd.select=-1;
@@ -145,15 +152,15 @@ void loop() {
   }
 
 
-  uint8_t all_ok = 1;
+  arm_is_resting = 1;
   for(i=0;i<NUM_MOTORS;i++){
-    all_ok = joints[i]->update() && all_ok;
+    arm_is_resting = joints[i]->update() && arm_is_resting;
   }
-  if(all_ok)
-    waiting_mode = 0;  //All joints have finished moving
-
+  if(arm_is_resting)
+    waiting_mode = 0;  //All joints have finished moving, clear waiting mode
 
   delay(10);
+  // delay( 10 - (millis() - last_loop_time) );
 }
 
 
