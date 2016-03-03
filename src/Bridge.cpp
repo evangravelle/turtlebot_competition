@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 	                            }else if(status.at(0) == 'm'){
 	                            	//Is the arm moving?
 	                            	moving = atoi(status.substr(status.find(" ")+1, status.find("|")).c_str());
-	                            	ROS_INFO("Moving %i", arm_status.isMoving);
+	                            	// ROS_INFO("Moving %i", arm_status.isMoving);
 	                            } else {
 	                            	//Motor positions
 	                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
