@@ -84,7 +84,6 @@ void movementCallback(const coconuts_common::ArmMovement::ConstPtr& msg){
 	} else {
 		ROS_INFO("Nothing to Send");
 	}
-
 }
 
 int main(int argc, char **argv) {
@@ -181,18 +180,20 @@ int main(int argc, char **argv) {
 						int loops = 0;
 					    while (looking && loops < 10) {	
 							if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
-	                            // If Sensor Reading
 	                            if ( (status.at(0)) == 's' ) {
+	                            	//Sonar sensor reading
 	                                sensor_reading.sensor = atoi(status.substr(status.find("s") + 1, status.find(" ")).c_str() );
 	                                sensor_reading.reading = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
-	                                status = status.erase(0, status.find("|") + 1);
 	                                sensor_status.sensor_readings.push_back(sensor_reading);
 	                                // ROS_INFO("Sonar [%i %i]", sensor_reading.sensor, sensor_reading.reading);
+	                            }else if(status.at(0) == 'm'){
+	                            	//Is the arm moving?
+	                            	arm_status.isMoving = atoi(status.substr(status.find(" ")+1, status.find("|")).c_str());
 	                            } else {
+	                            	//Motor positions
 	                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
 	                                motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
 	                                ROS_DEBUG("BEFORE: [%s].", status.c_str());
-	                                status = status.erase(0, status.find("|") + 1);
 	                                ROS_DEBUG("AFTER: [%s].", status.c_str());
 	                                arm_status.motor_positions.push_back(motor_position);
 
@@ -201,6 +202,8 @@ int main(int argc, char **argv) {
 
 	                                ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
 	                            }
+
+	                            status = status.erase(0, status.find("|") + 1);
 							} else {
 								looking = false;
 								ROS_DEBUG("Done looking [%s].", status.c_str());
@@ -219,7 +222,7 @@ int main(int argc, char **argv) {
 			if ( count % polling_frequency == 0 ) {
 				serial_port_.write("A|");
 			}
-			if(count % sonar_polling_freq ==0){
+			if(count % sonar_polling_freq == 0){
 				serial_port_.write("S|");
 			}
 		} catch(std::exception& e){
