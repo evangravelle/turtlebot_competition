@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
 	}
 
 	int count=0;
+	uint8_t moving = 0;
 
 	while(ros::ok()) {
 
@@ -188,7 +189,8 @@ int main(int argc, char **argv) {
 	                                // ROS_INFO("Sonar [%i %i]", sensor_reading.sensor, sensor_reading.reading);
 	                            }else if(status.at(0) == 'm'){
 	                            	//Is the arm moving?
-	                            	arm_status.isMoving = atoi(status.substr(status.find(" ")+1, status.find("|")).c_str());
+	                            	moving = atoi(status.substr(status.find(" ")+1, status.find("|")).c_str());
+	                            	ROS_INFO("Moving %i", arm_status.isMoving);
 	                            } else {
 	                            	//Motor positions
 	                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
@@ -202,7 +204,6 @@ int main(int argc, char **argv) {
 
 	                                ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
 	                            }
-
 	                            status = status.erase(0, status.find("|") + 1);
 							} else {
 								looking = false;
@@ -210,6 +211,7 @@ int main(int argc, char **argv) {
 							}
 							loops++;
 						}
+						arm_status.isMoving = moving; 	//Sometimes it receives no movement update, just use the last one
 						arm_status_pub.publish(arm_status);
 						sensor_status_pub.publish(sensor_status);
 					} else {
