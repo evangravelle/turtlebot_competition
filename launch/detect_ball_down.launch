@@ -2,10 +2,10 @@
 
   <!-- detect ball down parameters-->
   <arg name="h_min_down" default="0" />
-  <arg name="h_max_down" default="50" />
+  <arg name="h_max_down" default="55" />
   <arg name="s_min_down" default="0" />
   <arg name="s_max_down" default="255" />
-  <arg name="v_min_down" default="210" />
+  <arg name="v_min_down" default="195" />
   <arg name="v_max_down" default="255" />
   <param name="/detect_ball_down/h_min" value="$(arg h_min_down)" />
   <param name="/detect_ball_down/h_max" value="$(arg h_max_down)" />

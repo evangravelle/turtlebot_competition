@@ -122,18 +122,19 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
         contour_area = cv::contourArea(contours[i]);
         current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-        if (current_error < best_error) {
+        if (current_error < best_error && enclosing_circle_radius > 35) {
             best_error = current_error;
             best_circle_radius = enclosing_circle_radius;
             best_circle_center = enclosing_circle_center;
         }
      }
-    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
-
-    ball.x=best_circle_center.x;
-    ball.y=best_circle_center.y;
-    ball_pixel_pub.publish(ball);
-
+     
+    if (best_circle_radius > 35) {
+        cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+        ball.x=best_circle_center.x;
+        ball.y=best_circle_center.y;
+        ball_pixel_pub.publish(ball);
+    }
 
     //cv::imshow(WINDOW1, cv_ptr_raw->image);
 

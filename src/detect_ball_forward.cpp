@@ -25,6 +25,8 @@ static const char WINDOW4[] = "/detect_ball_forward/after_dilate";
 // Initialize variables
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
+int min_radius = 5;
+int max_radius = 30;
 
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
@@ -126,6 +128,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             best_circle_center = enclosing_circle_center;
         }
      }
+
+    if (best_circle_radius > min_radius && best_circle_radius < max_radius) {
+        cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+        ball.x = best_circle_center.x;
+        ball.y = best_circle_center.y;
+        ball_pixel_pub.publish(ball);
+    }
 
     cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
     //cv::imshow(WINDOW1, cv_ptr_raw->image);

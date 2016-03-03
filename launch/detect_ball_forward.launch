@@ -2,10 +2,10 @@
 
   <!-- Detect Ball Parameters-->
   <arg name="h_min_forward" default="0" />
-  <arg name="h_max_forward" default="41" />
-  <arg name="s_min_forward" default="27" />
-  <arg name="s_max_forward" default="201" />
-  <arg name="v_min_forward" default="166" />
+  <arg name="h_max_forward" default="40" />
+  <arg name="s_min_forward" default="52" />
+  <arg name="s_max_forward" default="255" />
+  <arg name="v_min_forward" default="174" />
   <arg name="v_max_forward" default="255" />
   <param name="/detect_ball_forward/h_min" value="$(arg h_min_forward)" />
   <param name="/detect_ball_forward/h_max" value="$(arg h_max_forward)" />
