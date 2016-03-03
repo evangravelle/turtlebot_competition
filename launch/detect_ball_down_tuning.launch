@@ -5,10 +5,10 @@
 
   <!-- Detect Ball -->
   <param name="/detect_ball_down/h_min" type="int" value="0" />
-  <param name="/detect_ball_down/h_max" type="int" value="50" />
+  <param name="/detect_ball_down/h_max" type="int" value="55" />
   <param name="/detect_ball_down/s_min" type="int" value="0" />
   <param name="/detect_ball_down/s_max" type="int" value="255" />
-  <param name="/detect_ball_down/v_min" type="int" value="210" />
+  <param name="/detect_ball_down/v_min" type="int" value="195" />
   <param name="/detect_ball_down/v_max" type="int" value="255" />
   <node name="detect_ball_down_tuning" pkg="coconuts_master" type="detect_ball_down_tuning" />
 

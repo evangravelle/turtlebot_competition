@@ -29,6 +29,8 @@ int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
+int min_radius = 5;
+int max_radius = 30;
 
 void on_trackbar(int,void*) {}
 
@@ -82,8 +84,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 /*
     // Use Hough tranform to search for circles
     std::vector<cv::Vec3f> circles;
-    int min_radius = 5;
-    int max_radius = 30;
     int accumulator_threshold = 20; // increase for less circles
     int grad_value = 100;
     cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, 2*min_radius, grad_value, accumulator_threshold, min_radius, max_radius);
@@ -136,14 +136,20 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
         contour_area = cv::contourArea(contours[i]);
         current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-        if (current_error < best_error) {
+        if (current_error < best_error && enclosing_circle_radius > min_radius && enclosing_circle_radius < max_radius) {
             best_error = current_error;
             best_circle_radius = enclosing_circle_radius;
             best_circle_center = enclosing_circle_center;
         }
      }
 
-    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+
+    if (best_circle_radius > min_radius && best_circle_radius < max_radius) {
+        cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+        ball.x = best_circle_center.x;
+        ball.y = best_circle_center.y;
+        ball_pixel_pub.publish(ball);
+    }
 
     cv::imshow(WINDOW5, drawing);
 

@@ -12,8 +12,8 @@
 image_transport::Publisher pub;
 ros::Publisher image_thresh_pub;
 
-ros::Publisher ball_location_pub;
-geometry_msgs::Pose ball;
+ros::Publisher ball_pixel_pub;
+geometry_msgs::Point ball;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_down/image_raw";
@@ -52,34 +52,34 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         return;
     }
 
-    //cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
+    cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
 
     // remove some noise
     // cv::medianBlur(cv_ptr_raw->image, cv_ptr_raw->image, 3);
 
     // Convert to HSV
-    //cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
+    cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
     //cv::imshow(WINDOW1, hsv_image);
 
     // split HSV, then threshold
-    //cv::split(hsv_image, hsv_channels);
-    //cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-    //cv::imshow(WINDOW2, hsv_thresh);
+    cv::split(hsv_image, hsv_channels);
+    cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
+    cv::imshow(WINDOW2, hsv_thresh);
 
-    //cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
-    //cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
+    cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+    cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
     // Erode then display
-    //cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-    //cv::imshow(WINDOW3, hsv_thresh);
+    cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
+    cv::imshow(WINDOW3, hsv_thresh);
 
     // Dilate then display
-    //cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
-    //cv::imshow(WINDOW4, hsv_thresh);
+    cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
+    cv::imshow(WINDOW4, hsv_thresh);
 
     // Blur image
-    //cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
-
+    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
+/*
     // Use Hough tranform to search for circles
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(cv_ptr_raw->image, circles, CV_HOUGH_GRADIENT, 2, cv_ptr_raw->image.rows/8, 100, 20);
@@ -98,6 +98,46 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 		    ball_location_pub.publish(ball);
 
         }
+    }
+*/
+    // Contour method
+    cv::Mat canny_output;
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::Point2f enclosing_circle_center;
+    float enclosing_circle_radius;
+    double contour_area;
+
+    /// Detect edges using canny
+    int low_thresh = 100;
+    cv::Canny(hsv_thresh, canny_output, low_thresh, low_thresh*2, 3 );
+    /// Find contours
+    cv::findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+
+    /// Draw contours
+    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
+
+    cv::Point2f best_circle_center;
+    double best_circle_radius = 0.0;
+    double best_error = 1.0;
+    double current_error;
+    for(int i = 0; i < contours.size(); i++) {
+        cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+        cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
+        contour_area = cv::contourArea(contours[i]);
+        current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
+        if (current_error < best_error && enclosing_circle_radius > 35) {
+            best_error = current_error;
+            best_circle_radius = enclosing_circle_radius;
+            best_circle_center = enclosing_circle_center;
+        }
+     }
+
+    if (best_circle_radius > 35) {
+        cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+        ball.x=best_circle_center.x;
+        ball.y=best_circle_center.y;
+        ball_pixel_pub.publish(ball);
     }
 
     cv::imshow(WINDOW1, cv_ptr_raw->image);
@@ -126,7 +166,7 @@ int main(int argc, char **argv)
 
     image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     //image_transport::Subscriber sub = it.subscribe("/stereo/right/image_rect_color", 1, imageCallback); //Testing
-	ball_location_pub = nh.advertise<geometry_msgs::Pose>("/ballLocation",1000,true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1000,true);
     //pub = it.advertise("/detect_ball/hsv_image", 1);
 
     nh.getParam("/detect_ball_down/h_min", H_MIN);
