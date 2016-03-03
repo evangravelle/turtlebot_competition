@@ -16,6 +16,7 @@
 		For example, using 20 means that for every 20 times the 
 		ROS loop executes this will execute once -->	
 	<param name="polling_frequency" type="int" value="10" />
+	<param name="sonar_polling_freq" type="int" value="5" />
 	<param name="motor_count" type="int" value="4" />
 	
 	<!-- Link 0 -->

@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 	ros::NodeHandle pn("~");
 	std::string port_name;
 	std::ostringstream param_name;
-	int motor_count, polling_frequency;
+	int motor_count, polling_frequency, sonar_polling_freq;
 	
    	// Maybe reduce this so we dont buffer commands?
 	ros::Subscriber motor_sub = n.subscribe("motor_control",1, &movementCallback);
@@ -106,6 +106,7 @@ int main(int argc, char **argv) {
 	pn.param<std::string>("port", port_name, "/dev/ttyUSB0");
 	pn.param<int>("motor_count", motor_count, 4);
 	pn.param<int>("polling_frequency", polling_frequency, 20);
+	pn.param<int>("sonar_polling_freq", sonar_polling_freq, 5);
 
 	for(int i = 0; i < motor_count; i++) {
 
@@ -169,55 +170,58 @@ int main(int argc, char **argv) {
 				if (status.find("hello") != std::string::npos) {
 					ROS_INFO("Its Adele, turn that shit off");
 				} else {
-				// input is a repeating string of format: "X YYYY|"
-				// if we find a "A|" we should assume its out of sequence and ignore
-				if ( status.length() > 0 && status.find("A|") == std::string::npos && status.find(" ") >= 0 && status.find("|") >= 0 ) {
+					// input is a repeating string of format: "X YYYY|"
+					// if we find a "A|" we should assume its out of sequence and ignore
+					if ( status.length() > 0 && status.find("A|") == std::string::npos && status.find(" ") >= 0 && status.find("|") >= 0 ) {
 
-					bool looking = true;
-					coconuts_common::MotorPosition motor_position;
-                    coconuts_common::SensorReading sensor_reading;
-					
-					int loops = 0;
-				    while (looking && loops < 10) {	
-						if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
-                            // If Sensor Reading
-                            if ( (status.at(0)) == 'S' ) {
-                                sensor_reading.sensor = atoi(status.substr(status.find("S") + 1, status.find(" ")).c_str() );
-                                sensor_reading.reading = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
-                                status = status.erase(0, status.find("|") + 1);
-                                sensor_status.sensor_readings.push_back(sensor_reading);
-                            } else {
-                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
-                                motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
-                                ROS_DEBUG("BEFORE: [%s].", status.c_str());
-                                status = status.erase(0, status.find("|") + 1);
-                                ROS_DEBUG("AFTER: [%s].", status.c_str());
-                                arm_status.motor_positions.push_back(motor_position);
+						bool looking = true;
+						coconuts_common::MotorPosition motor_position;
+	                    coconuts_common::SensorReading sensor_reading;
+						
+						int loops = 0;
+					    while (looking && loops < 10) {	
+							if ( (status.length() > 0) && (status.find(" ") >= 0) && (status.find("|") >= 0) ) {
+	                            // If Sensor Reading
+	                            if ( (status.at(0)) == 's' ) {
+	                                sensor_reading.sensor = atoi(status.substr(status.find("s") + 1, status.find(" ")).c_str() );
+	                                sensor_reading.reading = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+	                                status = status.erase(0, status.find("|") + 1);
+	                                sensor_status.sensor_readings.push_back(sensor_reading);
+	                                // ROS_INFO("Sonar [%i %i]", sensor_reading.sensor, sensor_reading.reading);
+	                            } else {
+	                                motor_position.motor = atoi(status.substr(0, status.find(" ")).c_str());
+	                                motor_position.position = atoi(status.substr(status.find(" ") + 1, status.find("|")).c_str());
+	                                ROS_DEBUG("BEFORE: [%s].", status.c_str());
+	                                status = status.erase(0, status.find("|") + 1);
+	                                ROS_DEBUG("AFTER: [%s].", status.c_str());
+	                                arm_status.motor_positions.push_back(motor_position);
 
-                                // Copy values locally for relative movement
-                                motors[motor_position.motor]["position"] = motor_position.position;
+	                                // Copy values locally for relative movement
+	                                motors[motor_position.motor]["position"] = motor_position.position;
 
-                                ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
-                            }
-						} else {
-							looking = false;
-							ROS_DEBUG("Done looking [%s].", status.c_str());
+	                                ROS_DEBUG("STATUS Found [%i %i|].", motor_position.motor, motor_position.position);
+	                            }
+							} else {
+								looking = false;
+								ROS_DEBUG("Done looking [%s].", status.c_str());
+							}
+							loops++;
 						}
-						loops++;
+						arm_status_pub.publish(arm_status);
+						sensor_status_pub.publish(sensor_status);
+					} else {
+						ROS_INFO("Found out of sequence request [%s].", status.c_str());
 					}
-					arm_status_pub.publish(arm_status);
-					sensor_status_pub.publish(sensor_status);
-				} else {
-					ROS_INFO("Found out of sequence request [%s].", status.c_str());
 				}
-			}
 			}
 
 			// Queue up next request for status, but only do it 1/10th of the times we send requests
 			if ( count % polling_frequency == 0 ) {
 				serial_port_.write("A|");
 			}
-
+			if(count % sonar_polling_freq ==0){
+				serial_port_.write("S|");
+			}
 		} catch(std::exception& e){
 			std::cerr<<e.what()<<std::endl;
 		}
