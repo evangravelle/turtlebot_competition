@@ -126,37 +126,8 @@ while(ros::ok()){
 			}
 	
 
-//		if (cos(angle)>0){
-//			if (abs(angle*180/3.14)<45){
-//				a=A*angle;
-//			}
-//			else{
-//				a=A;
-//			}
-//		}
-//		else if (angle*180/3.14>90){
-//			if (abs(angle*180/3.14)>135){
-//				a=-A*(angle-3.14);
-//			}
-//			else{
-//				a=A;
-//			}
-//		}
-//		else if (angle*180/3.14<-90){
-//			if (abs(angle*180/3.14)>135){
-//				a=-A*(angle+3.14);
-//			}
-//			else{
-//				a=A;
-//			}
-//		}
-//	
 a=A*angle;
 
-
-//		if (dist<.01){
-//			a=0;
-//		}
 
 
 			finalVel.linear.x=KTERM*v;
@@ -165,18 +136,18 @@ a=A*angle;
 		}
 
 		if (dist < .25){
-				if ((finalVel.linear.x-lastVel.linear.x)>.01){
+				if ((finalVel.linear.x-lastVel.linear.x)>.02){
 					finalVel.linear.x=lastVel.linear.x+.02;
 				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.01){
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.02){
 					finalVel.linear.x=lastVel.linear.x-.02;
 				}
 		}
 		else  {
-				if ((finalVel.linear.x-lastVel.linear.x)>.05){
+				if ((finalVel.linear.x-lastVel.linear.x)>.03){
 					finalVel.linear.x=lastVel.linear.x+.03;
 				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.05){
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.03){
 					finalVel.linear.x=lastVel.linear.x-.03;
 				}		
 		}

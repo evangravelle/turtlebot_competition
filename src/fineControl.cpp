@@ -35,8 +35,8 @@ float CANGLETERM=.5;
 
 double dist=0;
 double angle=0;
-double KLinear=.05;
-double KAngular=.01;
+double KLinear=.0005;
+double KAngular=.008;
 double thresholdAngle=0;
 double thresholdDistance=0;
 
@@ -63,8 +63,8 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 //Calculate Dist and angle
 gotInitialGoal=true;
 
-dist=240-cenPose->y;
-angle=320-cenPose->x;
+dist=235-cenPose->y;
+angle=350-cenPose->x; //CENTER
 	
 }
 
@@ -83,8 +83,8 @@ u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1,
 geometry_msgs::Twist finalVel;
 
 //LAST VELOCITY INIT
-lastVel.linear.x=0;
-lastVel.angular.z=0;
+lastVel.linear.x=10;
+lastVel.angular.z=10;
 
 
 
@@ -93,7 +93,7 @@ while(ros::ok()){
 
 	if (gotInitialGoal==true){
 		std::cout << "\n\n\n";
-		std::cout << "Got measurement" <<  dist<<"\n";
+		std::cout << "Got measurement" <<  angle<<"\n";
 
 		if (abs(dist)>thresholdDistance){
 			finalVel.linear.x=KLinear*dist;
@@ -108,20 +108,20 @@ while(ros::ok()){
 		}
 		}
 
-				if ((finalVel.linear.x-lastVel.linear.x)>.01){
-					finalVel.linear.x=lastVel.linear.x+.01;
-				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.01){
-					finalVel.linear.x=lastVel.linear.x-.01;
-				}
+//				if ((finalVel.linear.x-lastVel.linear.x)>.01){
+//					finalVel.linear.x=lastVel.linear.x+.01;
+//				}	
+//				else if ((finalVel.linear.x-lastVel.linear.x)<-.01){
+//					finalVel.linear.x=lastVel.linear.x-.01;
+//				}
 
 
-				if ((finalVel.angular.z-lastVel.angular.z)>.001){
-					finalVel.angular.z=lastVel.angular.z+.001;
-				}	
-				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
-					finalVel.angular.z=lastVel.angular.z-.001;
-				}
+//				if ((finalVel.angular.z-lastVel.angular.z)>.001){
+//					finalVel.angular.z=lastVel.angular.z+.001;
+//				}	
+//				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
+//					finalVel.angular.z=lastVel.angular.z-.001;
+//				}
 		
 		if (abs(finalVel.angular.z)<.0001){
 		finalVel.angular.z=0;			
@@ -131,16 +131,16 @@ while(ros::ok()){
 
 
 //Maxes
-		if (finalVel.angular.z >.1){
-			finalVel.angular.z=.1;
-		}else if (finalVel.angular.z<-.1){
-			finalVel.angular.z=-.1;
+		if (finalVel.angular.z >.5){
+			finalVel.angular.z=.5;
+		}else if (finalVel.angular.z<-.5){
+			finalVel.angular.z=-.5;
 		}
 
-		if (finalVel.linear.x>.02){
-			finalVel.linear.x=.02;
-		}else if (finalVel.linear.x<-.02){
-			finalVel.linear.x=-.02;
+		if (finalVel.linear.x>.1){
+			finalVel.linear.x=.1;
+		}else if (finalVel.linear.x<-.1){
+			finalVel.linear.x=-.1;
 		}
 
 

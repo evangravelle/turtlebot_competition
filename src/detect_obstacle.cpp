@@ -27,32 +27,32 @@ const int ON=1;
 int DETECTED=1;
 int NOT_DETECTED=0;
 
-double thresholdMin=25;
-double thresholdMax=200;
+double thresholdMin=5;
+double thresholdMax=100;
 double orientation=0;
 
 
-bool newMeasurement=false;
+bool newMeasurement=true;
 
 int r1=0;
 int r2=0;
 int r3=0;
 
-double x=0;
-double y=0;
+double x=1;
+double y=1;
 
 // Construct Node Class
 using namespace std;
 
-
-
-// Other member variables
-
-
-
 void toPose(){
+	x=0;
+	y=0;
+	std::cout << "Got Sensor Readings: " <<    obstacles.transforms[0].transform.translation.x <<" \n";
 	obstaclePose.pose.position.x=x+obstacles.transforms[0].transform.translation.y*sin(orientation) + obstacles.transforms[0].transform.translation.x*cos(orientation);
 	obstaclePose.pose.position.y=y+obstacles.transforms[0].transform.translation.y*cos(orientation) + obstacles.transforms[0].transform.translation.x*sin(orientation);
+obstaclePose.pose.position.x=obstaclePose.pose.position.x*5;
+obstaclePose.pose.position.y=obstaclePose.pose.position.y*5;
+	obstaclePose.pose.orientation.w=1;
 }
 
 void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
@@ -72,14 +72,16 @@ r1=0;
 r2=0;
 r3=0;
 
+
+
 //Later transform to global coordinates;
-	if (s->sensor_readings[0].reading >thresholdMin && s->sensor_readings[0].reading < thresholdMax){
+	if (s->sensor_readings[2].reading >thresholdMin && s->sensor_readings[2].reading < thresholdMax){
 		r1=DETECTED;}
 
-	if (s->sensor_readings[1].reading >thresholdMin && s->sensor_readings[1].reading < thresholdMax){
+	if (s->sensor_readings[0].reading >thresholdMin && s->sensor_readings[0].reading < thresholdMax){
 		r2=DETECTED;}
 
-	if (s->sensor_readings[2].reading >thresholdMin && s->sensor_readings[2].reading < thresholdMax){
+	if (s->sensor_readings[1].reading >thresholdMin && s->sensor_readings[1].reading < thresholdMax){
 		r3=DETECTED;}
 
 	if (r1==DETECTED){
@@ -87,35 +89,29 @@ r3=0;
 			if (r3==DETECTED){
 					//LEFT AND CENTER AND RIGHT
 					obstacles.transforms[0].transform.translation.y=0;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[1].reading/1000;
 			}else{
 					//LEFT AND CENTER
-					obstacles.transforms[0].transform.translation.y=-.15;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[1].reading/1000;
+					obstacles.transforms[0].transform.translation.y=-.025;
 			}
 		}else{
 			if (r3==DETECTED){
 					//LEFT AND RIGHT
 					obstacles.transforms[0].transform.translation.y=0;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[1].reading/1000;
 			}else{
 					//ONLY LEFT
-					obstacles.transforms[0].transform.translation.y=-.3;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[0].reading/1000;
+					obstacles.transforms[0].transform.translation.y=-.05;
 			}
 		}
 	}else{
 		if (r2==DETECTED){
 			if (r3==DETECTED){
 					//CENTER AND RIGHT
-					obstacles.transforms[0].transform.translation.y=.15;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[1].reading/1000;
+					obstacles.transforms[0].transform.translation.y=.025;
 			}
 		}else{
 			if (r3==DETECTED){
 					//ONLY RIGHT
-					obstacles.transforms[0].transform.translation.y=.3;
-					obstacles.transforms[0].transform.translation.x=s->sensor_readings[2].reading/1000;
+					obstacles.transforms[0].transform.translation.y=.05;
 			}else{
 					//NONE
 			}
@@ -123,11 +119,15 @@ r3=0;
 	}
 
 
+
+
 	if (r1==DETECTED || r2==DETECTED || r3==DETECTED){
 		toPose();
+		obstacles.transforms[0].transform.translation.x=s->sensor_readings[0].reading/1000.;
 		newMeasurement=true;
 	}else{
-		newMeasurement=false;
+		toPose();
+		newMeasurement=true;
 	}
 
 
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 	ros::Publisher u_pub_, pos_pub_;
 
 	obstacles.transforms.resize(num);
-	obstaclePose.header.frame_id="picasso";
+	obstaclePose.header.frame_id="michelangelo";
 
 	for (int i=1;i<num;i++){
 		obstacles.transforms[i].transform.rotation.x=OFF;
@@ -155,7 +155,7 @@ tf_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
 
 //obstacle locations
 u_pub_ = nh_.advertise<tf2_msgs::TFMessage>("/tf", 1, true);
-pos_pub_ = nh_.advertise<tf2_msgs::TFMessage>("poseEstimationC", 1, true);
+pos_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("poseEstimation", 1, true);
 
 
 while(ros::ok()){
