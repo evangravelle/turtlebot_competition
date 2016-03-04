@@ -18,10 +18,10 @@
 
 #define 	MOVE_TO_BALL				70
 #define         MOVING_TO_BALL          71
-#define         AT_BALL                 71
+#define         AT_BALL                 72
 
 #define 	PICK_UP_BALL				80	
-#define         GOT_BALL                71
+#define         GOT_BALL                81 
 
 #define 	DROP_BALL					90
 
