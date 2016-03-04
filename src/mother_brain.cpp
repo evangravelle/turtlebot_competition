@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/String.h>
 #include <tf/transform_listener.h>
@@ -22,7 +23,9 @@ private:
 
 	// Topics we subscribe to
     ros::Subscriber 
-        control_override_sub;
+        control_override_sub,
+        control_substate_sub,
+        detect_ball_forward_sub;
 
 	// Topics we Publish
     ros::Publisher
@@ -42,9 +45,11 @@ public:
         
         // Subscriptions
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
+        control_substate_sub = nodeh.subscribe<coconuts_common::ControlState>("/control_substate", 1, &mother_brain::control_substate_receive, this);
+        detect_ball_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
 
         // Publishers
-        control_state_pub = nodeh.advertise<coconuts_common::ControlState>("/control_state", 1);
+        control_state_pub = nodeh.advertise<coconuts_common::ControlState>("/control_state", 10);
         goal_pose_pub = nodeh.advertise<geometry_msgs::TransformStamped>("/goal_pose", 1);
         cmd_vel_pub = nodeh.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1);
 
@@ -55,8 +60,17 @@ public:
     void control_override_receive(const coconuts_common::ControlState::ConstPtr& control_msg) {
 
         behavior_state_ = control_msg->state;
+        behavior_sub_state_ = control_msg->sub_state;
+        ROS_INFO("Mother Brain: Forced control state to [%d].", behavior_state_);
 
 	}
+
+    void control_substate_receive(const coconuts_common::ControlState::ConstPtr& control_msg) {
+
+        behavior_sub_state_ = control_msg->sub_state;
+        ROS_INFO("Mother Brain: Forced sub state to [%d].", behavior_sub_state_);
+
+    }
 
     void publish_state() {
         coconuts_common::ControlState current_state;
@@ -65,23 +79,50 @@ public:
         control_state_pub.publish(current_state);
     }
 
+
+    void move_to_ball() {
+
+        if (behavior_state_ == MOVE_TO_BALL) {
+            // Need to know:
+            // 1.  when we're at the ball
+            // 2.  When we're ready to pick up the ball
+            // 3.  When do we give up?
+            if (behavior_sub_state_ == MOVING_TO_BALL) { //  still getting there.
+                ROS_INFO("Mother Brain: Moving To Ball.");
+            }
+
+            // AT_BALL set by external node
+            // If we are ready
+            if (behavior_sub_state_ == AT_BALL) {
+                ROS_INFO("Mother Brain: At Ball.");
+                behavior_state_ = PICK_UP_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            }
+
+            if (false) {
+                // Failure, go back to FIND_BALL
+                ROS_INFO("Mother Brain: Find Ball FAILED.");
+                behavior_state_ = FIND_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            }
+        }
+
+    }
+
+    void find_ball_callback(const geometry_msgs::Point::ConstPtr& msg) {
+
+        if (behavior_state_ == FIND_BALL) {
+                behavior_state_ = MOVE_TO_BALL;
+                behavior_sub_state_ = MOVING_TO_BALL;
+                // we just need to stop looking
+                ROS_INFO("Ball found, moving to ball and changing state to MOVE_TO_BALL");
+        }
+    }
+
     void find_ball() {
 
         if (behavior_state_ == FIND_BALL) {
             tf::StampedTransform ball_found_transform;
-
-            // Drive the bot around 
-            // TODO:  This needs to drive in some search patern
-            // and avoid obstacles - shoud potentially be another node that
-            // only runs in this state (FIND_BALL, SEARCH_FOR_BALL)
-            behavior_sub_state_ = SEARCH_FOR_BALL;
-            // Move forward a bit
-            // rotate 90
-            geometry_msgs::Twist search_twist;
-            search_twist.angular.z = 2;
-            search_twist.linear.x = 10;
-            cmd_vel_pub.publish(search_twist);
-
 
             // Wait for a sign indicating we've found a ball
             ros::Time now = ros::Time::now();
@@ -90,7 +131,7 @@ public:
                 ball_found_listener.lookupTransform("/camera_forward", "/ball_forward", now, ball_found_transform);
                 // set states 
                 behavior_state_ = MOVE_TO_BALL;
-                behavior_sub_state_ = BALL_FOUND;
+                behavior_sub_state_ = MOVING_TO_BALL;
                 // publish transform to goal_pose
                 ROS_INFO("Ball found, moving to ball and changing state to MOVE_TO_BALL");
                 publish_goal(ball_found_transform);
@@ -169,12 +210,12 @@ int main(int argc, char** argv)
                 //
                 behavior_sub_state_ = SEARCH_FOR_BALL;
 
-                mother_brain_h.find_ball();
+                //mother_brain_h.find_ball();
 
                 break;
 
             case MOVE_TO_BALL:
-                //
+                mother_brain_h.move_to_ball(); 
                 break;
 
             case PICK_UP_BALL:
