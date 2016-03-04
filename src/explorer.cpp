@@ -62,7 +62,7 @@ public:
         switch (movement) {
             default:
                 geometry_msgs::Twist search_twist;
-                search_twist.angular.z = 0.4;
+                search_twist.angular.z = 0.3;
                 //search_twist.linear.x = 0.3;
                 search_twist.linear.x = 0.0;
                 cmd_vel_pub.publish(search_twist);

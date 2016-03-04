@@ -8,6 +8,7 @@
 #include <tf2_msgs/TFMessage.h>
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <coconuts_common/ArmMovement.h>
 
 
 // Ugly, but this works
@@ -31,7 +32,8 @@ private:
     ros::Publisher
         control_state_pub,
         goal_pose_pub,
-        cmd_vel_pub;
+        cmd_vel_pub,
+        motor_control_pub;
 
     tf::TransformListener ball_found_listener;
 
@@ -52,6 +54,7 @@ public:
         control_state_pub = nodeh.advertise<coconuts_common::ControlState>("/control_state", 10);
         goal_pose_pub = nodeh.advertise<geometry_msgs::TransformStamped>("/goal_pose", 1);
         cmd_vel_pub = nodeh.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1);
+        motor_control_pub = nodeh.advertise<coconuts_common::ArmMovement>("/motor_control", 1);
 
 
     }
@@ -88,7 +91,7 @@ public:
             // 2.  When we're ready to pick up the ball
             // 3.  When do we give up?
             if (behavior_sub_state_ == MOVING_TO_BALL) { //  still getting there.
-                ROS_INFO("Mother Brain: Moving To Ball.");
+                //ROS_INFO("Mother Brain: Moving To Ball.");
             }
 
             // AT_BALL set by external node
@@ -151,6 +154,51 @@ public:
         goal_pose_pub.publish(msg);
     }
 
+    void arm_grabBallOpen() {
+        ROS_INFO("Mother Brain: Moving arm to grab ball open.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "GRAB_BALL_OPEN";
+        positionArm(arm_movement);
+    }
+
+    void arm_grabBallClose() {
+        ROS_INFO("Mother Brain: Moving arm to grab ball close.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "GRAB_BALL_CLOSE";
+        positionArm(arm_movement);
+    }
+
+    void arm_dropBallOpen() {
+        ROS_INFO("Mother Brain: Moving arm to drop ball open.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "DROP_BALL_OPEN";
+        positionArm(arm_movement);
+    }
+
+    void arm_dropBallClose() {
+        ROS_INFO("Mother Brain: Moving arm to drop ball close.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "DROP_BALL_CLOSE";
+        positionArm(arm_movement);
+    }
+
+    void arm_search() {
+        ROS_INFO("Mother Brain: Moving arm to search mode.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "SEARCH";
+        positionArm(arm_movement);
+    }
+
+    void positionArm(coconuts_common::ArmMovement arm_movement) {
+        ROS_INFO("Mother Brain: Sending Command to Arm");
+        motor_control_pub.publish(arm_movement);
+    }
+
 
     ~mother_brain() { }
 };
@@ -160,7 +208,12 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "mother_brain");
     mother_brain mother_brain_h;
 
+
     ROS_INFO("Mother Brain Started");
+
+    if (ros::ok()) {
+        mother_brain_h.arm_search();
+    }
 
     while(ros::ok()) {
 	
@@ -172,16 +225,17 @@ int main(int argc, char** argv)
         if (prev_behavior_state_ != behavior_state_) {
             ROS_INFO("State changed from [%d] to [%d].", prev_behavior_state_, behavior_state_);
             prev_behavior_state_ = behavior_state_;
+            if ( behavior_state_ == INIT) {
+                mother_brain_h.arm_search();
+            }
         }
 
         switch ( behavior_state_ ) {
 
             case INIT:
-                //
                 break;
 
             case MANUAL:
-                //
                 break;
 
             case START:
@@ -238,63 +292,3 @@ int main(int argc, char** argv)
         ros::spinOnce();
     }
 }
-
-
-/*
- * Default Switch Code
- *
- */
-
-/*
-    switch ( behavior_state_ ) {
-
-        case INIT:
-            //
-            break;
-
-        case MANUAL:
-            //
-            break;
-
-        case START:
-            //
-            break;
-
-        case END:
-            //
-            break;
-
-        case CONFIG:
-            //
-            break;
-
-        case FIND_GOAL:
-            //
-            break;
-
-        case MOVE_TO_GOAL:
-            //
-            break;
-
-        case FIND_BALL:
-            //
-            break;
-
-        case MOVE_TO_BALL:
-            //
-            break;
-
-        case PICK_UP_BALL:
-            //
-            break;
-
-        case DROP_BALL:
-            //
-            break;
-
-        default: 
-            ROS_ERROR("Default called on case stament.  Unexpected state [%i] in mother_brain:main().", behavior_state_);
-
-    }
-
-*/
