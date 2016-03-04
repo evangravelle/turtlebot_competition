@@ -84,9 +84,68 @@ public:
         control_state_pub.publish(current_state);
     }
 
+    void drop_ball() {
+
+        if (behavior_state_ == DROP_BALL) {
+            // Need to know
+            // 1. if ball dropped
+            // 2. if it failed
+            // perhaps we dont need an explicit state for ball dropped?:w
+            if (behavior_sub_state_ == BALL_DROPPED) {
+                ROS_INFO("Mother Brain: Ball Droped , going to FIND_BALL.");
+                behavior_state_ = FIND_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            } else if (behavior_sub_state_ == DROP_BALL_FAILED) {
+                ROS_INFO("Mother Brain: Ball Drop failed, going to FIND_BALL.");
+                behavior_state_ = FIND_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            } else {
+                arm_drop_ball_open();
+            }
+            
+
+        }
+
+    }
+
+    void move_to_goal() {
+        // Only do this if the top level state is correct.
+        // Sub-states are controlled by external nodes
+        if (behavior_state_ == MOVE_TO_GOAL) {
+            // Need to know:
+            // 1.  when we're at the goal
+            // 2.  When we're ready to drop up the ball
+            // 3.  When do we give up?
+            //
+            if (behavior_sub_state_ == MOVING_TO_GOAL) { //  still getting there.
+                //ROS_INFO("Mother Brain: Moving To Ball.");
+            }
+
+            // AT_BALL set by external node
+            // If we are ready
+            if (behavior_sub_state_ == AT_GOAL) {
+                ROS_INFO("Mother Brain: At Goal.");
+                behavior_state_ = DROP_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            }
+
+            // Failure...
+            if (behavior_sub_state_ == MOVE_TO_GOAL_FAILED) {
+                // Failure, go back to FIND_BALL
+                ROS_INFO("Mother Brain: Move to Goal FAILED.");
+                // TODO: Some recovery behavior?
+                behavior_state_ = FIND_GOAL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            }
+
+        }
+    }
+
     void find_goal() {
         if (behavior_state_ == FIND_GOAL) {
             if (behavior_sub_state_ == GOAL_FOUND) {
+                behavior_state_ = MOVE_TO_GOAL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
             }
         }
     }
@@ -152,7 +211,7 @@ public:
 
             if (behavior_sub_state_ == MOVE_TO_BALL_FAILED) {
                 // Failure, go back to FIND_BALL
-                ROS_INFO("Mother Brain: Find Ball FAILED.");
+                ROS_INFO("Mother Brain: Move to Ball FAILED.");
                 // TODO: Some recovery behavior?
                 behavior_state_ = FIND_BALL;
                 behavior_sub_state_ = DEFAULT_SUB_STATE;
@@ -292,11 +351,11 @@ int main(int argc, char** argv)
                 break;
 
             case START:
-                //
+                behavior_state_ = FIND_BALL; 
                 break;
 
             case END:
-                //
+                behavior_state_ = INIT; 
                 break;
 
             case CONFIG:
@@ -309,6 +368,7 @@ int main(int argc, char** argv)
                 break;
 
             case MOVE_TO_GOAL:
+                mother_brain_h.move_to_goal();
                 //
                 break;
 
@@ -332,7 +392,7 @@ int main(int argc, char** argv)
                 break;
 
             case DROP_BALL:
-                //
+                mother_brain_h.drop_ball();
                 break;
 
             default: 
