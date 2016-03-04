@@ -13,6 +13,9 @@
 <node pkg="coconuts_master" type="mother_brain" name="mother_brain_node" output="screen" >
 </node>
 
+<node pkg="coconuts_master" type="explorer" name="explorer_node" output="screen" >
+</node>
+
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find coconuts_master)/rviz/robot.rviz" />
 
 <node name="publish_transforms" pkg="coconuts_master" type="publish_transforms" />
