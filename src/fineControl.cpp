@@ -14,6 +14,8 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <std_msgs/Float32.h>
 #include <coconuts_common/ArmMovement.h>
 #include <math.h>
+#include <states.h>
+#include <coconuts_common/ControlState.h>
 
 //Declare Variables
 double y, x, r,x1,y11,x2,y22,x3,y33,cdotMag, cdotAngle;
@@ -39,15 +41,18 @@ double angle=0;
 double KLinear=.0005;
 double ILinear=0;
 double KILinear=.00005;
-double KAngular=.008;
+double KAngular=.005;
 double IAngular=0;
-double KIAngular=.0005;
+double KIAngular=.0002;
 double thresholdAngle=0;
 double thresholdDistance=0;
 
 
 bool goForBall=false;
 bool got_cdot=false;
+
+int state=0;
+
 geometry_msgs::Twist cdot;
 coconuts_common::ArmMovement grabBallOpen;
 
@@ -75,16 +80,23 @@ angle=350-cenPose->x; //CENTER
 	
 }
 
+void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
+	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == -50){ //&& control_state -> sub_state == MOVING_TO_BALL
+		state=1;
+	}
+}
+
 int main(int argc, char **argv)
 {
 
 ros::init(argc, argv, "Downward_facing_camera_control");
 ros::NodeHandle ph_, nh_;
 ros::Rate loop_rate(50); 
-ros::Subscriber cen_sub_;
+ros::Subscriber cen_sub_, control_sub;
 ros::Publisher u_pub_,m_pub;
 
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB);
+control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 m_pub = nh_.advertise<coconuts_common::ArmMovement>("/motor_control", 1, true);
 
@@ -100,6 +112,7 @@ grabBallOpen.pose="GRAB_BALL_OPEN";
 while(ros::ok()){
 	ros::spinOnce();
 
+	if (state==1){
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
 	}
@@ -181,6 +194,10 @@ while(ros::ok()){
 		}else{
 			m_pub.publish(grabBallOpen);
 		}
+
+
+}
+
 
 		loop_rate.sleep();
 

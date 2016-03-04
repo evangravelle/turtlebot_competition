@@ -13,7 +13,9 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
 #include <coconuts_common/ArmMovement.h>
+#include <coconuts_common/ControlState.h>
 #include <math.h>
+#include <states.h>
 
 //Declare Variables
 double y, x, r,x1,y11,x2,y22,x3,y33,cdotMag, cdotAngle;
@@ -38,21 +40,23 @@ double dist=0;
 double angle=0;
 double KLinear=.0005;
 double ILinear=0;
-double KILinear=.00005;
-double KAngular=.0008;
+double KILinear=0;//.00005;
+double KAngular=.005;
 double IAngular=0;
-double KIAngular=.0005;
+double KIAngular=0;//.0005;
 double thresholdAngle=0;
 double thresholdDistance=0;
 
 double m=0;
 double b=0;
 
-
+int state=1;
 bool goForBall=false;
 bool got_cdot=false;
 geometry_msgs::Twist cdot;
 coconuts_common::ArmMovement grabBallOpen;
+ros::Publisher control_pub;
+coconuts_common::ControlState cs;
 
 // Construct Node Class
 using namespace std;
@@ -74,9 +78,22 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 gotInitialGoal=true;
 
 double xPrime=((480-cenPose->y)-b)/m;
-dist=480-cenPose->y;
-angle=xPrime-cenPose->x; //CENTER
+dist=438-cenPose->y;
+angle=xPrime-cenPose->x-15; //CENTER
 
+	if (abs(dist)<10 && abs(angle) <5){
+		state=0;
+		cs.state=MOVE_TO_BALL;
+		cs.sub_state=-50;
+		control_pub.publish(cs);
+	}
+
+}
+
+void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
+	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state != -50){ //&& control_state -> sub_state == MOVING_TO_BALL
+		state=1;
+	}
 }
 
 int main(int argc, char **argv)
@@ -85,11 +102,14 @@ int main(int argc, char **argv)
 ros::init(argc, argv, "AaRoNmA");
 ros::NodeHandle ph_, nh_;
 ros::Rate loop_rate(50); 
-ros::Subscriber cen_sub_;
+ros::Subscriber cen_sub_, control_sub;
 ros::Publisher u_pub_,m_pub;
 
+
+control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
+control_pub = nh_.advertise<coconuts_common::ControlState>("/control_state",1, true);
 
 
 geometry_msgs::Twist finalVel;
@@ -103,7 +123,8 @@ b=(480-124)-m*(266);
 
 while(ros::ok()){
 	ros::spinOnce();
-
+		std::cout << "state : " <<  state<<"\n";
+	if (state==1){
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
 	}
@@ -185,6 +206,9 @@ while(ros::ok()){
 		}else{
 			m_pub.publish(grabBallOpen);
 		}
+	}
+
+
 
 		loop_rate.sleep();
 
