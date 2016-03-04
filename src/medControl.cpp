@@ -39,11 +39,14 @@ double angle=0;
 double KLinear=.0005;
 double ILinear=0;
 double KILinear=.00005;
-double KAngular=.008;
+double KAngular=.0008;
 double IAngular=0;
 double KIAngular=.0005;
 double thresholdAngle=0;
 double thresholdDistance=0;
+
+double m=0;
+double b=0;
 
 
 bool goForBall=false;
@@ -70,23 +73,24 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 //Calculate Dist and angle
 gotInitialGoal=true;
 
-dist=235-cenPose->y;
-angle=350-cenPose->x; //CENTER
-	
+double xPrime=((480-cenPose->y)-b)/m;
+dist=480-cenPose->y;
+angle=xPrime-cenPose->x; //CENTER
+
 }
 
 int main(int argc, char **argv)
 {
 
-ros::init(argc, argv, "Downward_facing_camera_control");
+ros::init(argc, argv, "AaRoNmA");
 ros::NodeHandle ph_, nh_;
 ros::Rate loop_rate(50); 
 ros::Subscriber cen_sub_;
 ros::Publisher u_pub_,m_pub;
 
-cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB);
+cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
-m_pub = nh_.advertise<coconuts_common::ArmMovement>("/motor_control", 1, true);
+
 
 geometry_msgs::Twist finalVel;
 
@@ -94,8 +98,8 @@ geometry_msgs::Twist finalVel;
 lastVel.linear.x=0;
 lastVel.angular.z=0;
 
-grabBallOpen.type="POSE";
-grabBallOpen.pose="GRAB_BALL_OPEN";
+m=(((480-124)-(480-322.5))/(266-322.5));
+b=(480-124)-m*(266);
 
 while(ros::ok()){
 	ros::spinOnce();
@@ -167,10 +171,10 @@ while(ros::ok()){
 			finalVel.angular.z=-.5;
 		}
 
-		if (finalVel.linear.x>.1){
-			finalVel.linear.x=.1;
-		}else if (finalVel.linear.x<-.1){
-			finalVel.linear.x=-.1;
+		if (finalVel.linear.x>.2){
+			finalVel.linear.x=.2;
+		}else if (finalVel.linear.x<-.2){
+			finalVel.linear.x=-.2;
 		}
 		std::cout <<"\n\n";
 		std::cout << "Error x: " <<  angle<<"\n";
@@ -187,3 +191,7 @@ while(ros::ok()){
 }
 
 }
+
+
+
+
