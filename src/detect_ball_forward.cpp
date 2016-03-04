@@ -133,7 +133,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
         ball.x = best_circle_center.x;
         ball.y = best_circle_center.y;
-        ball_pixel_pub.publish(ball);
+    //    ball_pixel_pub.publish(ball);
     }
 
     cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
@@ -143,8 +143,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     cv::waitKey(3);
 
     //Convert the CvImage to a ROS image message and publish it
-    it_pub.publish(cv_ptr_raw->toImageMsg());
-
+                it_pub.publish(cv_ptr_raw->toImageMsg());  
+    ball.x=best_circle_center.x;
+    ball.y=best_circle_center.y;
+	if (ball.x < 320){
+		ball_pixel_pub.publish(ball);
+	}
 }
 
 int main(int argc, char **argv)
