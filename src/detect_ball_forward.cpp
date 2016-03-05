@@ -8,25 +8,32 @@
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Point.h>
 
-
+// Create publishers
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub;
 
-ros::Publisher ball_pixel_pub, bucket_pixel_pub;
-geometry_msgs::Point ball;
-
-//Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball_forward/image_raw";
-static const char WINDOW2[] = "/detect_ball_forward/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball_forward/after_erode";
-static const char WINDOW4[] = "/detect_ball_forward/after_dilate";
-//static const char WINDOW5[] = "/detect_ball/hsv_thresh";
+ros::Publisher ball_pixel_pub;
+geometry_msgs::Point ball, previous_best_circle_center;
+float epsilon = 0.0001;
+float error_threshold = 0.35;
 
 // Initialize variables
-const int max_circles = 1; // Maximum number of circles to draw
+const int max_circles = 3; // Maximum number of circles to draw
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 int min_radius = 5;
 int max_radius = 30;
+
+bool compareFloats(float a, float b, float epsilon) {
+   float diff = a - b;
+   return (diff < epsilon) && (-diff < epsilon);
+}
+
+float calculateDistance(const float x1, const float y1, const float x2, const float y2)
+{
+    float diffY = y2 - y1;
+    float diffX = x2 - x1;
+    return sqrt((diffY * diffY) + (diffX * diffX));
+}
 
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
@@ -97,12 +104,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     }
 */
 
-    cv::Mat canny_output;
+ cv::Mat canny_output;
     std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
-    cv::Point2f enclosing_circle_center;
-    float enclosing_circle_radius;
-    double contour_area;
+    cv::Point2f enclosing_circle_center, best_circle_center;
+    float enclosing_circle_radius, best_circle_radius;
+    float contour_area;
 
     /// Detect edges using canny
     int low_thresh = 100;
@@ -113,37 +120,67 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     /// Draw contours
     cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
-    cv::Point2f best_circle_center;
-    double best_circle_radius;
-    double best_error = 1.0;
-    double current_error;
+    float best_distance = 2000;
+    float best_error = 1.0;
+    float current_error, current_distance;
     for(int i = 0; i < contours.size(); i++) {
         cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
         cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
         contour_area = cv::contourArea(contours[i]);
         current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-        if (current_error < best_error && (enclosing_circle_center.x <360 || enclosing_circle_center.y < 240)) {
-            best_error = current_error;
-            best_circle_radius = enclosing_circle_radius;
-            best_circle_center = enclosing_circle_center;
+        current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, 
+            previous_best_circle_center.x, previous_best_circle_center.y);
+
+        // if no previous best ball location
+        if (compareFloats(previous_best_circle_center.x, -1.0, epsilon)) {
+            // saves most circular, above a certain threshold, within size thresholds, and closer to previous circle
+            if (current_error < best_error && current_error < error_threshold && enclosing_circle_radius > min_radius && 
+              enclosing_circle_radius < max_radius && (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
+                best_error = current_error;
+                best_circle_radius = enclosing_circle_radius;
+                best_circle_center = enclosing_circle_center;
+            }
+        }
+        else {
+            // saves closest to previous circle, within size thresholds, and above circle threshold
+            if (current_distance < best_distance && enclosing_circle_radius > min_radius && 
+              enclosing_circle_radius < max_radius && current_error < error_threshold &&
+              (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
+                best_error = current_error;
+                best_distance = current_distance;
+                best_circle_radius = enclosing_circle_radius;
+                best_circle_center = enclosing_circle_center;
+            }
         }
      }
 
-    if (best_circle_radius > min_radius && best_circle_radius < max_radius) {
+    // if no ball was detected, reset previous best value
+    if (compareFloats(best_error, 1.0, epsilon)) {
+        previous_best_circle_center.x = -1.0;
+        previous_best_circle_center.y = -1.0;
+        // std::cout << "no ball" << std::endl;
+    }
+
+    // if ball was detected, store location
+    else {
+        previous_best_circle_center.x = best_circle_center.x;
+        previous_best_circle_center.y = best_circle_center.y;
+
+        // std::cout << "ball at " << previous_best_circle_center.x << ", " << previous_best_circle_center.y << std::endl;
+        // std::cout << "error = " << best_error << std::endl;
         cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
         ball.x = best_circle_center.x;
         ball.y = best_circle_center.y;
         ball_pixel_pub.publish(ball);
     }
 
-    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
     //cv::imshow(WINDOW1, cv_ptr_raw->image);
 
     //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
     cv::waitKey(3);
 
     //Convert the CvImage to a ROS image message and publish it
-                it_pub.publish(cv_ptr_raw->toImageMsg());  
+    it_pub.publish(cv_ptr_raw->toImageMsg());  
 }
 
 int main(int argc, char **argv)
@@ -166,6 +203,9 @@ int main(int argc, char **argv)
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
 	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1,true);
     it_pub = it.advertise("/detect_ball_forward/ball_circles", 1);
+
+    previous_best_circle_center.x = -1.0;
+    previous_best_circle_center.y = -1.0;
 
 	ros::spin();
 
