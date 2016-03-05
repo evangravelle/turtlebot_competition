@@ -13,7 +13,9 @@ image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub;
 
 ros::Publisher ball_pixel_pub;
-geometry_msgs::Point ball, biggest_circle_center;
+geometry_msgs::Point ball, previous_best_circle_center;
+float epsilon = 0.0001;
+float error_threshold = 0.35;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_forward/image_raw";
@@ -31,6 +33,18 @@ int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
 int min_radius = 5;
 int max_radius = 30;
+
+bool compareFloats(float a, float b, float epsilon) {
+   float diff = a - b;
+   return (diff < epsilon) && (-diff < epsilon);
+}
+
+float calculateDistance(const float x1, const float y1, const float x2, const float y2)
+{
+    float diffY = y2 - y1;
+    float diffX = x2 - x1;
+    return sqrt((diffY * diffY) + (diffX * diffX));
+}
 
 void on_trackbar(int,void*) {}
 
@@ -83,11 +97,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
 /*
     // Use Hough tranform to search for circles
+
     std::vector<cv::Vec3f> circles;
     int accumulator_threshold = 20; // increase for less circles
     int grad_value = 100;
     cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, 2*min_radius, grad_value, accumulator_threshold, min_radius, max_radius);
-
+    geometry_msgs::Point2f biggest_circle_center;
     int biggest_circle_radius = 0;
     if(circles.size() > 0) {
         int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
@@ -114,9 +129,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     cv::Mat canny_output;
     std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
-    cv::Point2f enclosing_circle_center;
-    float enclosing_circle_radius;
-    double contour_area;
+    cv::Point2f enclosing_circle_center, best_circle_center;
+    float enclosing_circle_radius, best_circle_radius;
+    float contour_area;
 
     /// Detect edges using canny
     int low_thresh = 100;
@@ -127,24 +142,54 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     /// Draw contours
     cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
-    cv::Point2f best_circle_center;
-    double best_circle_radius;
-    double best_error = 1.0;
-    double current_error;
+    float best_distance = 2000;
+    float best_error = 1.0;
+    float current_error, current_distance;
     for(int i = 0; i < contours.size(); i++) {
         cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
         cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
         contour_area = cv::contourArea(contours[i]);
         current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-        if (current_error < best_error && enclosing_circle_radius > min_radius && enclosing_circle_radius < max_radius) {
-            best_error = current_error;
-            best_circle_radius = enclosing_circle_radius;
-            best_circle_center = enclosing_circle_center;
+        current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, 
+            previous_best_circle_center.x, previous_best_circle_center.y);
+
+        // if no previous best ball location
+        if (compareFloats(previous_best_circle_center.x, -1.0, epsilon)) {
+            // saves most circular, above a certain threshold, within size thresholds, and closer to previous circle
+            if (current_error < best_error && current_error < error_threshold && enclosing_circle_radius > min_radius && 
+              enclosing_circle_radius < max_radius && (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
+                best_error = current_error;
+                best_circle_radius = enclosing_circle_radius;
+                best_circle_center = enclosing_circle_center;
+            }
+        }
+        else {
+            // saves closest to previous circle, within size thresholds, and above circle threshold
+            if (current_distance < best_distance && enclosing_circle_radius > min_radius && 
+              enclosing_circle_radius < max_radius && current_error < error_threshold &&
+              (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
+                best_error = current_error;
+                best_distance = current_distance;
+                best_circle_radius = enclosing_circle_radius;
+                best_circle_center = enclosing_circle_center;
+            }
         }
      }
 
+    // if no ball was detected, reset previous best value
+    if (compareFloats(best_error, 1.0, epsilon)) {
+        previous_best_circle_center.x = -1.0;
+        previous_best_circle_center.y = -1.0;
+        std::cout << "no ball" << std::endl;
+    }
 
-    if (best_circle_radius > min_radius && best_circle_radius < max_radius) {
+    // if ball was detected, store location
+    else {
+        previous_best_circle_center.x = best_circle_center.x;
+        previous_best_circle_center.y = best_circle_center.y;
+
+        std::cout << "ball at " << previous_best_circle_center.x << ", " << previous_best_circle_center.y << std::endl;
+        std::cout << "error = " << best_error << std::endl;
         cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
         ball.x = best_circle_center.x;
         ball.y = best_circle_center.y;
@@ -166,7 +211,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-    ros::init(argc, argv, "detect_ball_tuning");
+    ros::init(argc, argv, "detect_ball_forward_tuning");
 
     ros::NodeHandle nh;
 
@@ -198,6 +243,9 @@ int main(int argc, char **argv)
     cv::createTrackbar("S_MAX", "trackbars", &S_MAX, S_TOP, on_trackbar);
     cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_TOP, on_trackbar);
     cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_TOP, on_trackbar);
+
+    previous_best_circle_center.x = -1.0;
+    previous_best_circle_center.y = -1.0;
 
     while(ros::ok()) {
 	   ros::spin();
