@@ -15,6 +15,7 @@
 int behavior_state_;
 int prev_behavior_state_;
 int behavior_sub_state_;
+int prev_behavior_sub_state_;
 
 class mother_brain {
 
@@ -167,15 +168,26 @@ public:
             // 2.  When we're ready to pick up the ball
             // 3.  When do we give up?
             //
+            //
+
+            if (behavior_sub_state_ == CHECK_BALL) {
+                ROS_INFO("Mother Brain: Got Ball, CHECKING");
+            }
+
+            if (behavior_sub_state_ == ATTEMPT_PICK_UP) {
+                // grab ball
+                arm_grab_ball_close();
+                ros::Duration(3.0).sleep();
+                // move to validate posltion
+                arm_check();
+                ros::Duration(3.0).sleep();
+                behavior_sub_state_ = CHECK_BALL;
+            }
+
             if (behavior_sub_state_ == GOT_BALL) {
                 ROS_INFO("Mother Brain: Got Ball, looking for goal");
                 behavior_state_ = FIND_GOAL;
                 behavior_sub_state_ = SEARCH_FOR_GOAL;
-            }
-
-            if (behavior_sub_state_ == LOST_BALL) {
-                ROS_INFO("Mother Brain: Ball Grab failed, attempting recovery.");
-                // Some recovery mode?
             }
 
             if (behavior_sub_state_ == GOT_BALL_FAILED) {
@@ -206,7 +218,7 @@ public:
             if (behavior_sub_state_ == AT_BALL) {
                 ROS_INFO("Mother Brain: At Ball.");
                 behavior_state_ = PICK_UP_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+                behavior_sub_state_ = ATTEMPT_PICK_UP;
             }
 
             if (behavior_sub_state_ == MOVE_TO_BALL_FAILED) {
@@ -306,6 +318,15 @@ public:
         positionArm(arm_movement);
     }
 
+    void arm_check() {
+        ROS_INFO("Mother Brain: Moving arm to check.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "CHECK_BALL";
+        positionArm(arm_movement);
+    }
+
+
     void positionArm(coconuts_common::ArmMovement arm_movement) {
         ROS_INFO("Mother Brain: Sending Command to Arm");
         motor_control_pub.publish(arm_movement);
@@ -340,6 +361,10 @@ int main(int argc, char** argv)
             if ( behavior_state_ == INIT) {
                 mother_brain_h.arm_search();
             }
+        }
+
+        if (prev_behavior_sub_state_ != behavior_sub_state_) {
+            prev_behavior_sub_state_ = behavior_sub_state_;
         }
 
         switch ( behavior_state_ ) {
