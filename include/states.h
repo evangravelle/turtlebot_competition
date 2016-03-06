@@ -27,9 +27,10 @@
 #define         MOVE_TO_BALL_FAILED     73
 
 #define 	PICK_UP_BALL				80	
-#define         GOT_BALL                81 
-#define         LOST_BALL               82 
-#define         GOT_BALL_FAILED         83 
+#define			ATTEMPT_PICK_UP			81
+#define			CHECK_BALL				82
+#define         GOT_BALL                83 
+#define         GOT_BALL_FAILED         84 
 
 #define 	DROP_BALL					90
 #define 	    BALL_DROPPED			91
