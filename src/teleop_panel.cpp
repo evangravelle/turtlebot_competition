@@ -69,10 +69,13 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   : rviz::Panel( parent )
   , linear_velocity_( 0 )
   , angular_velocity_( 0 )
+  , behavior_state_(INIT)
+  , behavior_sub_state_(DEFAULT_SUB_STATE)
 {
 
   // Mapping object for passing button values
   QSignalMapper * control_mapper = new QSignalMapper(this);
+  QSignalMapper * control_sub_mapper = new QSignalMapper(this);
   QSignalMapper * arm_mapper = new QSignalMapper(this);
   // Next we lay out the "output topic" text entry field using a
   // QLabel and a QLineEdit in a QHBoxLayout.
@@ -106,37 +109,75 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   control_state_layout->addWidget( configuration_button_, 2, 1, 1, 2 ); 
 
   // Row 3 Config modes
-  //
+  configuration_button_goal_color_ = new QPushButton("Goal Color", this);
+  control_state_layout->addWidget( configuration_button_goal_color_, 3, 0, 1, 1 ); 
+  configuration_button_ceiling_ = new QPushButton("Ceiling", this);
+  control_state_layout->addWidget( configuration_button_ceiling_, 3, 1, 1, 1 ); 
+  configuration_button_ball_color_ = new QPushButton("Ball Color", this);
+  control_state_layout->addWidget( configuration_button_ball_color_, 3, 2, 1, 1 ); 
   
 
   find_goal_button_ = new QPushButton("Find goal", this);
   control_state_layout->addWidget( find_goal_button_, 4, 1, 1, 2  ); 
 
   // row 5 Find goal substates
+  find_goal_button_search_ = new QPushButton("Search for Goal", this);
+  control_state_layout->addWidget( find_goal_button_search_, 5, 0, 1, 1  ); 
+  find_goal_button_found_ = new QPushButton("Goal Found", this);
+  control_state_layout->addWidget( find_goal_button_found_, 5, 1, 1, 1  ); 
 
   
   move_to_goal_button_ = new QPushButton("Move To Goal", this);
   control_state_layout->addWidget( move_to_goal_button_, 6, 1, 1, 2 ); 
 
   // row 7 move to goal substates
+  move_to_goal_button_moving_ = new QPushButton("Moving To Goal", this);
+  control_state_layout->addWidget( move_to_goal_button_moving_, 7, 0, 1, 1 ); 
+  move_to_goal_button_at_ = new QPushButton("At Goal", this);
+  control_state_layout->addWidget( move_to_goal_button_at_, 7, 1, 1, 1 ); 
+  move_to_goal_button_failed_ = new QPushButton("Moving To Goal Failed", this);
+  control_state_layout->addWidget( move_to_goal_button_failed_, 7, 2, 1, 1 ); 
 
   find_ball_button_ = new QPushButton("Find Ball", this);
   control_state_layout->addWidget( find_ball_button_, 8, 1,1, 2 ); 
   
   // row 9 move to goal substates
+  find_ball_button_search_ = new QPushButton("Search For Ball", this);
+  control_state_layout->addWidget( find_ball_button_search_, 9, 0,1, 1 ); 
+  find_ball_button_found_ = new QPushButton("Ball Found", this);
+  control_state_layout->addWidget( find_ball_button_found_, 9, 1,1, 1 ); 
 
   move_to_ball_button_ = new QPushButton("Move to Ball", this);
   control_state_layout->addWidget( move_to_ball_button_, 10, 1, 1, 2 ); 
 
   // row 11 move to goal substates
+  move_to_ball_button_moving_ = new QPushButton("Moving to Ball", this);
+  control_state_layout->addWidget( move_to_ball_button_moving_, 11, 0, 1, 1 ); 
+  move_to_ball_button_at_ = new QPushButton("At Ball", this);
+  control_state_layout->addWidget( move_to_ball_button_at_, 11, 1, 1, 1 ); 
+  move_to_ball_button_failed_ = new QPushButton("Moving to Ball Failed", this);
+  control_state_layout->addWidget( move_to_ball_button_failed_, 11, 2, 1, 1 ); 
  
   pick_up_ball_button_ = new QPushButton("Pick Up Ball", this);
   control_state_layout->addWidget( pick_up_ball_button_, 12, 1,1, 2 ); 
 
-  // row 11 move to goal substates
+  // row 13 pick up ball substates
+  pick_up_ball_button_attempt_ = new QPushButton("Pick Up Ball Attempt", this);
+  control_state_layout->addWidget( pick_up_ball_button_attempt_, 13, 0,1, 1 ); 
+  pick_up_ball_button_check_ = new QPushButton("Check Ball", this);
+  control_state_layout->addWidget( pick_up_ball_button_check_, 13, 1,1, 1 ); 
+  pick_up_ball_button_got_ = new QPushButton("Got Ball", this);
+  control_state_layout->addWidget( pick_up_ball_button_got_, 13, 2,1, 1 ); 
+  pick_up_ball_button_failed_ = new QPushButton("Pick Up Ball Failed", this);
+  control_state_layout->addWidget( pick_up_ball_button_failed_, 13, 3,1, 1 ); 
   
   drop_ball_button_ = new QPushButton("Drop Ball", this);
   control_state_layout->addWidget( drop_ball_button_, 14, 1, 1, 2 ); 
+
+  drop_ball_button_dropped_ = new QPushButton("Droped Ball", this);
+  control_state_layout->addWidget( drop_ball_button_dropped_, 15, 0, 1, 1 ); 
+  drop_ball_button_failed_ = new QPushButton("Droped Ball Failed", this);
+  control_state_layout->addWidget( drop_ball_button_failed_, 15, 1, 1, 1 ); 
 
   // Arm Control Layout
   //
@@ -192,16 +233,35 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Control
   connect( configuration_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( configuration_button_goal_color_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( configuration_button_ceiling_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( configuration_button_ball_color_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( end_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
   connect( start_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
   connect( init_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
   connect( manual_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
   connect( find_goal_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( find_goal_button_search_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( find_goal_button_found_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( move_to_goal_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( move_to_goal_button_moving_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( move_to_goal_button_at_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( move_to_goal_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( find_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( find_ball_button_search_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( find_ball_button_found_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( move_to_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( move_to_ball_button_moving_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( move_to_ball_button_at_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( move_to_ball_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( pick_up_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( pick_up_ball_button_attempt_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( pick_up_ball_button_check_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( pick_up_ball_button_got_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( pick_up_ball_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( drop_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( drop_ball_button_dropped_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( drop_ball_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
 
   // Arm
   connect( arm_search_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
@@ -217,12 +277,31 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   control_mapper->setMapping(start_button_, START);
   control_mapper->setMapping(end_button_, END);
   control_mapper->setMapping(configuration_button_, CONFIG);
+      control_sub_mapper->setMapping(configuration_button_goal_color_, CONFIG_GOAL_COLOR);
+      control_sub_mapper->setMapping(configuration_button_ceiling_, CONFIG_CEILING);
+      control_sub_mapper->setMapping(configuration_button_ball_color_, CONFIG_BALL_COLOR );
   control_mapper->setMapping(find_goal_button_, FIND_GOAL);
+      control_sub_mapper->setMapping(find_goal_button_search_, SEARCH_FOR_GOAL );
+      control_sub_mapper->setMapping(find_goal_button_found_, GOAL_FOUND );
   control_mapper->setMapping(move_to_goal_button_, MOVE_TO_GOAL);
+      control_sub_mapper->setMapping(move_to_goal_button_moving_, MOVING_TO_GOAL);
+      control_sub_mapper->setMapping(move_to_goal_button_at_, AT_GOAL);
+      control_sub_mapper->setMapping(move_to_goal_button_failed_, MOVE_TO_GOAL_FAILED);
   control_mapper->setMapping(find_ball_button_, FIND_BALL);
+      control_sub_mapper->setMapping(find_ball_button_search_, SEARCH_FOR_BALL);
+      control_sub_mapper->setMapping(find_ball_button_found_, BALL_FOUND);
   control_mapper->setMapping(move_to_ball_button_, MOVE_TO_BALL);
+      control_sub_mapper->setMapping(move_to_ball_button_moving_, MOVING_TO_BALL);
+      control_sub_mapper->setMapping(move_to_ball_button_at_, AT_BALL);
+      control_sub_mapper->setMapping(move_to_ball_button_failed_, MOVE_TO_BALL_FAILED);
   control_mapper->setMapping(pick_up_ball_button_, PICK_UP_BALL);
+      control_sub_mapper->setMapping(pick_up_ball_button_attempt_, ATTEMPT_PICK_UP);
+      control_sub_mapper->setMapping(pick_up_ball_button_check_, CHECK_BALL);
+      control_sub_mapper->setMapping(pick_up_ball_button_got_, GOT_BALL);
+      control_sub_mapper->setMapping(pick_up_ball_button_failed_, GOT_BALL_FAILED);
   control_mapper->setMapping(drop_ball_button_, DROP_BALL);
+      control_sub_mapper->setMapping(drop_ball_button_dropped_, BALL_DROPPED);
+      control_sub_mapper->setMapping(drop_ball_button_failed_, DROP_BALL_FAILED);
 
   // Arm
   arm_mapper->setMapping(arm_search_button_, 0);
@@ -234,6 +313,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   connect( control_mapper, SIGNAL(mapped(int)), this, SLOT(handleControlButton(int)));
   connect( arm_mapper, SIGNAL(mapped(int)), this, SLOT(handleArmButton(int)));
+  connect( control_sub_mapper, SIGNAL(mapped(int)), this, SLOT(handleControlSubStateButton(int)));
 
   // Start the timer.
   output_timer->start( 100 );
@@ -266,27 +346,67 @@ void TeleopPanel::updateTopic()
 
 
 void TeleopPanel::handleControlButton(int control_state) {
-    sendControlUpdate(control_state);
+  ROS_INFO("in handleControlButton");
+  coconuts_common::ControlState control_state_msg;
+  control_state_msg.state = control_state;
+  control_state_msg.sub_state = DEFAULT_SUB_STATE;
+  control_state_publisher_.publish(control_state_msg);
 }
 
-void TeleopPanel::handleArmButton(int arm_state) {
-    sendArmUpdate(arm_state);
-}
-
-void TeleopPanel::sendControlUpdate(int behavior_state)
-{
-  // Do the stuff to do
-  ROS_INFO("in sendControlUpdate");
+void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
+  ROS_INFO("in handleControlSubStateButton");
   coconuts_common::ControlState control_state;
-  control_state.state = behavior_state;
-  control_state.sub_state = DEFAULT_SUB_STATE;
+  control_state.sub_state = control_sub_state;
+  switch(control_sub_state) {
+      case 21:
+      case 22:
+      case 23:
+          control_state.state = CONFIG;
+          break;
+
+      case 41:
+      case 42:
+          control_state.state = FIND_GOAL;
+          break;
+
+      case 51:
+      case 52:
+      case 53:
+          control_state.state = MOVE_TO_GOAL;
+          break;
+
+      case 61:
+      case 62:
+          control_state.state = FIND_BALL;
+          break;
+
+      case 71:
+      case 72:
+      case 73:
+          control_state.state = MOVE_TO_BALL;
+          break;
+
+      case 81:
+      case 82:
+      case 83:
+      case 84:
+          control_state.state = PICK_UP_BALL;
+          break;
+
+      case 91:
+      case 92:
+          control_state.state = DROP_BALL;
+          break;
+
+      default:
+          control_state.state = INIT;
+          control_state.sub_state = DEFAULT_SUB_STATE;
+          break;
+  }
   control_state_publisher_.publish(control_state);
 }
 
-void TeleopPanel::sendArmUpdate(int arm_state)
-{
-  // Do the stuff to do
-  ROS_INFO("in sendArmUpdate");
+void TeleopPanel::handleArmButton(int arm_state) {
   coconuts_common::ArmMovement arm_control;
   arm_control.type = "POSE";
   switch(arm_state) {

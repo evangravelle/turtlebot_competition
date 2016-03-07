@@ -97,9 +97,8 @@ protected Q_SLOTS:
   // setTopic() with the result.
   void updateTopic();
   void handleControlButton(int control_state);
+  void handleControlSubStateButton(int control_state);
   void handleArmButton(int arm_state);
-  void sendControlUpdate(int status);
-  void sendArmUpdate(int status);
 
   // Then we finish up with protected member variables.
 protected:
@@ -112,16 +111,42 @@ protected:
 
   // Control State Buttons
   QPushButton* configuration_button_;
+      QPushButton* configuration_button_goal_color_;
+      QPushButton* configuration_button_ceiling_;
+      QPushButton* configuration_button_ball_color_;
+    
   QPushButton* start_button_;
   QPushButton* end_button_;
   QPushButton* init_button_;
   QPushButton* manual_button_;
+
   QPushButton* find_goal_button_;
+      QPushButton* find_goal_button_search_;
+      QPushButton* find_goal_button_found_;
+    
   QPushButton* move_to_goal_button_;
+      QPushButton* move_to_goal_button_moving_;
+      QPushButton* move_to_goal_button_at_;
+      QPushButton* move_to_goal_button_failed_;
+
   QPushButton* find_ball_button_;
+      QPushButton* find_ball_button_search_;
+      QPushButton* find_ball_button_found_;
+
   QPushButton* move_to_ball_button_;
+      QPushButton* move_to_ball_button_moving_;
+      QPushButton* move_to_ball_button_at_;
+      QPushButton* move_to_ball_button_failed_;
+
   QPushButton* pick_up_ball_button_;
+      QPushButton* pick_up_ball_button_attempt_;
+      QPushButton* pick_up_ball_button_check_;
+      QPushButton* pick_up_ball_button_got_;
+      QPushButton* pick_up_ball_button_failed_;
+
   QPushButton* drop_ball_button_;
+      QPushButton* drop_ball_button_dropped_;
+      QPushButton* drop_ball_button_failed_;
 
   // Arm Position Buttons
   //
@@ -141,12 +166,20 @@ protected:
   ros::Publisher control_state_publisher_;
   ros::Publisher arm_control_publisher_;
 
+  // Ros Subscriptions 
+  ros::Subscriber control_state_subscriber_;
+
   // The ROS node handle.
   ros::NodeHandle nh_;
 
   // The latest velocity values from the drive widget.
   float linear_velocity_;
   float angular_velocity_;
+  
+  // The Latest states from the control_state callback
+  // Maybe NOT needed...
+  int behavior_state_;
+  int behavior_sub_state_;
   // END_TUTORIAL
 };
 
