@@ -10,8 +10,13 @@
 #include <coconuts_common/ControlState.h>
 #include <coconuts_common/ArmMovement.h>
 
+/*
+ * TODO
+ *
+ * Ensure we're not using DEFAULT states for anything. Everything sholud have a home...
+ *
+ */
 
-// Ugly, but this works
 int behavior_state_;
 int prev_behavior_state_;
 int behavior_sub_state_;
@@ -106,7 +111,7 @@ public:
                 default:
                     arm_drop_ball_open();
                     ros::Duration(3.0).sleep();
-                    behavior_sub_state_ = DROP_BALL_FAILED;
+                    behavior_sub_state_ = BALL_DROPPED;
                     break;
             }
         }
@@ -424,11 +429,7 @@ int main(int argc, char** argv)
     mother_brain mother_brain_h;
 
 
-    ROS_INFO("Mother Brain: Started");
-
-    if (ros::ok()) {
-        mother_brain_h.arm_search();
-    }
+    ROS_INFO("Mother Brain (main): Started");
 
     while(ros::ok()) {
 	
@@ -437,16 +438,13 @@ int main(int argc, char** argv)
         // CASE statement specific logic
         // Explicit debugging 
 
+        if (prev_behavior_sub_state_ != behavior_sub_state_) {
+            prev_behavior_sub_state_ = behavior_sub_state_;
+        }
+
         if (prev_behavior_state_ != behavior_state_) {
             ROS_INFO("State changed from [%d] to [%d].", prev_behavior_state_, behavior_state_);
             prev_behavior_state_ = behavior_state_;
-            if ( behavior_state_ == INIT) {
-                mother_brain_h.arm_search();
-            }
-        }
-
-        if (prev_behavior_sub_state_ != behavior_sub_state_) {
-            prev_behavior_sub_state_ = behavior_sub_state_;
         }
 
         switch ( behavior_state_ ) {
@@ -504,4 +502,6 @@ int main(int argc, char** argv)
 
         ros::spinOnce();
     }
+
+    ROS_INFO("Mother Brain (main): o/\" Yo holmes smell ya later \"\\o");
 }
