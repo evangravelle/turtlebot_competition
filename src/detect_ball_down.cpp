@@ -25,7 +25,8 @@ ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 coconuts_common::ControlState current_state;
-float error_threshold = 0.35;
+float error_floor_threshold = 0.35;
+float error_grab_threshold = 0.6;
 float min_floor_radius = 35;
 float min_grab_radius = 50;
 float grab_ball_center_x = 331;
@@ -136,25 +137,39 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         double best_circle_radius = 0.0;
         double best_error = 1.0;
         double current_error;
-        for(int i = 0; i < contours.size(); i++) {
-            cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
-            cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
-            contour_area = cv::contourArea(contours[i]);
-            current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-            if (current_error < error_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
-                best_error = current_error;
-                best_circle_radius = enclosing_circle_radius;
-                best_circle_center = enclosing_circle_center;
-            }
-        }
+        
 
         if (current_state.state == MOVE_TO_BALL && best_circle_radius > min_floor_radius) {
+            for(int i = 0; i < contours.size(); i++) {
+                cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+                cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
+                contour_area = cv::contourArea(contours[i]);
+                current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
+                if (current_error < error_floor_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
+                    best_error = current_error;
+                    best_circle_radius = enclosing_circle_radius;
+                    best_circle_center = enclosing_circle_center;
+                }
+            }
+
             cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
             ball.x=best_circle_center.x;
             ball.y=best_circle_center.y;
             ball_pixel_pub.publish(ball);
         }
         else if (current_state.sub_state == CHECK_BALL) {
+            for(int i = 0; i < contours.size(); i++) {
+                cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+                cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
+                contour_area = cv::contourArea(contours[i]);
+                current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
+                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
+                    best_error = current_error;
+                    best_circle_radius = enclosing_circle_radius;
+                    best_circle_center = enclosing_circle_center;
+                }
+            }
+
             cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
 
             if (best_circle_radius > min_grab_radius && 
@@ -166,6 +181,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             }
 
             control_state_pub.publish(current_state);
+            ros::Duration(1).sleep();
         }
 
         //cv::imshow(WINDOW1, cv_ptr_raw->image);
@@ -195,10 +211,10 @@ int main(int argc, char **argv)
     nh.getParam("/detect_ball_down/v_max", V_MAX);
 
     image_transport::Subscriber sub = it.subscribe("/camera_down/image_raw", 1, imageCallback);
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("ball_pixel", 1, true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down/ball_pixel", 1, true);
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
-    it_pub = it.advertise("ball_circles", 1);
+    it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
 
 	ros::spin();
 
