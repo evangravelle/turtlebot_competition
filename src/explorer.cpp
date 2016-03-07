@@ -2,6 +2,7 @@
 #include <geometry_msgs/Twist.h>
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <coconuts_common/SensorStatus.h>
 
 
 // Ugly, but this works
@@ -17,7 +18,8 @@ private:
 
 	// Topics we subscribe to
     ros::Subscriber 
-        control_state_sub;
+        control_state_sub,
+        sensor_status_sub;
 
 	// Topics we Publish
     ros::Publisher
@@ -25,6 +27,9 @@ private:
 
     int movement;
     int max_movements;
+    bool left_obstacle;
+    bool right_obstacle;
+    bool center_obstacle;
 
 public:
 
@@ -35,9 +40,13 @@ public:
         behavior_sub_state_ = DEFAULT_SUB_STATE;
         movement = 0;
         max_movements = 10;
+        left_obstacle = false;
+        right_obstacle = false;
+        center_obstacle = false;
         
         // Subscriptions
         control_state_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state", 1, &explorer::control_state_receive, this);
+        sensor_status_sub  = nodeh.subscribe<coconuts_common::SensorStatus>("/sensor_status", 1, &explorer::sensor_status_receive, this);
 
         // Publishers
         cmd_vel_pub = nodeh.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1);
@@ -53,20 +62,65 @@ public:
 
 	}
 
+    void sensor_status_receive(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
+
+        // TODO define these magic numbers and parameterize the reading value
+        for (int i = 0; i < sensor_msg->sensor_readings.size(); i++ ) {
+            //ROS_INFO("Explorer: Looking at sensor [%d] reading [%d].", sensor_msg->sensor_readings[i].sensor, sensor_msg->sensor_readings[i].reading);
+
+            switch (sensor_msg->sensor_readings[i].sensor) {
+                case 0:
+                    if (sensor_msg->sensor_readings[i].reading < 20) {
+                        center_obstacle = true;
+                    } else {
+                        center_obstacle = false;
+                    }
+                    break;
+
+                case 1:
+                    if (sensor_msg->sensor_readings[i].reading < 35) {
+                        right_obstacle = true;
+                    } else {
+                        right_obstacle = false;
+                    }
+                    break;
+
+                case 2:
+                    if (sensor_msg->sensor_readings[i].reading < 35) {
+                        left_obstacle = true;
+                    } else {
+                        left_obstacle = false;
+                    }
+                    break;
+            
+                default:
+                    break;
+            }
+        }
+	}
+
     void exploreOnce() {
 
         movement++;
+        geometry_msgs::Twist search_twist;
+        // Bone dumb obstacle avoidance
+        // Go forward unless we run into something
+        search_twist.linear.x = 0.1;
+        search_twist.angular.z = 0.0;
+        if (left_obstacle && right_obstacle) {
+            search_twist.linear.x = -0.1; // Go Backwards
+        } else {
+            if (left_obstacle) search_twist.angular.z = -0.3; // rotate right
+            else if (right_obstacle) search_twist.angular.z = 0.3; // rotate left
+        }
+        // Do we care about center here?
+
         // Drive the bot around 
         // TODO:  This needs to drive in some search patern
         // TODO:  Look at some better sutied packages: http://wiki.ros.org/hector_navigation
-        switch (movement) {
-            default:
-                geometry_msgs::Twist search_twist;
-                search_twist.angular.z = 0.3;
-                //search_twist.linear.x = 0.3;
-                search_twist.linear.x = 0.0;
-                cmd_vel_pub.publish(search_twist);
-        }
+        //
+        cmd_vel_pub.publish(search_twist);
+
         if (movement >= max_movements) movement = 0;
     }
         
