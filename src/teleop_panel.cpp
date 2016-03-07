@@ -34,6 +34,7 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QSignalMapper>
 #include <QLabel>
 #include <QTimer>
 
@@ -44,6 +45,7 @@
 
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <coconuts_common/ArmMovement.h>
 
 namespace coconuts_rviz_plugins
 {
@@ -68,6 +70,10 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   , linear_velocity_( 0 )
   , angular_velocity_( 0 )
 {
+
+  // Mapping object for passing button values
+  QSignalMapper * control_mapper = new QSignalMapper(this);
+  QSignalMapper * arm_mapper = new QSignalMapper(this);
   // Next we lay out the "output topic" text entry field using a
   // QLabel and a QLineEdit in a QHBoxLayout.
   QHBoxLayout* topic_layout = new QHBoxLayout;
@@ -76,35 +82,85 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   topic_layout->addWidget( output_topic_editor_ );
 
   // Control State Layout
+  // 
+  // Label
   QGridLayout* control_state_layout = new QGridLayout;
-  control_state_layout->addWidget( new QLabel( "Control State:" ));
+  control_state_layout->addWidget( new QLabel( "Control State:"), 0, 0, 1, 4 );
 
-  configuration_button_ = new QPushButton("Configuration", this);
-  control_state_layout->addWidget( configuration_button_ ); 
-
-  start_button_ = new QPushButton("Start Derby", this);
-  control_state_layout->addWidget( start_button_ ); 
-
-  end_button_ = new QPushButton("End Derby", this);
-  control_state_layout->addWidget( end_button_ ); 
-
+  // Top Row
   init_button_ = new QPushButton("Init", this);
-  control_state_layout->addWidget( init_button_ ); 
+  control_state_layout->addWidget( init_button_, 1, 0, 1, 1 ); 
 
   manual_button_ = new QPushButton("Manual Control", this);
-  control_state_layout->addWidget( manual_button_ ); 
+  control_state_layout->addWidget( manual_button_, 1, 1, 1, 1 ); 
+
+  start_button_ = new QPushButton("Start Derby", this);
+  control_state_layout->addWidget( start_button_, 1, 2, 1, 1 ); 
+
+  end_button_ = new QPushButton("End Derby", this);
+  control_state_layout->addWidget( end_button_, 1, 3, 1, 1 ); 
+
+
+  // 
+  configuration_button_ = new QPushButton("Configuration", this);
+  control_state_layout->addWidget( configuration_button_, 2, 1, 1, 2 ); 
+
+  // Row 3 Config modes
+  //
+  
 
   find_goal_button_ = new QPushButton("Find goal", this);
-  control_state_layout->addWidget( find_goal_button_ ); 
+  control_state_layout->addWidget( find_goal_button_, 4, 1, 1, 2  ); 
 
+  // row 5 Find goal substates
+
+  
   move_to_goal_button_ = new QPushButton("Move To Goal", this);
-  control_state_layout->addWidget( move_to_goal_button_ ); 
+  control_state_layout->addWidget( move_to_goal_button_, 6, 1, 1, 2 ); 
+
+  // row 7 move to goal substates
 
   find_ball_button_ = new QPushButton("Find Ball", this);
-  control_state_layout->addWidget( find_ball_button_ ); 
+  control_state_layout->addWidget( find_ball_button_, 8, 1,1, 2 ); 
+  
+  // row 9 move to goal substates
 
   move_to_ball_button_ = new QPushButton("Move to Ball", this);
-  control_state_layout->addWidget( move_to_ball_button_ ); 
+  control_state_layout->addWidget( move_to_ball_button_, 10, 1, 1, 2 ); 
+
+  // row 11 move to goal substates
+ 
+  pick_up_ball_button_ = new QPushButton("Pick Up Ball", this);
+  control_state_layout->addWidget( pick_up_ball_button_, 12, 1,1, 2 ); 
+
+  // row 11 move to goal substates
+  
+  drop_ball_button_ = new QPushButton("Drop Ball", this);
+  control_state_layout->addWidget( drop_ball_button_, 14, 1, 1, 2 ); 
+
+  // Arm Control Layout
+  //
+  // Label
+  QGridLayout* arm_state_layout = new QGridLayout;
+  arm_state_layout->addWidget( new QLabel( "Arm State:"), 0, 0, 1, 2 );
+  
+  arm_search_button_ = new QPushButton("Search", this);
+  arm_state_layout->addWidget(arm_search_button_, 1, 0, 1, 2);
+
+  arm_grab_open_button_ = new QPushButton("Grab Open", this);
+  arm_state_layout->addWidget(arm_grab_open_button_, 2, 0, 1, 1);
+
+  arm_grab_close_button_ = new QPushButton("Grab Close", this);
+  arm_state_layout->addWidget(arm_grab_close_button_, 2, 1, 1, 1);
+  
+  arm_check_button_ = new QPushButton("Check", this);
+  arm_state_layout->addWidget(arm_check_button_, 3, 0, 1, 2);
+
+  arm_drop_close_button_ = new QPushButton("Drop Close", this);
+  arm_state_layout->addWidget(arm_drop_close_button_, 4, 0, 1, 1);
+
+  arm_drop_open_button_ = new QPushButton("Drop Open", this);
+  arm_state_layout->addWidget(arm_drop_open_button_, 4, 1, 1, 1);
 
   // Then create the control widget.
   drive_widget_ = new DriveWidget;
@@ -112,8 +168,9 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout( control_state_layout );
-  layout->addWidget( drive_widget_ );
-  layout->addLayout( topic_layout );
+  layout->addLayout( arm_state_layout );
+  //layout->addWidget( drive_widget_ );
+  //layout->addLayout( topic_layout );
   setLayout( layout );
 
   // Create a timer for sending the output.  Motor controllers want to
@@ -131,16 +188,52 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // SLOT connections cant be passed args likethis - TODO
   connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
   connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-  connect( configuration_button_, SIGNAL( released() ), this, SLOT( handleConfigurationButton() ));
-  connect( start_button_, SIGNAL( released() ), this, SLOT( handleStartButton() ));
-  connect( end_button_, SIGNAL( released() ), this, SLOT( handleEndButton() ));
-  connect( init_button_, SIGNAL( released() ), this, SLOT( handleInitButton() ));
-  connect( manual_button_, SIGNAL( released() ), this, SLOT( handleManualButton() ));
-  connect( find_goal_button_, SIGNAL( released() ), this, SLOT( handleFindGoalButton() ));
-  connect( move_to_goal_button_, SIGNAL( released() ), this, SLOT( handleMoveToGoalButton() ));
-  connect( find_ball_button_, SIGNAL( released() ), this, SLOT( handleFindBallButton() ));
-  connect( move_to_ball_button_, SIGNAL( released() ), this, SLOT( handleMoveToBallButton() ));
   connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
+
+  // Control
+  connect( configuration_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( end_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( start_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( init_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( manual_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( find_goal_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( move_to_goal_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( find_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( move_to_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( pick_up_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+  connect( drop_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+
+  // Arm
+  connect( arm_search_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_grab_open_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_grab_close_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_check_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_drop_close_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_drop_open_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  
+  // Control
+  control_mapper->setMapping(init_button_, INIT);
+  control_mapper->setMapping(manual_button_, MANUAL);
+  control_mapper->setMapping(start_button_, START);
+  control_mapper->setMapping(end_button_, END);
+  control_mapper->setMapping(configuration_button_, CONFIG);
+  control_mapper->setMapping(find_goal_button_, FIND_GOAL);
+  control_mapper->setMapping(move_to_goal_button_, MOVE_TO_GOAL);
+  control_mapper->setMapping(find_ball_button_, FIND_BALL);
+  control_mapper->setMapping(move_to_ball_button_, MOVE_TO_BALL);
+  control_mapper->setMapping(pick_up_ball_button_, PICK_UP_BALL);
+  control_mapper->setMapping(drop_ball_button_, DROP_BALL);
+
+  // Arm
+  arm_mapper->setMapping(arm_search_button_, 0);
+  arm_mapper->setMapping(arm_grab_open_button_, 1);
+  arm_mapper->setMapping(arm_grab_close_button_, 2);
+  arm_mapper->setMapping(arm_check_button_, 3);
+  arm_mapper->setMapping(arm_drop_close_button_, 4);
+  arm_mapper->setMapping(arm_drop_open_button_, 5);
+
+  connect( control_mapper, SIGNAL(mapped(int)), this, SLOT(handleControlButton(int)));
+  connect( arm_mapper, SIGNAL(mapped(int)), this, SLOT(handleArmButton(int)));
 
   // Start the timer.
   output_timer->start( 100 );
@@ -149,6 +242,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   drive_widget_->setEnabled( false );
 
   control_state_publisher_ = nh_.advertise<coconuts_common::ControlState>("/control_state_override", 1);
+  arm_control_publisher_ = nh_.advertise<coconuts_common::ArmMovement>("/motor_control", 1);
 }
 
 // setVel() is connected to the DriveWidget's output, which is sent
@@ -171,40 +265,12 @@ void TeleopPanel::updateTopic()
 }
 
 
-void TeleopPanel::handleConfigurationButton() {
-    sendControlUpdate(CONFIG);
+void TeleopPanel::handleControlButton(int control_state) {
+    sendControlUpdate(control_state);
 }
 
-void TeleopPanel::handleStartButton() {
-    sendControlUpdate(START);
-}
-
-void TeleopPanel::handleEndButton() {
-    sendControlUpdate(END);
-}
-
-void TeleopPanel::handleInitButton() {
-    sendControlUpdate(INIT);
-}
-
-void TeleopPanel::handleManualButton() {
-    sendControlUpdate(MANUAL);
-}
-
-void TeleopPanel::handleFindGoalButton() {
-    sendControlUpdate(FIND_GOAL);
-}
-
-void TeleopPanel::handleMoveToGoalButton() {
-    sendControlUpdate(MOVE_TO_GOAL);
-}
-
-void TeleopPanel::handleFindBallButton() {
-    sendControlUpdate(FIND_BALL);
-}
-
-void TeleopPanel::handleMoveToBallButton() {
-    sendControlUpdate(MOVE_TO_BALL);
+void TeleopPanel::handleArmButton(int arm_state) {
+    sendArmUpdate(arm_state);
 }
 
 void TeleopPanel::sendControlUpdate(int behavior_state)
@@ -215,6 +281,38 @@ void TeleopPanel::sendControlUpdate(int behavior_state)
   control_state.state = behavior_state;
   control_state.sub_state = DEFAULT_SUB_STATE;
   control_state_publisher_.publish(control_state);
+}
+
+void TeleopPanel::sendArmUpdate(int arm_state)
+{
+  // Do the stuff to do
+  ROS_INFO("in sendArmUpdate");
+  coconuts_common::ArmMovement arm_control;
+  arm_control.type = "POSE";
+  switch(arm_state) {
+      case 0:
+          arm_control.pose = "SEARCH";
+          break;
+      case 1:
+          arm_control.pose = "GRAB_BALL_OPEN";
+          break;
+      case 2:
+          arm_control.pose = "GRAB_BALL_CLOSE";
+          break;
+      case 3:
+          arm_control.pose = "CHECK_BALL";
+          break;
+      case 4:
+          arm_control.pose = "DROP_BALL_CLOSE";
+          break;
+      case 5:
+          arm_control.pose = "DROP_BALL_OPEN";
+          break;
+      default:
+          arm_control.pose = "SEARCH";
+          break;
+  }
+  arm_control_publisher_.publish(arm_control);
 }
 
 // Set the topic name we are publishing to.

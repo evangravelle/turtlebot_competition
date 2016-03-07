@@ -96,16 +96,10 @@ protected Q_SLOTS:
   // updateTopic() reads the topic name from the QLineEdit and calls
   // setTopic() with the result.
   void updateTopic();
-  void handleConfigurationButton();
-  void handleStartButton();
-  void handleEndButton();
-  void handleInitButton();
-  void handleManualButton();
-  void handleFindGoalButton();
-  void handleMoveToGoalButton();
-  void handleFindBallButton();
-  void handleMoveToBallButton();
+  void handleControlButton(int control_state);
+  void handleArmButton(int arm_state);
   void sendControlUpdate(int status);
+  void sendArmUpdate(int status);
 
   // Then we finish up with protected member variables.
 protected:
@@ -116,6 +110,7 @@ protected:
   // One-line text editor for entering the outgoing ROS topic name.
   QLineEdit* output_topic_editor_;
 
+  // Control State Buttons
   QPushButton* configuration_button_;
   QPushButton* start_button_;
   QPushButton* end_button_;
@@ -125,6 +120,18 @@ protected:
   QPushButton* move_to_goal_button_;
   QPushButton* find_ball_button_;
   QPushButton* move_to_ball_button_;
+  QPushButton* pick_up_ball_button_;
+  QPushButton* drop_ball_button_;
+
+  // Arm Position Buttons
+  //
+  QPushButton* arm_search_button_;
+  QPushButton* arm_grab_open_button_;
+  QPushButton* arm_grab_close_button_;
+  QPushButton* arm_check_button_;
+  QPushButton* arm_drop_close_button_;
+  QPushButton* arm_drop_open_button_;
+
 
   // The current name of the output topic.
   QString output_topic_;
@@ -132,6 +139,7 @@ protected:
   // The ROS publisher for the command velocity.
   ros::Publisher velocity_publisher_;
   ros::Publisher control_state_publisher_;
+  ros::Publisher arm_control_publisher_;
 
   // The ROS node handle.
   ros::NodeHandle nh_;
