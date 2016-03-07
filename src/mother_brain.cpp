@@ -67,7 +67,7 @@ public:
 
         behavior_state_ = control_msg->state;
         behavior_sub_state_ = control_msg->sub_state;
-        ROS_INFO("Mother Brain: Forced control state to [%d].", behavior_state_);
+        ROS_INFO("Mother Brain: Forced control state to [%d], [%d].", behavior_state_, behavior_sub_state_);
 
 	}
 
@@ -85,148 +85,209 @@ public:
         control_state_pub.publish(current_state);
     }
 
+    // TODO: Failure Condition
     void drop_ball() {
 
         if (behavior_state_ == DROP_BALL) {
-            // Need to know
-            // 1. if ball dropped
-            // 2. if it failed
-            // perhaps we dont need an explicit state for ball dropped?:w
-            if (behavior_sub_state_ == BALL_DROPPED) {
-                ROS_INFO("Mother Brain: Ball Droped , going to FIND_BALL.");
-                behavior_state_ = FIND_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
-            } else if (behavior_sub_state_ == DROP_BALL_FAILED) {
-                ROS_INFO("Mother Brain: Ball Drop failed, going to FIND_BALL.");
-                behavior_state_ = FIND_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
-            } else {
-                arm_drop_ball_open();
-            }
-            
 
+            switch(behavior_sub_state_) {
+                case BALL_DROPPED:
+                    ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to START.");
+                    behavior_state_ = START;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                case DROP_BALL_FAILED:
+                    ROS_INFO("Mother Brain (DROP_BALL): DROP_BALL_FAILED, going to FIND_BALL.");
+                    behavior_state_ = FIND_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    arm_drop_ball_open();
+                    ros::Duration(3.0).sleep();
+                    behavior_sub_state_ = DROP_BALL_FAILED;
+                    break;
+            }
         }
 
     }
 
     void move_to_goal() {
-        // Only do this if the top level state is correct.
-        // Sub-states are controlled by external nodes
+
         if (behavior_state_ == MOVE_TO_GOAL) {
-            // Need to know:
-            // 1.  when we're at the goal
-            // 2.  When we're ready to drop up the ball
-            // 3.  When do we give up?
-            //
-            if (behavior_sub_state_ == MOVING_TO_GOAL) { //  still getting there.
-                //ROS_INFO("Mother Brain: Moving To Ball.");
-            }
 
-            // AT_BALL set by external node
-            // If we are ready
-            if (behavior_sub_state_ == AT_GOAL) {
-                ROS_INFO("Mother Brain: At Goal.");
-                behavior_state_ = DROP_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
-            }
+            switch(behavior_sub_state_) {
+                case MOVING_TO_GOAL:
+                    //ROS_INFO("Mother Brain (MOVE_TO_GOAL): Moving To Ball.");
+                    break;
 
-            // Failure...
-            if (behavior_sub_state_ == MOVE_TO_GOAL_FAILED) {
-                // Failure, go back to FIND_BALL
-                ROS_INFO("Mother Brain: Move to Goal FAILED.");
-                // TODO: Some recovery behavior?
-                behavior_state_ = FIND_GOAL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+                case AT_GOAL:
+                    ROS_INFO("Mother Brain (MOVE_TO_GOAL): AT_GOAL, going to DROP_BALL.");
+                    behavior_state_ = DROP_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                case MOVE_TO_GOAL_FAILED:
+                    ROS_INFO("Mother Brain (MOVE_TO_GOAL): MOVE_TO_GOAL_FAILED, going to FIND_GOAL.");
+                    behavior_state_ = FIND_GOAL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (MOVE_TO_GOAL): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
             }
 
         }
     }
 
     void find_goal() {
+
         if (behavior_state_ == FIND_GOAL) {
-            if (behavior_sub_state_ == GOAL_FOUND) {
-                behavior_state_ = MOVE_TO_GOAL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+
+            switch(behavior_sub_state_){
+                case SEARCH_FOR_GOAL:
+                    //ROS_INFO("Mother Brain (FIND_GOAL): Searching for Goal.");
+                    break;
+
+                case GOAL_FOUND:
+                    ROS_INFO("Mother Brain (FIND_GOAL): GOAL_FOUND, going to MOVE_TO_GOAL.");
+                    behavior_state_ = MOVE_TO_GOAL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (FIND_GOAL): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
             }
         }
+
     }
 
     void find_goal_callback(const geometry_msgs::Point::ConstPtr& msg) {
 
         if (behavior_state_ == FIND_GOAL) {
+
+                ROS_INFO("Mother Brain (FIND_GOAL): Callback Executed, going to MOVE_TO_GOAL.");
                 behavior_state_ = MOVE_TO_GOAL;
                 behavior_sub_state_ = MOVING_TO_GOAL;
-                // we just need to stop looking
-                ROS_INFO("Mother Brain: Ball changing state to MOVE_TO_BALL.");
+
         }
     }
 
     void pick_up_ball() {
+
         if (behavior_state_ == PICK_UP_BALL) {
-            // Need to know:
-            // 1.  when we're at the ball
-            // 2.  When we're ready to pick up the ball
-            // 3.  When do we give up?
-            //
-            //
 
-            if (behavior_sub_state_ == CHECK_BALL) {
-                ROS_INFO("Mother Brain: Got Ball, CHECKING");
-            }
+            switch(behavior_sub_state_) {
+                case ATTEMPT_PICK_UP:
+                    // grab ball
+                    arm_grab_ball_close();
+                    ros::Duration(3.0).sleep();
+                    // move to validate posltion
+                    arm_check();
+                    ros::Duration(3.0).sleep();
+                    behavior_sub_state_ = CHECK_BALL;
+                    break;
 
-            if (behavior_sub_state_ == ATTEMPT_PICK_UP) {
-                // grab ball
-                arm_grab_ball_close();
-                ros::Duration(3.0).sleep();
-                // move to validate posltion
-                arm_check();
-                ros::Duration(3.0).sleep();
-                behavior_sub_state_ = CHECK_BALL;
-            }
+                case CHECK_BALL:
+                    ROS_INFO("Mother Brain (PICK_UP_BALL):  CHECK_BALL, still checking");
+                    break;
 
-            if (behavior_sub_state_ == GOT_BALL) {
-                ROS_INFO("Mother Brain: Got Ball, looking for goal");
-                behavior_state_ = FIND_GOAL;
-                behavior_sub_state_ = SEARCH_FOR_GOAL;
-            }
+                case GOT_BALL:
+                    ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL, going to FIND_GOAL");
+                    behavior_state_ = FIND_GOAL;
+                    behavior_sub_state_ = SEARCH_FOR_GOAL;
+                    break;
 
-            if (behavior_sub_state_ == GOT_BALL_FAILED) {
-                ROS_INFO("Mother Brain: Ball Grab failed, going to FIND_BALL.");
-                behavior_state_ = FIND_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+                case GOT_BALL_FAILED:
+                    ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL_FAILED, going to FIND_BALL.");
+                    behavior_state_ = FIND_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (PICK_UP_BALL): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
             }
         }
     }
 
+    void start() {
 
+        if (behavior_state_ == START) {
+            ROS_INFO("Mother Brain (START): Starting Initialization.");
+            arm_search();
+            ros::Duration(3.0).sleep();
+            ROS_INFO("Mother Brain (START): Finished Initialization, moving to FIND_BALL.");
+            behavior_state_ = FIND_BALL;
+            behavior_sub_state_ = DEFAULT_SUB_STATE;
+        }
+
+    }
+
+    void end() {
+
+        if (behavior_state_ == END) {
+            ROS_INFO("Mother Brain (END): Shutting Down.");
+            arm_search();
+            ros::Duration(3.0).sleep();
+            ROS_INFO("Mother Brain (END): Going to INIT.");
+            behavior_state_ = INIT;
+            behavior_sub_state_ = DEFAULT_SUB_STATE;
+        }
+    }
+
+    void config() {
+
+        if (behavior_state_ == CONFIG) {
+
+            switch(behavior_sub_state_){
+                case CONFIG_GOAL_COLOR:
+                    //ROS_INFO("Mother Brain (CONFIG): Setting Goal Color.");
+                    break;
+
+                case CONFIG_CEILING:
+                    //ROS_INFO("Mother Brain (CONFIG): Setting Ceiling.");
+                    break;
+
+                case CONFIG_BALL_COLOR:
+                    //ROS_INFO("Mother Brain (CONFIG): Setting Ball Color.");
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (CONFIG): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
+            }
+        }
+    }
+
+    // TODO: Failure Recovery
     void move_to_ball() {
 
-        // Only do this if the top level state is correct.
-        // Sub-states are controlled by external nodes
         if (behavior_state_ == MOVE_TO_BALL) {
-            // Need to know:
-            // 1.  when we're at the ball
-            // 2.  When we're ready to pick up the ball
-            // 3.  When do we give up?
-            //
-            if (behavior_sub_state_ == MOVING_TO_BALL) { //  still getting there.
-                //ROS_INFO("Mother Brain: Moving To Ball.");
-            }
 
-            // AT_BALL set by external node
-            // If we are ready
-            if (behavior_sub_state_ == AT_BALL) {
-                ROS_INFO("Mother Brain: At Ball.");
-                behavior_state_ = PICK_UP_BALL;
-                behavior_sub_state_ = ATTEMPT_PICK_UP;
-            }
+            switch(behavior_sub_state_) {
+                case MOVING_TO_BALL:
+                    //ROS_INFO("Mother Brain (MOVE_TO_BALL): MOVING_TO_BALL.");
+                    break;
 
-            if (behavior_sub_state_ == MOVE_TO_BALL_FAILED) {
-                // Failure, go back to FIND_BALL
-                ROS_INFO("Mother Brain: Move to Ball FAILED.");
-                // TODO: Some recovery behavior?
-                behavior_state_ = FIND_BALL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+                case AT_BALL:
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): AT_BALL, going to attempt pick up.");
+                    behavior_state_ = PICK_UP_BALL;
+                    behavior_sub_state_ = ATTEMPT_PICK_UP;
+                    break;
+
+                case MOVE_TO_BALL_FAILED:
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): MOVE_TO_BALL_FAILED, going to FIND_BALL.");
+                    behavior_state_ = FIND_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
             }
         }
 
@@ -235,18 +296,39 @@ public:
     void find_ball_callback(const geometry_msgs::Point::ConstPtr& msg) {
 
         if (behavior_state_ == FIND_BALL) {
+                ROS_INFO("Mother Brain (FIND_BALL): Callback Executed, going to MOVE_TO_BALL.");
                 behavior_state_ = MOVE_TO_BALL;
                 behavior_sub_state_ = MOVING_TO_BALL;
-                // we just need to stop looking
-                ROS_INFO("Mother Brain: Ball changing state to MOVE_TO_BALL.");
         }
+
     }
 
-    /* This is the TF based version, the callback version which is in use is "find_ball_Callback"
-     */
     void find_ball() {
 
         if (behavior_state_ == FIND_BALL) {
+
+            switch(behavior_sub_state_) {
+
+                case DEFAULT_SUB_STATE:
+                    ROS_INFO("Mother Brain (FIND_BALL): DEFAULT_SUB_STATE, starting search.");
+                    behavior_sub_state_ = SEARCH_FOR_BALL;
+                    break;
+
+                case SEARCH_FOR_BALL:
+                    //ROS_INFO("Mother Brain (FIND_BALL): SEARCH_FOR_BALL contines....");
+                    break;
+
+                case BALL_FOUND:
+                    ROS_INFO("Mother Brain (FIND_BALL): BALL_FOUND, going to MOVE_TO_BALL.");
+                    behavior_state_ = MOVE_TO_BALL;
+                    behavior_sub_state_ = MOVING_TO_BALL;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (FIND_BALL): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
+            }
+
             /*
             tf::StampedTransform ball_found_transform;
 
@@ -342,7 +424,7 @@ int main(int argc, char** argv)
     mother_brain mother_brain_h;
 
 
-    ROS_INFO("Mother Brain Started");
+    ROS_INFO("Mother Brain: Started");
 
     if (ros::ok()) {
         mother_brain_h.arm_search();
@@ -376,43 +458,34 @@ int main(int argc, char** argv)
                 break;
 
             case START:
-                behavior_state_ = FIND_BALL; 
+                mother_brain_h.start();
                 break;
 
             case END:
-                behavior_state_ = INIT; 
+                mother_brain_h.end();
                 break;
 
             case CONFIG:
-                //
+                mother_brain_h.config();
                 break;
 
             case FIND_GOAL:
                 mother_brain_h.find_goal();
-                //
                 break;
 
             case MOVE_TO_GOAL:
                 mother_brain_h.move_to_goal();
-                //
                 break;
 
             case FIND_BALL:
-
-                // Changing state here causes Explorer node to control the Turtlebot
-                behavior_sub_state_ = SEARCH_FOR_BALL;
-
                 mother_brain_h.find_ball();
-
                 break;
 
             case MOVE_TO_BALL:
-                // This is a state managed by mother brain, but the work and sub-states are controlled by other nodes
                 mother_brain_h.move_to_ball(); 
                 break;
 
             case PICK_UP_BALL:
-                // Also controlled by another node..
                 mother_brain_h.pick_up_ball();
                 break;
 
@@ -421,7 +494,7 @@ int main(int argc, char** argv)
                 break;
 
             default: 
-                ROS_ERROR("Default called on case stament.  Unexpected state [%i] in mother_brain:main().", behavior_state_);
+                ROS_ERROR("Default called on case stament.  Unexpected state [%d] in mother_brain:main().", behavior_state_);
 
         }
 
