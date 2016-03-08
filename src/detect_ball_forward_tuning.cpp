@@ -10,12 +10,12 @@
 
 // Create publishers
 image_transport::Publisher it_pub;
-ros::Publisher image_thresh_pub;
-
-ros::Publisher ball_pixel_pub;
-geometry_msgs::Point ball, previous_best_circle_center;
+ros::Publisher image_thresh_pub, ball_pixel_pub;
+geometry_msgs::Point ball, previous_best_circle_center_orange, previous_best_circle_center_green;
+coconuts_common::ControlState current_state;
 float epsilon = 0.0001;
-float error_threshold = 0.35;
+float error_threshold_orange = 0.35;
+float error_threshold_green = 0.35;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_forward/image_raw";
@@ -30,7 +30,11 @@ const int max_circles = 3; // Maximum number of circles to draw
 int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
-int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX;
+// Initialize variables
+const int max_circles = 3; // Maximum number of circles to draw
+int H_MIN_ORANGE, H_MAX_ORANGE, S_MIN_ORANGE, S_MAX_ORANGE, V_MIN_ORANGE, V_MAX_ORANGE; // To be loaded from parameter server
+int H_MIN_GREEN, H_MAX_GREEN, S_MIN_GREEN, S_MAX_GREEN, V_MIN_GREEN, V_MAX_GREEN; // To be loaded from parameter server
+
 int min_radius = 5;
 int max_radius = 30;
 
@@ -49,163 +53,234 @@ float calculateDistance(const float x1, const float y1, const float x2, const fl
 void on_trackbar(int,void*) {}
 
 //This function is called everytime a new image is published
-void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
-{
-    current_time = ros::Time::now();
-    // const sensor_msgs::ImageConstPtr hsv_image;
-    cv_bridge::CvImagePtr cv_ptr_raw;
+void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
+    // Does nothing if the state isn't in FIND_BALL
+    if (true) { //current_state.state == FIND_BALL || current_state.state == MOVE_TO_BALL
 
-    // Convert from the ROS image message to a CvImage suitable for working with OpenCV for processing
-    try
-    {
-        cv_ptr_raw = cv_bridge::toCvCopy(raw_image, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        //if there is an error during conversion, display it
-        ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
-        return;
-    }
+        cv_bridge::CvImagePtr cv_ptr_raw;
 
-    cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
+        // Convert from the ROS image message to a CvImage suitable for working with OpenCV for processing
+        try
+        {
+            cv_ptr_raw = cv_bridge::toCvCopy(raw_image, sensor_msgs::image_encodings::BGR8);
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            //if there is an error during conversion, display it
+            ROS_ERROR("detect_ball::cv_bridge exception: %s", e.what());
+            return;
+        }
 
-    // remove some noise
-    // cv::medianBlur(cv_ptr_raw->image, cv_ptr_raw->image, 3);
+        cv::Mat hsv_image, hsv_channels[3], hsv_thresh_orange, hsv_thresh_green;
 
-    // Convert to HSV
-    cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
-    //cv::imshow(WINDOW1, hsv_image);
+        // Convert to HSV
+        cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
+        //cv::imshow(WINDOW1, hsv_image);
 
-    // split HSV, then threshold
-    cv::split(hsv_image, hsv_channels);
-    cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-    cv::imshow(WINDOW2, hsv_thresh);
+        // split HSV, then threshold for orange
+        cv::split(hsv_image, hsv_channels);
+        cv::inRange(hsv_image, cv::Scalar(H_MIN_ORANGE, S_MIN_ORANGE, V_MIN_ORANGE), cv::Scalar(H_MAX_ORANGE, S_MAX_ORANGE, V_MAX_ORANGE), hsv_thresh_orange);
+        //cv::imshow(WINDOW2, hsv_thresh);
 
-    cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
-    cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
+        cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+        cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
-    // Erode then display
-    cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-    cv::imshow(WINDOW3, hsv_thresh);
+        // Erode then display
+        cv::erode(hsv_thresh_orange, hsv_thresh_orange, erodeElement,cv::Point(-1,-1),2);
+        // cv::imshow(WINDOW3, hsv_thresh);
 
-    // Dilate then display
-    cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
+        // Dilate then display
+        cv::dilate(hsv_thresh_orange, hsv_thresh_orange, dilateElement);
+        //cv::imshow(WINDOW4, hsv_thresh);
 
-    // Blur image
-    cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
-    cv::imshow(WINDOW4, hsv_thresh);
+        // Blur image
+        cv::GaussianBlur(hsv_thresh_orange, hsv_thresh_orange, cv::Size(9, 9), 2, 2);
 
-/*
-    // Use Hough tranform to search for circles
+        /*
+        // Use Hough tranform to search for circles
+        std::vector<cv::Vec3f> circles;
+        cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, hsv_thresh.rows/8, 100, 20, 10, 60);
 
-    std::vector<cv::Vec3f> circles;
-    int accumulator_threshold = 20; // increase for less circles
-    int grad_value = 100;
-    cv::HoughCircles(hsv_thresh, circles, CV_HOUGH_GRADIENT, 2, 2*min_radius, grad_value, accumulator_threshold, min_radius, max_radius);
-    geometry_msgs::Point2f biggest_circle_center;
-    int biggest_circle_radius = 0;
-    if(circles.size() > 0) {
-        int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
-        for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
+        if(circles.size() > 0) {
+            int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
+            for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
+        //        for(int current_circle = 0; current_circle < 1; ++current_circle) {
+                cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
+                int radius = std::floor(circles[current_circle][2]);
 
-            cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
-            int radius = std::floor(circles[current_circle][2]);
-            cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
+                cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
 
-            if (radius > biggest_circle_radius) {
-                biggest_circle_radius = radius;
-                biggest_circle_center.x = circles[current_circle][0];
-                biggest_circle_center.y = circles[current_circle][1];
+                ball.x=center.x;
+                ball.y=center.y;
+                ball_pixel_pub.publish(ball);
+
+            }
+        }
+        */
+
+        cv::Mat canny_output_orange;
+        std::vector<std::vector<cv::Point> > contours_orange;
+        std::vector<cv::Vec4i> hierarchy_orange;
+        cv::Point2f enclosing_circle_center_orange, best_circle_center_orange;
+        float enclosing_circle_radius_orange, best_circle_radius_orange;
+        float contour_area_orange;
+
+        /// Detect edges using canny
+        int low_thresh = 100;
+        cv::Canny(hsv_thresh_orange, canny_output_orange, low_thresh, low_thresh*2, 3 );
+        /// Find contours
+        cv::findContours(canny_output_orange, contours_orange, hierarchy_orange, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+
+        /// Draw contours
+        cv::Mat drawing_orange = cv::Mat::zeros( canny_output_orange.size(), CV_8UC3 );
+
+        float best_distance_orange = 2000;
+        float best_error_orange = 1.0;
+        float current_error_orange, current_distance_orange;
+        for(int i = 0; i < contours_orange.size(); i++) {
+            cv::drawContours(drawing_orange, contours_orange, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy_orange, 0, cv::Point() );
+            cv::minEnclosingCircle(contours_orange[i], enclosing_circle_center_orange, enclosing_circle_radius_orange);
+            contour_area_orange = cv::contourArea(contours_orange[i]);
+            current_error_orange = (M_PI*pow(enclosing_circle_radius_orange,2) - contour_area_orange) / (M_PI*pow(enclosing_circle_radius_orange,2));
+            current_distance_orange = calculateDistance(enclosing_circle_center_orange.x, enclosing_circle_center_orange.y, 
+                previous_best_circle_center_orange.x, previous_best_circle_center_orange.y);
+
+            // if no previous orange best ball location
+            if (compareFloats(previous_best_circle_center_orange.x, -1.0, epsilon)) {
+                // saves most circular, above a certain threshold, within size thresholds, and closer to previous circle
+                if (current_error_orange < best_error_orange && current_error_orange < error_threshold_orange && 
+                  enclosing_circle_radius_orange > min_radius && enclosing_circle_radius_orange < max_radius && 
+                  (enclosing_circle_center_orange.x < 360 || enclosing_circle_center_orange.y < 240)) {
+                    best_error_orange = current_error_orange;
+                    best_circle_radius_orange = enclosing_circle_radius_orange;
+                    best_circle_center_orange = enclosing_circle_center_orange;
+                }
+            }
+            else {
+                // saves closest to previous circle, within size thresholds, and above circle threshold
+                if (current_distance_orange < best_distance_orange && enclosing_circle_radius_orange > min_radius && 
+                  enclosing_circle_radius_orange < max_radius && current_error_orange < error_threshold_orange &&
+                  (enclosing_circle_center_orange.x < 360 || enclosing_circle_center_orange.y < 240)) {
+                    best_error_orange = current_error_orange;
+                    best_distance_orange = current_distance_orange;
+                    best_circle_radius_orange = enclosing_circle_radius_orange;
+                    best_circle_center_orange = enclosing_circle_center_orange;
+                }
+            }
+         }
+
+        // if no orange ball was detected, reset previous best orange value and look for green
+        if (compareFloats(best_error_orange, 1.0, epsilon)) {
+            previous_best_circle_center_orange.x = -1.0;
+            previous_best_circle_center_orange.y = -1.0;
+            // std::cout << "no ball" << std::endl;
+
+            cv::inRange(hsv_image, cv::Scalar(H_MIN_GREEN, S_MIN_GREEN, V_MIN_GREEN), cv::Scalar(H_MAX_GREEN, S_MAX_GREEN, V_MAX_GREEN), hsv_thresh_green);
+            //cv::imshow(WINDOW2, hsv_thresh);
+
+            // Erode then display
+            cv::erode(hsv_thresh_green, hsv_thresh_green, erodeElement,cv::Point(-1,-1),2);
+            // cv::imshow(WINDOW3, hsv_thresh);
+
+            // Dilate then display
+            cv::dilate(hsv_thresh_green, hsv_thresh_green, dilateElement);
+            //cv::imshow(WINDOW4, hsv_thresh);
+
+            // Blur image
+            cv::GaussianBlur(hsv_thresh_green, hsv_thresh_green, cv::Size(9, 9), 2, 2);
+
+            cv::Mat canny_output_green;
+            std::vector<std::vector<cv::Point> > contours_green;
+            std::vector<cv::Vec4i> hierarchy_green;
+            cv::Point2f enclosing_circle_center_green, best_circle_center_green;
+            float enclosing_circle_radius_green, best_circle_radius_green;
+            float contour_area_green;
+
+            /// Detect edges using canny
+            cv::Canny(hsv_thresh_green, canny_output_green, low_thresh, low_thresh*2, 3 );
+            /// Find contours
+            cv::findContours(canny_output_green, contours_green, hierarchy_green, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+
+            /// Draw contours
+            cv::Mat drawing_green = cv::Mat::zeros( canny_output_green.size(), CV_8UC3 );
+
+            float best_distance_green = 2000;
+            float best_error_green = 1.0;
+            float current_error_green, current_distance_green;
+            for(int i = 0; i < contours_green.size(); i++) {
+                cv::drawContours(drawing_green, contours_green, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy_green, 0, cv::Point() );
+                cv::minEnclosingCircle(contours_green[i], enclosing_circle_center_green, enclosing_circle_radius_green);
+                contour_area_green = cv::contourArea(contours_green[i]);
+                current_error_green = (M_PI*pow(enclosing_circle_radius_green,2) - contour_area_green) / (M_PI*pow(enclosing_circle_radius_green,2));
+                current_distance_green = calculateDistance(enclosing_circle_center_green.x, enclosing_circle_center_green.y, 
+                    previous_best_circle_center_green.x, previous_best_circle_center_green.y);
+
+                // if no previous best green ball location
+                if (compareFloats(previous_best_circle_center_green.x, -1.0, epsilon)) {
+                    // saves most circular, above a certain threshold, within size thresholds, and closer to previous circle
+                    if (current_error_green < best_error_green && current_error_green < error_threshold_green && 
+                      enclosing_circle_radius_green > min_radius && enclosing_circle_radius_green < max_radius && 
+                      (enclosing_circle_center_green.x < 360 || enclosing_circle_center_green.y < 240)) {
+                        best_error_green = current_error_green;
+                        best_circle_radius_green = enclosing_circle_radius_green;
+                        best_circle_center_green = enclosing_circle_center_green;
+                    }
+                }
+                else {
+                    // saves closest to previous circle, within size thresholds, and above circle threshold
+                    if (current_distance_green < best_distance_green && enclosing_circle_radius_green > min_radius && 
+                      enclosing_circle_radius_green < max_radius && current_error_green < error_threshold_green &&
+                      (enclosing_circle_center_green.x < 360 || enclosing_circle_center_green.y < 240)) {
+                        best_error_green = current_error_green;
+                        best_distance_green = current_distance_green;
+                        best_circle_radius_green = enclosing_circle_radius_green;
+                        best_circle_center_green = enclosing_circle_center_green;
+                    }
+                }
+            }
+
+            // if no green ball was detected, reset previous best green value
+            if (compareFloats(best_error_green, 1.0, epsilon)) {
+                previous_best_circle_center_green.x = -1.0;
+                previous_best_circle_center_green.y = -1.0;
+            }
+
+            // if green ball was detected, store location
+            else {
+                previous_best_circle_center_green.x = best_circle_center_green.x;
+                previous_best_circle_center_green.y = best_circle_center_green.y;
+
+                // std::cout << "ball at " << previous_best_circle_center.x << ", " << previous_best_circle_center.y << std::endl;
+                // std::cout << "error = " << best_error << std::endl;
+                cv::circle(cv_ptr_raw->image, best_circle_center_green, best_circle_radius_green, cv::Scalar( 0, 255, 0),2);
+                ball.x = best_circle_center_green.x;
+                ball.y = best_circle_center_green.y;
+                ball_pixel_pub.publish(ball);
             }
 
         }
 
-        ball.x=biggest_circle_center.x;
-        ball.y=biggest_circle_center.y;
-        ball_pixel_pub.publish(ball);
-    }
-*/
-
-    cv::Mat canny_output;
-    std::vector<std::vector<cv::Point> > contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::Point2f enclosing_circle_center, best_circle_center;
-    float enclosing_circle_radius, best_circle_radius;
-    float contour_area;
-
-    /// Detect edges using canny
-    int low_thresh = 100;
-    cv::Canny(hsv_thresh, canny_output, low_thresh, low_thresh*2, 3 );
-    /// Find contours
-    cv::findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-
-    /// Draw contours
-    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
-
-    float best_distance = 2000;
-    float best_error = 1.0;
-    float current_error, current_distance;
-    for(int i = 0; i < contours.size(); i++) {
-        cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
-        cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
-        contour_area = cv::contourArea(contours[i]);
-        current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-        current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, 
-            previous_best_circle_center.x, previous_best_circle_center.y);
-
-        // if no previous best ball location
-        if (compareFloats(previous_best_circle_center.x, -1.0, epsilon)) {
-            // saves most circular, above a certain threshold, within size thresholds, and closer to previous circle
-            if (current_error < best_error && current_error < error_threshold && enclosing_circle_radius > min_radius && 
-              enclosing_circle_radius < max_radius && (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
-                best_error = current_error;
-                best_circle_radius = enclosing_circle_radius;
-                best_circle_center = enclosing_circle_center;
-            }
-        }
+        // if orange ball was detected, store location
         else {
-            // saves closest to previous circle, within size thresholds, and above circle threshold
-            if (current_distance < best_distance && enclosing_circle_radius > min_radius && 
-              enclosing_circle_radius < max_radius && current_error < error_threshold &&
-              (enclosing_circle_center.x < 360 || enclosing_circle_center.y < 240)) {
-                best_error = current_error;
-                best_distance = current_distance;
-                best_circle_radius = enclosing_circle_radius;
-                best_circle_center = enclosing_circle_center;
-            }
+            previous_best_circle_center_orange.x = best_circle_center_orange.x;
+            previous_best_circle_center_orange.y = best_circle_center_orange.y;
+
+            // std::cout << "ball at " << previous_best_circle_center.x << ", " << previous_best_circle_center.y << std::endl;
+            // std::cout << "error = " << best_error << std::endl;
+            cv::circle(cv_ptr_raw->image, best_circle_center_orange, best_circle_radius_orange, cv::Scalar( 255, 165, 0),2);
+            ball.x = best_circle_center_orange.x;
+            ball.y = best_circle_center_orange.y;
+            ball_pixel_pub.publish(ball);
         }
-     }
 
-    // if no ball was detected, reset previous best value
-    if (compareFloats(best_error, 1.0, epsilon)) {
-        previous_best_circle_center.x = -1.0;
-        previous_best_circle_center.y = -1.0;
-        std::cout << "no ball" << std::endl;
+        //cv::imshow(WINDOW1, cv_ptr_raw->image);
+
+        //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
+        cv::waitKey(3);
+
+        //Convert the CvImage to a ROS image message and publish it
+        it_pub.publish(cv_ptr_raw->toImageMsg());  
     }
-
-    // if ball was detected, store location
-    else {
-        previous_best_circle_center.x = best_circle_center.x;
-        previous_best_circle_center.y = best_circle_center.y;
-
-        std::cout << "ball at " << previous_best_circle_center.x << ", " << previous_best_circle_center.y << std::endl;
-        std::cout << "error = " << best_error << std::endl;
-        cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
-        ball.x = best_circle_center.x;
-        ball.y = best_circle_center.y;
-        ball_pixel_pub.publish(ball);
-    }
-
-    cv::imshow(WINDOW5, drawing);
-
-    cv::imshow(WINDOW1, cv_ptr_raw->image);
-
-    //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
-    cv::waitKey(3);
-
-    //Convert the CvImage to a ROS image message and publish it on the "camera/image_processed" topic.
-    it_pub.publish(cv_ptr_raw->toImageMsg());
-
 }
 
 int main(int argc, char **argv)
@@ -228,12 +303,19 @@ int main(int argc, char **argv)
 	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1000,true);
     it_pub = it.advertise("/detect_ball_forward/ball_circles", 1);
 
-    nh.getParam("/detect_ball_forward/h_min", H_MIN);
-    nh.getParam("/detect_ball_forward/h_max", H_MAX);
-    nh.getParam("/detect_ball_forward/s_min", S_MIN);
-    nh.getParam("/detect_ball_forward/s_max", S_MAX);
-    nh.getParam("/detect_ball_forward/v_min", V_MIN);
-    nh.getParam("/detect_ball_forward/v_max", V_MAX);
+    nh.getParam("/detect_ball_forward/h_min_orange", H_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/h_max_orange", H_MAX_ORANGE);
+    nh.getParam("/detect_ball_forward/s_min_orange", S_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/s_max_orange", S_MAX_ORANGE);
+    nh.getParam("/detect_ball_forward/v_min_orange", V_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/v_max_orange", V_MAX_ORANGE);
+
+    nh.getParam("/detect_ball_forward/h_min_green", H_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/h_max_green", H_MAX_ORANGE);
+    nh.getParam("/detect_ball_forward/s_min_green", S_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/s_max_green", S_MAX_ORANGE);
+    nh.getParam("/detect_ball_forward/v_min_green", V_MIN_ORANGE);
+    nh.getParam("/detect_ball_forward/v_max_green", V_MAX_ORANGE);
 
     cv::namedWindow("trackbars",0);
 
