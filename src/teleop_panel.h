@@ -137,6 +137,7 @@ protected:
       QPushButton* move_to_ball_button_moving_;
       QPushButton* move_to_ball_button_at_;
       QPushButton* move_to_ball_button_failed_;
+      QPushButton* move_to_ball_button_center_on_ball_;
 
   QPushButton* pick_up_ball_button_;
       QPushButton* pick_up_ball_button_attempt_;

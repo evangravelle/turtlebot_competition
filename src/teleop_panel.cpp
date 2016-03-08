@@ -157,6 +157,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   control_state_layout->addWidget( move_to_ball_button_at_, 11, 1, 1, 1 ); 
   move_to_ball_button_failed_ = new QPushButton("Moving to Ball Failed", this);
   control_state_layout->addWidget( move_to_ball_button_failed_, 11, 2, 1, 1 ); 
+  move_to_ball_button_center_on_ball_ = new QPushButton("Center On Ball", this);
+  control_state_layout->addWidget( move_to_ball_button_center_on_ball_, 11, 3, 1, 1 ); 
  
   pick_up_ball_button_ = new QPushButton("Pick Up Ball", this);
   control_state_layout->addWidget( pick_up_ball_button_, 12, 1,1, 2 ); 
@@ -254,6 +256,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
       connect( move_to_ball_button_moving_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
       connect( move_to_ball_button_at_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
       connect( move_to_ball_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( move_to_ball_button_center_on_ball_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
   connect( pick_up_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
       connect( pick_up_ball_button_attempt_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
       connect( pick_up_ball_button_check_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
@@ -294,6 +297,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
       control_sub_mapper->setMapping(move_to_ball_button_moving_, MOVING_TO_BALL);
       control_sub_mapper->setMapping(move_to_ball_button_at_, AT_BALL);
       control_sub_mapper->setMapping(move_to_ball_button_failed_, MOVE_TO_BALL_FAILED);
+      control_sub_mapper->setMapping(move_to_ball_button_center_on_ball_, CENTER_ON_BALL);
   control_mapper->setMapping(pick_up_ball_button_, PICK_UP_BALL);
       control_sub_mapper->setMapping(pick_up_ball_button_attempt_, ATTEMPT_PICK_UP);
       control_sub_mapper->setMapping(pick_up_ball_button_check_, CHECK_BALL);
@@ -383,6 +387,7 @@ void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
       case 71:
       case 72:
       case 73:
+      case 74:
           control_state.state = MOVE_TO_BALL;
           break;
 
