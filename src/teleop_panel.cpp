@@ -381,6 +381,8 @@ void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
 
       case 61:
       case 62:
+      case 63:
+      case 64:
           control_state.state = FIND_BALL;
           break;
 
