@@ -98,7 +98,7 @@ public:
             switch(behavior_sub_state_) {
                 case BALL_DROPPED:
                     ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to START.");
-                    behavior_state_ = START;
+                    behavior_state_ = FIND_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
@@ -204,6 +204,9 @@ public:
                     ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL, going to FIND_GOAL");
                     behavior_state_ = FIND_GOAL;
                     behavior_sub_state_ = SEARCH_FOR_GOAL;
+                    arm_drop_ball_close();
+                    ros::Duration(3.0).sleep();
+                    behavior_sub_state_ = CHECK_BALL;
                     break;
 
                 case GOT_BALL_FAILED:
@@ -325,6 +328,8 @@ public:
 
                 case SEARCH_FOR_BALL:
                     //ROS_INFO("Mother Brain (FIND_BALL): SEARCH_FOR_BALL contines....");
+                    //Get arm out of way if its not yet
+                    arm_search();
                     break;
 
                 case BALL_FOUND:
