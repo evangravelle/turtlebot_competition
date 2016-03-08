@@ -10,12 +10,15 @@
 #include <states.h>
 #include <coconuts_common/ControlState.h>
 
+// display images?
+bool display = false;
+
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
-static const char WINDOW1[] = "/detect_ball_down/image_raw";
-static const char WINDOW2[] = "/detect_ball_down/hsv_thresh";
-static const char WINDOW3[] = "/detect_ball_down/after_erode";
-static const char WINDOW4[] = "/detect_ball_down/after_dilate";
-//static const char WINDOW5[] = "/detect_ball/hsv_thresh";
+static const char WINDOW1[] = "/detect_ball_down_green/image_raw";
+static const char WINDOW2[] = "/detect_ball_down_green/hsv_thresh";
+//static const char WINDOW3[] = "/detect_ball_down_green/after_erode";
+//static const char WINDOW4[] = "/detect_ball_down_green/after_dilate";
+//static const char WINDOW5[] = "/detect_ball_down_green/hsv_thresh";
 
 // Initialize variables
 image_transport::Publisher it_pub;
@@ -23,7 +26,10 @@ ros::Publisher ball_pixel_pub, control_state_pub, image_thresh_pub;
 geometry_msgs::Point ball;
 ros::Time current_time;
 const int max_circles = 1; // Maximum number of circles to draw
-int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
+int H_TOP = 179; // top end value of sliders
+int S_TOP = 255;
+int V_TOP = 255;
+int H_MIN_GREEN, H_MAX_GREEN, S_MIN_GREEN, S_MAX_GREEN, V_MIN_GREEN, V_MAX_GREEN; // To be loaded from parameter server
 coconuts_common::ControlState current_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.6;
@@ -32,6 +38,8 @@ float min_grab_radius = 50;
 float grab_ball_center_x = 331;
 float grab_ball_center_y = 332;
 float grab_ball_center_dist = 50;
+
+void onTrackbar(int,void*) {}
 
 float calculateDistance(const float x1, const float y1, const float x2, const float y2)
 {
@@ -78,9 +86,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // split HSV, then threshold
         cv::split(hsv_image, hsv_channels);
-        cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-        //cv::imshow(WINDOW2, hsv_thresh);
+        cv::inRange(hsv_image, cv::Scalar(H_MIN_GREEN, S_MIN_GREEN, V_MIN_GREEN), cv::Scalar(H_MAX_GREEN, S_MAX_GREEN, V_MAX_GREEN), hsv_thresh);
+        if (display) {
+            cv::imshow(WINDOW2, hsv_thresh);
 
+        }
         cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
         cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
@@ -183,8 +193,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             control_state_pub.publish(current_state);
             ros::Duration(1).sleep();
         }
-
-        //cv::imshow(WINDOW1, cv_ptr_raw->image);
+        if (display) {
+            cv::imshow(WINDOW1, cv_ptr_raw->image);
+        }
 
         //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
         cv::waitKey(3);
@@ -197,28 +208,33 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 int main(int argc, char **argv)
 {
 
-	ros::init(argc, argv, "detect_ball_down");
-	
+	ros::init(argc, argv, "detect_ball_down_green");
 	ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
 
-    nh.getParam("/detect_ball_down/h_min", H_MIN);
-    nh.getParam("/detect_ball_down/h_max", H_MAX);
-    nh.getParam("/detect_ball_down/s_min", S_MIN);
-    nh.getParam("/detect_ball_down/s_max", S_MAX);
-    nh.getParam("/detect_ball_down/v_min", V_MIN);
-    nh.getParam("/detect_ball_down/v_max", V_MAX);
+    if (display) {
+        cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
+        cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
+    }
+
+    nh.getParam("/detect_ball_down_green/h_min_green", H_MIN_GREEN);
+    nh.getParam("/detect_ball_down_green/h_max_green", H_MAX_GREEN);
+    nh.getParam("/detect_ball_down_green/s_min_green", S_MIN_GREEN);
+    nh.getParam("/detect_ball_down_green/s_max_green", S_MAX_GREEN);
+    nh.getParam("/detect_ball_down_green/v_min_green", V_MIN_GREEN);
+    nh.getParam("/detect_ball_down_green/v_max_green", V_MAX_GREEN);
 
     image_transport::Subscriber sub = it.subscribe("/camera_down/image_raw", 1, imageCallback);
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down/ball_pixel", 1, true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down_green/ball_pixel", 1, true);
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
-    it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
+    it_pub = it.advertise("/detect_ball_down_green/ball_circles", 1);
 
 	ros::spin();
 
-    //cv::destroyWindow(WINDOW2);
-    //cv::destroyWindow(WINDOW4);
-
+    if (display) {
+        cv::destroyWindow(WINDOW1);
+        cv::destroyWindow(WINDOW2);
+    }
  }

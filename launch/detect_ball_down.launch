@@ -1,20 +1,24 @@
 <launch>
 
-  <!-- detect ball down parameters-->
-  <arg name="h_min_down" default="0" />
-  <arg name="h_max_down" default="55" />
-  <arg name="s_min_down" default="0" />
-  <arg name="s_max_down" default="255" />
-  <arg name="v_min_down" default="195" />
-  <arg name="v_max_down" default="255" />
-  <param name="/detect_ball_down/h_min" value="$(arg h_min_down)" />
-  <param name="/detect_ball_down/h_max" value="$(arg h_max_down)" />
-  <param name="/detect_ball_down/s_min" value="$(arg s_min_down)" />
-  <param name="/detect_ball_down/s_max" value="$(arg s_max_down)" />
-  <param name="/detect_ball_down/v_min" value="$(arg v_min_down)" />
-  <param name="/detect_ball_down/v_max" value="$(arg v_max_down)" />
+  <!-- parameters-->
+  <param name="/detect_ball_down_orange/h_min_orange" value="0" />
+  <param name="/detect_ball_down_orange/h_max_orange" value="55" />
+  <param name="/detect_ball_down_orange/s_min_orange" value="0" />
+  <param name="/detect_ball_down_orange/s_max_orange" value="255" />
+  <param name="/detect_ball_down_orange/v_min_orange" value="195" />
+  <param name="/detect_ball_down_orange/v_max_orange" value="255" />
 
-  <node name="detect_ball_down" pkg="coconuts_odroid" type="detect_ball_down" />
+  <node name="detect_ball_down_orange" pkg="coconuts_odroid" type="detect_ball_down_orange" />
+
+  <!-- parameters-->
+  <param name="/detect_ball_down_green/h_min_green" value="21" />
+  <param name="/detect_ball_down_green/h_max_green" value="60" />
+  <param name="/detect_ball_down_green/s_min_green" value="0" />
+  <param name="/detect_ball_down_green/s_max_green" value="255" />
+  <param name="/detect_ball_down_green/v_min_green" value="195" />
+  <param name="/detect_ball_down_green/v_max_green" value="255" />
+
+  <node name="detect_ball_down_green" pkg="coconuts_odroid" type="detect_ball_down_green" />
 
   <!-- stereo image proc - down camera  --> 
   <!-- <node ns="camera_down" name= "image_proc" pkg="image_proc" type="image_proc"/>  -->
