@@ -21,6 +21,7 @@ int behavior_state_;
 int prev_behavior_state_;
 int behavior_sub_state_;
 int prev_behavior_sub_state_;
+bool reset_arm_;
 
 class mother_brain {
 
@@ -51,6 +52,7 @@ public:
         behavior_state_ = INIT;
         prev_behavior_state_ = INIT;
         behavior_sub_state_ = DEFAULT_SUB_STATE;
+        reset_arm_ = false;
         
         // Subscriptions
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
@@ -100,6 +102,8 @@ public:
                     ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to START.");
                     behavior_state_ = FIND_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    reset_arm_ = true;
+                    // TODO:  back up, ROTATE 360, tuck away arm...
                     break;
 
                 case DROP_BALL_FAILED:
@@ -226,7 +230,6 @@ public:
 
         if (behavior_state_ == START) {
             ROS_INFO("Mother Brain (START): Starting Initialization.");
-            arm_search();
             ros::Duration(3.0).sleep();
             ROS_INFO("Mother Brain (START): Finished Initialization, moving to FIND_BALL.");
             behavior_state_ = FIND_BALL;
@@ -329,7 +332,10 @@ public:
                 case SEARCH_FOR_BALL:
                     //ROS_INFO("Mother Brain (FIND_BALL): SEARCH_FOR_BALL contines....");
                     //Get arm out of way if its not yet
-                    arm_search();
+                    if (reset_arm_) {
+                        arm_search();
+                        reset_arm_ = false;
+                    }
                     break;
 
                 case BALL_FOUND:

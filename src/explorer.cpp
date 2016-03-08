@@ -70,7 +70,7 @@ public:
 
             switch (sensor_msg->sensor_readings[i].sensor) {
                 case 0:
-                    if (sensor_msg->sensor_readings[i].reading < 20) {
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 5) {
                         center_obstacle = true;
                     } else {
                         center_obstacle = false;
@@ -78,7 +78,7 @@ public:
                     break;
 
                 case 1:
-                    if (sensor_msg->sensor_readings[i].reading < 35) {
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
                         right_obstacle = true;
                     } else {
                         right_obstacle = false;
@@ -86,7 +86,7 @@ public:
                     break;
 
                 case 2:
-                    if (sensor_msg->sensor_readings[i].reading < 35) {
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
                         left_obstacle = true;
                     } else {
                         left_obstacle = false;
