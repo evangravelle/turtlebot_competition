@@ -105,13 +105,19 @@ public:
         geometry_msgs::Twist search_twist;
         // Bone dumb obstacle avoidance
         // Go forward unless we run into something
-        search_twist.linear.x = 0.0;
-        search_twist.angular.z = 0.3;
+        search_twist.linear.x = 0.1;
+        search_twist.angular.z = 0.0;
         if (left_obstacle && right_obstacle) {
             search_twist.linear.x = -0.1; // Go Backwards
         } else {
-            if (left_obstacle) search_twist.angular.z = -0.3; // rotate right
-            else if (right_obstacle) search_twist.angular.z = 0.3; // rotate left
+            if (left_obstacle) {
+                search_twist.angular.z = -0.6; // rotate right
+                search_twist.linear.x = 0.0;
+            }
+            else if (right_obstacle) {
+                search_twist.angular.z = 0.6; // rotate left
+                search_twist.linear.x = 0.0;
+            }
         }
         // Do we care about center here?
 
