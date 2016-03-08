@@ -50,7 +50,7 @@ double thresholdDistance=0;
 double m=0;
 double b=0;
 
-int state=1;
+int state=0;
 bool goForBall=false;
 bool got_cdot=false;
 geometry_msgs::Twist cdot;

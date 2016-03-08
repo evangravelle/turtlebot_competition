@@ -1,0 +1,4 @@
+<launch>
+  <node name="medControl" pkg="coconuts_odroid" type="medControl"/>
+  <node name="fineControl" pkg="coconuts_odroid" type="fineControl" />
+</launch>

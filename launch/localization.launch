@@ -1,0 +1,5 @@
+<launch>
+
+  <node name="globalLocalizationPy" pkg="coconuts_odroid" type="globalLocalizationPY.py" />
+
+</launch>
