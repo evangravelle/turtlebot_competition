@@ -56,7 +56,7 @@ public:
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
         control_substate_sub = nodeh.subscribe<coconuts_common::ControlState>("/control_substate", 1, &mother_brain::control_substate_receive, this);
         detect_ball_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
-        detect_goal_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_goal_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
+        detect_goal_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_goal_forward/ball_pixel", 1, &mother_brain::find_goal_callback, this);
 
         // Publishers
         control_state_pub = nodeh.advertise<coconuts_common::ControlState>("/control_state", 10);
@@ -282,6 +282,10 @@ public:
                     ROS_INFO("Mother Brain (MOVE_TO_BALL): AT_BALL, going to attempt pick up.");
                     behavior_state_ = PICK_UP_BALL;
                     behavior_sub_state_ = ATTEMPT_PICK_UP;
+                    break;
+
+                case CENTER_ON_BALL:
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): CENTER_ON_BALL, centering.");
                     break;
 
                 case MOVE_TO_BALL_FAILED:
