@@ -358,7 +358,9 @@ public:
                     break;
 
                 case BALL_FOUND:
-                    ROS_INFO("Mother Brain (FIND_BALL): BALL_FOUND, going to MOVE_TO_BALL.");
+                case GREEN_BALL_FOUND:
+                case ORANGE_BALL_FOUND:
+                    ROS_INFO("Mother Brain (FIND_BALL): BALL_FOUND [%d], going to MOVE_TO_BALL.", behavior_sub_state_);
                     behavior_state_ = MOVE_TO_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
