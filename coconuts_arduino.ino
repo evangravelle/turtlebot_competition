@@ -26,6 +26,8 @@ JointController joint_1(94, 797, A1, AFMS.getMotor(2));
 JointController joint_2(275, 670, A2, AFMS.getMotor(3));
 JointController joint_3(280, 640, A3, AFMS.getMotor(4), 10);
 
+#define ARM_POLL_INTERVAL 10
+
 #define NUM_MOTORS 4
 JointController* joints[] = {&joint_0, &joint_1, &joint_2, &joint_3};
 
@@ -78,7 +80,23 @@ JointCmd current_cmd;
 
 uint8_t arm_is_resting = 0;
 
+long last_arm_update = 0;
+int current_updating_sensor = 0;
+
 void loop() {
+  // while(1){
+  //   for(int i=0;i<NUM_SONAR;i++){
+  //     Serial.print(i);
+  //     Serial.print("  ");
+  //     Serial.print(sensors[i].update());
+  //     Serial.print("    ");
+  //     Serial.print(sensors[i].get_distance());
+  //     Serial.print("    |   ");
+  //     // delay(50);
+  //   }
+  //   Serial.println("");
+  // }
+
   // last_loop_time = millis();
 
   // delay(500);
@@ -133,10 +151,12 @@ void loop() {
     }
   }
 
+  sensors[current_updating_sensor].update();
+  current_updating_sensor = (current_updating_sensor + 1) % NUM_SONAR;
+
   if(!waiting_mode){
     //Dequeue the motor command
     //But if we're in waiting mode and the joints are still going, don't
-
     while(cmd_queue.size() > 0){
       current_cmd = cmd_queue.dq();
       if(current_cmd.wait){
@@ -151,16 +171,14 @@ void loop() {
     }
   }
 
-
-  arm_is_resting = 1;
-  for(i=0;i<NUM_MOTORS;i++){
-    arm_is_resting = joints[i]->update() && arm_is_resting;
+  if(millis() - last_arm_update > ARM_POLL_INTERVAL){
+    last_arm_update = millis();
+    arm_is_resting = 1;
+    for(i=0;i<NUM_MOTORS;i++){
+      arm_is_resting = joints[i]->update() && arm_is_resting;
+    }
+    if(arm_is_resting)
+      waiting_mode = 0;  //All joints have finished moving, clear waiting mode
   }
-  if(arm_is_resting)
-    waiting_mode = 0;  //All joints have finished moving, clear waiting mode
-
-  delay(10);
-  // delay( 10 - (millis() - last_loop_time) );
 }
-
 

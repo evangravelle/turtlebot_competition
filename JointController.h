@@ -44,10 +44,10 @@ private:
 
   //integral accumulator
   int _I = 1;
-  int _I_threshold = 30;
+  int _I_threshold = 40;
   int _I_max = 80;
 
-  //PID state
+  //PID state 
   int _current;
   int _error;
 
