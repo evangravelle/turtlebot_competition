@@ -101,7 +101,10 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
      }
 
+    cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
     cv::rectangle(drawing, rectangle, cv::Scalar( 255, 255, 0));
+
+    std::cout << "y pixel is " << rectangle.y << std::endl;
 
     imshow(WINDOW5, drawing);
 
