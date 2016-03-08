@@ -138,8 +138,6 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(snes_joy_node src/snes_joy_node.cpp)
-add_executable(mother_brain src/mother_brain.cpp)
-add_executable(explorer src/explorer.cpp)
 add_executable(teleop_config_server_example src/teleop_config_server_example.cpp)
 add_executable(detect_ball_forward_tuning src/detect_ball_forward_tuning.cpp)
 add_executable(detect_bucket_forward_tuning src/detect_bucket_forward_tuning.cpp)
@@ -152,8 +150,6 @@ add_executable(arm_pub_test src/arm_pub_test.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(snes_joy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
-add_dependencies(mother_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
-add_dependencies(explorer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(teleop_config_server_example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_ball_forward_tuning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_bucket_forward_tuning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -165,8 +161,6 @@ add_dependencies(arm_pub_test ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(snes_joy_node ${catkin_LIBRARIES})
-target_link_libraries(mother_brain ${catkin_LIBRARIES})
-target_link_libraries(explorer ${catkin_LIBRARIES})
 target_link_libraries(teleop_config_server_example ${catkin_LIBRARIES})
 target_link_libraries(detect_ball_forward_tuning ${catkin_LIBRARIES})
 target_link_libraries(detect_bucket_forward_tuning ${catkin_LIBRARIES})
