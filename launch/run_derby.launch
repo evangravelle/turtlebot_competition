@@ -1,6 +1,6 @@
 <launch>
 
-    <include file="$(turtlebot_bringup)/launch/minimal.launch" />
+    <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
     <include file="$(find coconuts_odroid)/launch/brain.launch" />
     <include file="$(find coconuts_odroid)/launch/bridge.launch" />
     <include file="$(find coconuts_odroid)/launch/detect_ball_forward.launch" />
