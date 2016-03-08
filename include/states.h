@@ -20,6 +20,8 @@
 #define 	FIND_BALL					60
 #define         SEARCH_FOR_BALL         61
 #define         BALL_FOUND              62
+#define         GREEN_BALL_FOUND        63
+#define         ORANGE_BALL_FOUND       64
 
 #define 	MOVE_TO_BALL				70
 #define         MOVING_TO_BALL          71
