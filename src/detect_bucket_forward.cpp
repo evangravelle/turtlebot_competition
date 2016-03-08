@@ -10,13 +10,23 @@
 #include <states.h>
 #include <coconuts_common/ControlState.h>
 
+// Display images?
+bool display = false;
+
+static const char WINDOW1[] = "/detect_bucket_forward/image_raw";
+static const char WINDOW2[] = "/detect_bucket_forward/hsv_thresh";
+
 // Initialize variables
-const int max_circles = 1; // Maximum number of circles to draw
+int H_TOP = 179; // top end value of sliders
+int S_TOP = 255;
+int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub, bucket_pixel_pub;
 geometry_msgs::Point bucket;
 coconuts_common::ControlState current_state;
+
+void on_trackbar(int,void*) {}
 
 void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
     current_state.state = control_msg->state;
@@ -44,9 +54,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         cv::Mat hsv_image, hsv_channels[3], hsv_thresh;
 
-        // remove some noise
-        // cv::medianBlur(cv_ptr_raw->image, cv_ptr_raw->image, 3);
-
         // Convert to HSV
         cv::cvtColor(cv_ptr_raw->image, hsv_image, CV_BGR2HSV);
         //cv::imshow(WINDOW1, hsv_image);
@@ -54,7 +61,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         // split HSV, then threshold
         cv::split(hsv_image, hsv_channels);
         cv::inRange(hsv_image, cv::Scalar(H_MIN, S_MIN, V_MIN), cv::Scalar(H_MAX, S_MAX, V_MAX), hsv_thresh);
-        //cv::imshow(WINDOW2, hsv_thresh);
+        if (display) {
+            cv::imshow(WINDOW2, hsv_thresh);
+        }
 
         cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
         cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
@@ -94,8 +103,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
          }
 
         cv::rectangle(drawing, rectangle, cv::Scalar( 255, 255, 0));
-
-        //imshow(WINDOW5, drawing);
+        if (display) {
+            imshow(WINDOW1, drawing);
+        }
 
         bucket.x = rectangle.x;
         bucket.y = rectangle.y;
@@ -113,10 +123,14 @@ int main(int argc, char **argv)
 {
 
 	ros::init(argc, argv, "detect_bucket_forward");
-	
 	ros::NodeHandle nh;
 
     image_transport::ImageTransport it(nh);
+
+    if (display) {
+        cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
+        cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
+    }
 
     nh.getParam("/detect_bucket_forward/h_min", H_MIN);
     nh.getParam("/detect_bucket_forward/h_max", H_MAX);
@@ -129,6 +143,20 @@ int main(int argc, char **argv)
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
     bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1,true);
 
+    if (display) {
+        cv::namedWindow("trackbars",0);
+        cv::createTrackbar("H_MIN", "trackbars", &H_MIN, H_TOP, on_trackbar);
+        cv::createTrackbar("H_MAX", "trackbars", &H_MAX, H_TOP, on_trackbar);
+        cv::createTrackbar("S_MIN", "trackbars", &S_MIN, S_TOP, on_trackbar);
+        cv::createTrackbar("S_MAX", "trackbars", &S_MAX, S_TOP, on_trackbar);
+        cv::createTrackbar("V_MIN", "trackbars", &V_MIN, V_TOP, on_trackbar);
+        cv::createTrackbar("V_MAX", "trackbars", &V_MAX, V_TOP, on_trackbar);
+    }
+
 	ros::spin();
 
- }
+    if (display) {
+        cv::destroyWindow(WINDOW1);
+        cv::destroyWindow(WINDOW2);
+    }
+}

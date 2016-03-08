@@ -16,7 +16,7 @@ double baseline_length = 10.5*inches_to_meters;
 double camera_forward_dist_from_ground = 16.0*inches_to_meters;
 int image_width, image_height;
 double xy_angle, dist;
-double bucket_dist_away = 1.0;
+double bucket_dist_away;
 
 // Assumes a horizontal camera view of 90 degrees
 
@@ -28,6 +28,8 @@ void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 
 	forward_image_pixel.x = pointPtr->x;
 	forward_image_pixel.y = pointPtr->y;
+
+	bucket_dist_away = exp(3.51e-5*pow(forward_image_pixel.y,2) - 0.0165*forward_image_pixel.y + 2.50);
 
 	bucket.transform.translation.x = bucket_dist_away;
 	bucket.transform.translation.y = bucket_dist_away - 2*bucket_dist_away*forward_image_pixel.x/(image_width - 1);

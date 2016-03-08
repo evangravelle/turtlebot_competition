@@ -29,7 +29,7 @@ void forwardLocationCallback(const geometry_msgs::Point::ConstPtr &pointPtr) {
 	forward_image_pixel.y = pointPtr->y;
 
 	ball.transform.translation.x = exp(8.1*pow(10,-6)*pow(forward_image_pixel.y,2) - 0.0091*forward_image_pixel.y + 5.1283)*inches_to_meters;
-	ball.transform.translation.y = ball.transform.translation.y * (forward_image_pixel.x - image_width/2.0)/(image_width/2.0);
+	ball.transform.translation.y = ball.transform.translation.x * (forward_image_pixel.x - image_width/2.0)/(image_width/2.0);
 
 	tf_br.sendTransform(ball);
 

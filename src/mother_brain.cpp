@@ -10,13 +10,6 @@
 #include <coconuts_common/ControlState.h>
 #include <coconuts_common/ArmMovement.h>
 
-/*
- * TODO
- *
- * Ensure we're not using DEFAULT states for anything. Everything sholud have a home...
- *
- */
-
 int behavior_state_;
 int prev_behavior_state_;
 int behavior_sub_state_;
@@ -92,12 +85,20 @@ public:
         control_state_pub.publish(current_state);
     }
 
-    // TODO: Failure Condition
     void drop_ball() {
 
         if (behavior_state_ == DROP_BALL) {
 
             switch(behavior_sub_state_) {
+
+                case DEFAULT_SUB_STATE:
+                    arm_drop_ball_open();
+                    ros::Duration(3.0).sleep();
+                    cocobot_turn_around();
+                    ros::Duration(3.0).sleep();
+                    behavior_sub_state_ = BALL_DROPPED;
+                    break;
+
                 case BALL_DROPPED:
                     ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to START.");
                     behavior_state_ = FIND_BALL;
@@ -113,9 +114,7 @@ public:
                     break;
 
                 default:
-                    arm_drop_ball_open();
-                    ros::Duration(3.0).sleep();
-                    behavior_sub_state_ = BALL_DROPPED;
+                    ROS_INFO("Mother Brain (DROP_BALL): DEFAULT called [%d].", behavior_sub_state_);
                     break;
             }
         }
@@ -127,6 +126,10 @@ public:
         if (behavior_state_ == MOVE_TO_GOAL) {
 
             switch(behavior_sub_state_) {
+                case DEFAULT_SUB_STATE:
+                    behavior_sub_state_ = MOVING_TO_GOAL;
+                    break;
+
                 case MOVING_TO_GOAL:
                     //ROS_INFO("Mother Brain (MOVE_TO_GOAL): Moving To Ball.");
                     break;
@@ -156,6 +159,10 @@ public:
         if (behavior_state_ == FIND_GOAL) {
 
             switch(behavior_sub_state_){
+                case DEFAULT_SUB_STATE:
+                    behavior_sub_state_ = SEARCH_FOR_GOAL;
+                    break;
+
                 case SEARCH_FOR_GOAL:
                     //ROS_INFO("Mother Brain (FIND_GOAL): Searching for Goal.");
                     break;
@@ -180,7 +187,7 @@ public:
 
                 ROS_INFO("Mother Brain (FIND_GOAL): Callback Executed, going to MOVE_TO_GOAL.");
                 behavior_state_ = MOVE_TO_GOAL;
-                behavior_sub_state_ = MOVING_TO_GOAL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
 
         }
     }
@@ -190,6 +197,10 @@ public:
         if (behavior_state_ == PICK_UP_BALL) {
 
             switch(behavior_sub_state_) {
+                case DEFAULT_SUB_STATE:
+                    behavior_sub_state_ = ATTEMPT_PICK_UP;
+                    break;
+
                 case ATTEMPT_PICK_UP:
                     // grab ball
                     arm_grab_ball_close();
@@ -207,10 +218,9 @@ public:
                 case GOT_BALL:
                     ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL, going to FIND_GOAL");
                     behavior_state_ = FIND_GOAL;
-                    behavior_sub_state_ = SEARCH_FOR_GOAL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
                     arm_drop_ball_close();
                     ros::Duration(3.0).sleep();
-                    behavior_sub_state_ = CHECK_BALL;
                     break;
 
                 case GOT_BALL_FAILED:
@@ -256,6 +266,9 @@ public:
         if (behavior_state_ == CONFIG) {
 
             switch(behavior_sub_state_){
+                case DEFAULT_SUB_STATE:
+                    break;
+
                 case CONFIG_GOAL_COLOR:
                     //ROS_INFO("Mother Brain (CONFIG): Setting Goal Color.");
                     break;
@@ -281,6 +294,11 @@ public:
         if (behavior_state_ == MOVE_TO_BALL) {
 
             switch(behavior_sub_state_) {
+
+                case DEFAULT_SUB_STATE:
+                    behavior_sub_state_ = MOVING_TO_BALL;
+                    break;
+
                 case MOVING_TO_BALL:
                     //ROS_INFO("Mother Brain (MOVE_TO_BALL): MOVING_TO_BALL.");
                     break;
@@ -288,7 +306,7 @@ public:
                 case AT_BALL:
                     ROS_INFO("Mother Brain (MOVE_TO_BALL): AT_BALL, going to attempt pick up.");
                     behavior_state_ = PICK_UP_BALL;
-                    behavior_sub_state_ = ATTEMPT_PICK_UP;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
                 case CENTER_ON_BALL:
@@ -314,7 +332,7 @@ public:
         if (behavior_state_ == FIND_BALL) {
                 ROS_INFO("Mother Brain (FIND_BALL): Callback Executed, going to MOVE_TO_BALL.");
                 behavior_state_ = MOVE_TO_BALL;
-                behavior_sub_state_ = MOVING_TO_BALL;
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
         }
 
     }
@@ -340,9 +358,11 @@ public:
                     break;
 
                 case BALL_FOUND:
-                    ROS_INFO("Mother Brain (FIND_BALL): BALL_FOUND, going to MOVE_TO_BALL.");
+                case GREEN_BALL_FOUND:
+                case ORANGE_BALL_FOUND:
+                    ROS_INFO("Mother Brain (FIND_BALL): BALL_FOUND [%d], going to MOVE_TO_BALL.", behavior_sub_state_);
                     behavior_state_ = MOVE_TO_BALL;
-                    behavior_sub_state_ = MOVING_TO_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
                 default:
@@ -433,6 +453,17 @@ public:
     void positionArm(coconuts_common::ArmMovement arm_movement) {
         ROS_INFO("Mother Brain: Sending Command to Arm");
         motor_control_pub.publish(arm_movement);
+    }
+
+    void cocobot_turn_around() {
+        geometry_msgs::Twist bot_movement;
+        bot_movement.linear.x = 0.0;
+        bot_movement.angular.z = 1.0;
+        sendMovement(bot_movement);
+    }
+
+    void sendMovement(geometry_msgs::Twist bot_movement) {
+        cmd_vel_pub.publish(bot_movement);
     }
 
 
