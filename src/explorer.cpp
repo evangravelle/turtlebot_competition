@@ -105,17 +105,17 @@ public:
         geometry_msgs::Twist search_twist;
         // Bone dumb obstacle avoidance
         // Go forward unless we run into something
-        search_twist.linear.x = 0.1;
+        search_twist.linear.x = 0.2;
         search_twist.angular.z = 0.0;
         if (left_obstacle && right_obstacle) {
-            search_twist.linear.x = -0.1; // Go Backwards
+            search_twist.linear.x = -0.3; // Go Backwards
         } else {
             if (left_obstacle) {
-                search_twist.angular.z = -0.6; // rotate right
+                search_twist.angular.z = -1.0; // rotate right
                 search_twist.linear.x = 0.0;
             }
             else if (right_obstacle) {
-                search_twist.angular.z = 0.6; // rotate left
+                search_twist.angular.z = 1.0; // rotate left
                 search_twist.linear.x = 0.0;
             }
         }
