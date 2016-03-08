@@ -83,15 +83,14 @@ angle=xPrime-cenPose->x-15; //CENTER
 
 	if (abs(dist)<10 && abs(angle) <5){
 		state=0;
-		cs.state=MOVE_TO_BALL;
-		cs.sub_state=-50;
+		cs.sub_state=CENTER_ON_BALL;
 		control_pub.publish(cs);
 	}
 
 }
 
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
-	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state != -50){ //&& control_state -> sub_state == MOVING_TO_BALL
+	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == MOVING_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
 		state=1;
 	}
 }
@@ -109,7 +108,7 @@ ros::Publisher u_pub_,m_pub;
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
-control_pub = nh_.advertise<coconuts_common::ControlState>("/control_state",1, true);
+control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
 
 
 geometry_msgs::Twist finalVel;

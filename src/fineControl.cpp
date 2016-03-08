@@ -81,7 +81,7 @@ angle=350-cenPose->x; //CENTER
 }
 
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
-	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == -50){ //&& control_state -> sub_state == MOVING_TO_BALL
+	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == CENTER_ON_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
 		state=1;
 	}
 }
@@ -96,7 +96,7 @@ ros::Subscriber cen_sub_, control_sub;
 ros::Publisher u_pub_,m_pub;
 
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB);
-control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
+control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_substate",1, stateCB);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 m_pub = nh_.advertise<coconuts_common::ArmMovement>("/motor_control", 1, true);
 
@@ -195,6 +195,7 @@ while(ros::ok()){
 			m_pub.publish(grabBallOpen);
 		}
 
+        // ON SUCCESS THIS SHOULD PUBLISH SUBSTATE "AT_BALL"
 
 }
 
