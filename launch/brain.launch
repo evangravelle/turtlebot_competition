@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="coconuts_master" type="mother_brain" name="mother_brain_node" output="screen" />
+
+    <node pkg="coconuts_master" type="explorer" name="explorer_node" output="screen" />
+
+</launch>

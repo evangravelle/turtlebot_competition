@@ -1,6 +1,6 @@
 <launch>
 
-    <!--<include file="$(find coconuts_odroid)/launch/mother_brain.xml" /> -->
+    <include file="$(find coconuts_odroid)/launch/brain.xml" />
     <include file="$(find coconuts_odroid)/launch/bridge.xml" />
     <include file="$(find coconuts_odroid)/launch/detect_ball_forward.xml" />
 
