@@ -25,6 +25,7 @@
 #define         MOVING_TO_BALL          71
 #define         AT_BALL                 72
 #define         MOVE_TO_BALL_FAILED     73
+#define         CENTER_ON_BALL          74
 
 #define 	PICK_UP_BALL				80	
 #define			ATTEMPT_PICK_UP			81
