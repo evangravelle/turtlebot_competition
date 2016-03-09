@@ -202,6 +202,8 @@ public:
                     break;
 
                 case ATTEMPT_PICK_UP:
+                case ATTEMPT_PICK_UP_GREEN:
+                case ATTEMPT_PICK_UP_ORANGE:
                     // grab ball
                     arm_grab_ball_close();
                     ros::Duration(3.0).sleep();
@@ -212,6 +214,8 @@ public:
                     break;
 
                 case CHECK_BALL:
+                case CHECK_GREEN:
+                case CHECK_ORANGE:
                     ROS_INFO("Mother Brain (PICK_UP_BALL):  CHECK_BALL, still checking");
                     break;
 
@@ -299,20 +303,28 @@ public:
                     behavior_sub_state_ = MOVING_TO_BALL;
                     break;
 
+                case MOVING_TO_GREEN:
+                case MOVING_TO_ORANGE:
                 case MOVING_TO_BALL:
-                    //ROS_INFO("Mother Brain (MOVE_TO_BALL): MOVING_TO_BALL.");
+                    //ROS_INFO("Mother Brain (MOVE_TO_BALL): Moving to Ball.");
                     break;
 
+                case AT_GREEN:
+                case AT_ORANGE:
                 case AT_BALL:
-                    ROS_INFO("Mother Brain (MOVE_TO_BALL): AT_BALL, going to attempt pick up.");
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): At Ball, going to attempt pick up.");
                     behavior_state_ = PICK_UP_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
+                case CENTER_ON_GREEN:
+                case CENTER_ON_ORANGE:
                 case CENTER_ON_BALL:
-                    ROS_INFO("Mother Brain (MOVE_TO_BALL): CENTER_ON_BALL, centering.");
+                    ROS_INFO("Mother Brain (MOVE_TO_BALL): centering.");
                     break;
 
+                case MOVE_TO_ORANGE_FAILED:
+                case MOVE_TO_GREEN_FAILED:
                 case MOVE_TO_BALL_FAILED:
                     ROS_INFO("Mother Brain (MOVE_TO_BALL): MOVE_TO_BALL_FAILED, going to FIND_BALL.");
                     behavior_state_ = FIND_BALL;
