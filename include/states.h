@@ -20,6 +20,8 @@
 #define 	FIND_BALL					60
 #define         SEARCH_FOR_BALL         61
 #define         BALL_FOUND              62
+#define         GREEN_BALL_FOUND        63
+#define         ORANGE_BALL_FOUND       64
 
 #define 	MOVE_TO_BALL				70
 #define         MOVING_TO_GREEN         71
@@ -30,6 +32,10 @@
 #define         AT_ORANGE               76
 #define         MOVE_TO_ORANGE_FAILED   77
 #define         CENTER_ON_ORANGE        78
+#define         MOVE_TO_BALL_FAILED     79
+#define         CENTER_ON_BALL          170
+#define         MOVING_TO_BALL          171
+#define         AT_BALL                 172
 
 #define 	PICK_UP_BALL				80	
 #define			ATTEMPT_PICK_UP_GREEN	81
@@ -38,6 +44,8 @@
 #define			CHECK_ORANGE			84
 #define         GOT_BALL                85 
 #define         GOT_BALL_FAILED         86 
+#define         ATTEMPT_PICK_UP         87 
+#define         CHECK_BALL              88 
 
 #define 	DROP_BALL					90
 #define 	    BALL_DROPPED			91
