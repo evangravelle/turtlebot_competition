@@ -206,10 +206,10 @@ public:
                 case ATTEMPT_PICK_UP_ORANGE:
                     // grab ball
                     arm_grab_ball_close();
-                    ros::Duration(3.0).sleep();
+                    ros::Duration(5.0).sleep();
                     // move to validate posltion
                     arm_check();
-                    ros::Duration(3.0).sleep();
+                    ros::Duration(5.0).sleep();
                     behavior_sub_state_ = CHECK_BALL;
                     break;
 
@@ -313,6 +313,8 @@ public:
                 case AT_ORANGE:
                 case AT_BALL:
                     ROS_INFO("Mother Brain (MOVE_TO_BALL): At Ball, going to attempt pick up.");
+                    arm_grab_ball_open();
+                    ros::Duration(5.0).sleep();
                     behavior_state_ = PICK_UP_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
