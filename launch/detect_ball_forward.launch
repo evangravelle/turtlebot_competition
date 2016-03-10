@@ -18,14 +18,14 @@
   <param name="/detect_ball_forward/v_min_green" value="148" />
   <param name="/detect_ball_forward/v_max_green" value="255" />
 
-  <node name="detect_ball_forward" pkg="coconuts_odroid" type="detect_ball_forward" output="screen"/>
+  <node name="detect_ball_forward" pkg="coconuts_odroid" type="detect_ball_forward"/>
 
   <!-- stereo image proc - forward camera-->
   <node ns="camera_forward" name= "image_proc" pkg="image_proc" type="image_proc"/>
 
   <!-- forward camera uses usb_cam -->
   <node name= "camera_forward" pkg="usb_cam" type="usb_cam_node" >
-    <param name="video_device" type="string" value="/dev/video0"/>  <!-- video2 for odroid -->
+    <param name="video_device" type="string" value="/dev/video2"/>  <!-- video2 for odroid -->
     <param name="pixel_format" type="string" value="yuyv"/>
     <param name="framerate" type="int" value="10"/>
     <param name="camera_frame_id" type="string" value="camera_forward" /> 
