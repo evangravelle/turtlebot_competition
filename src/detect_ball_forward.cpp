@@ -12,7 +12,7 @@
 
 // Display images and trackbars?
 bool display = false;
-bool require_correct_state = false;
+bool require_correct_state = true;
 
 // Create publishers
 image_transport::Publisher it_pub;
@@ -371,7 +371,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
         cv_ptr_raw = loadImage(raw_image);
         findGreen();
 
-        // if orange ball was detected, store location
+        // if green ball was detected, store location
         if (!compareFloats(best_error_green, 1.0, epsilon)) {
 
             previous_best_circle_center_green.x = best_circle_center_green.x;
@@ -465,7 +465,6 @@ int main(int argc, char **argv)
     float best_error_orange = 1.0;
     float best_error_green = 1.0;
 
-    ros::Rate rate(10);
 	ros::spin();
 
     //nh.setParam("/detect_ball_forward/h_min", H_MIN);

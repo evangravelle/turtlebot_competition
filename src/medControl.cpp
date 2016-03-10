@@ -14,6 +14,7 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <std_msgs/Float32.h>
 #include <coconuts_common/ArmMovement.h>
 #include <coconuts_common/ControlState.h>
+#include <coconuts_common/SensorStatus.h>
 #include <math.h>
 #include <states.h>
 
@@ -54,9 +55,16 @@ int state=1;
 int substate=1;
 bool goForBall=false;
 bool got_cdot=false;
+
+    bool left_obstacle=false;
+    bool right_obstacle=false;
+    bool center_obstacle=false;
+
 geometry_msgs::Twist cdot;
 coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
+ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub;
+ros::Publisher u_pub_,m_pub;
 coconuts_common::ControlState cs;
 
 // Construct Node Class
@@ -96,8 +104,8 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 		angle=350-cenPose->x; 
 		if (abs(dist)<10 && abs(angle) <5){
 			substate=3;
-	//		cs.sub_state=CENTER_ON_BALL;
-	//		control_pub.publish(cs);
+			cs.sub_state=AT_BALL;
+			control_pub.publish(cs);
 		}
 	}
 }
@@ -105,9 +113,49 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == MOVING_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
 		state=1;
-	}else{
+	}else if (control_state -> state ==FIND_BALL || control_state -> state ==FIND_GOAL){
+		state=2;
+	}
+	else{
 		state=0;
 	}
+}
+
+void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
+
+        // TODO define these magic numbers and parameterize the reading value
+        for (int i = 0; i < sensor_msg->sensor_readings.size(); i++ ) {
+            //ROS_INFO("Explorer: Looking at sensor [%d] reading [%d].", sensor_msg->sensor_readings[i].sensor, sensor_msg->sensor_readings[i].reading);
+
+            switch (sensor_msg->sensor_readings[i].sensor) {
+                case 0:
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 5) {
+                        center_obstacle = true;
+                    } else {
+                        center_obstacle = false;
+                    }
+                    break;
+
+                case 1:
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+                        right_obstacle = true;
+                    } else {
+                        right_obstacle = false;
+                    }
+                    break;
+
+                case 2:
+                    if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+                        left_obstacle = true;
+                    } else {
+                        left_obstacle = false;
+                    }
+                    break;
+            
+                default:
+                    break;
+            }
+        }
 }
 
 
@@ -229,19 +277,40 @@ void fineControl(){
 
 }
 
+
+
+void explore(){
+        finalVel.linear.x = 0.1;
+        finalVel.angular.z = 0.0;
+        if (left_obstacle && right_obstacle) {
+           finalVel.linear.x = -0.3; // Go Backwards
+        } else {
+            if (left_obstacle) {
+                finalVel.angular.z = -1.0; // rotate right
+                finalVel.linear.x = 0.0;
+            }
+            else if (right_obstacle) {
+                finalVel.angular.z = 1.0; // rotate left
+                finalVel.linear.x = 0.0;
+            }
+        }
+}
+
+
+
 int main(int argc, char **argv)
 {
 ros::init(argc, argv, "AaRoNmA");
 ros::NodeHandle ph_, nh_;
 ros::Rate loop_rate(50); 
-ros::Subscriber cen_sub_, cen2_sub_, control_sub;
-ros::Publisher u_pub_,m_pub;
+
 
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB2);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
+sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
 
 
 
@@ -254,19 +323,29 @@ m=(((480-124)-(480-322.5))/(266-322.5));
 b=(480-124)-m*(266);
 
 while(ros::ok()){
+	finalVel.linear.x=0;
+	finalVel.angular.z=0;
+
 	ros::spinOnce();
 		std::cout << "state : " <<  state<<"\n";
 	if (state==1){
 		if (substate==1){
+			cout << "subsate: 1" << "\n";
 			medControl();
 		}else if (substate==2){
+			cout << "substate: 2" << "\n";
 			fineControl();
 		}
 		u_pub_.publish(finalVel);
-	}else{
+	}else if (state==2){
+		cout << "Exploring ~~~" << "\n";
+		explore();
+	}
+	else{
 		cout << "inactive" << "\n";
 	}
 
+	u_pub_.publish(finalVel);
 	loop_rate.sleep();
 
 }
