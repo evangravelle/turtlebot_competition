@@ -201,6 +201,7 @@ public:
                     behavior_sub_state_ = ATTEMPT_PICK_UP;
                     break;
 
+                // Could simplyfi by using case without break...
                 case ATTEMPT_PICK_UP:
                 case ATTEMPT_PICK_UP_GREEN:
                 case ATTEMPT_PICK_UP_ORANGE:
@@ -210,7 +211,15 @@ public:
                     // move to validate posltion
                     arm_check();
                     ros::Duration(5.0).sleep();
-                    behavior_sub_state_ = CHECK_BALL;
+
+                    if (behavior_sub_state_ == ATTEMPT_PICK_UP_ORANGE) {
+                        behavior_sub_state_ = CHECK_ORANGE;
+                    } else if (behavior_sub_state_ == ATTEMPT_PICK_UP_GREEN) {
+                        behavior_sub_state_ = CHECK_GREEN;
+                    } else {
+                        behavior_sub_state_ = CHECK_BALL;
+                    }
+
                     break;
 
                 case CHECK_BALL:
@@ -316,7 +325,13 @@ public:
                     arm_grab_ball_open();
                     ros::Duration(5.0).sleep();
                     behavior_state_ = PICK_UP_BALL;
-                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    if (behavior_sub_state_ == AT_GREEN) {
+                        behavior_sub_state_ = ATTEMPT_PICK_UP_GREEN;
+                    } else if (behavior_sub_state_ == AT_ORANGE) {
+                        behavior_sub_state_ = ATTEMPT_PICK_UP_ORANGE;
+                    } else  {
+                        behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    }
                     break;
 
                 case CENTER_ON_GREEN:
