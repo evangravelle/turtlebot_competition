@@ -12,6 +12,7 @@
 
 // display images?
 bool display = false;
+bool require_correct_state = false;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_down_green/image_raw";
@@ -56,8 +57,9 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    // Does nothing if the state isn't in MOVE_TO_BALL or CHECK_BALL
-    if (current_state.state == MOVE_TO_BALL || current_state.sub_state == CHECK_BALL) {
+    
+    if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || 
+      current_state.sub_state == CHECK_GREEN || !require_correct_state) {
 
         current_time = ros::Time::now();
         // const sensor_msgs::ImageConstPtr hsv_image;
@@ -144,12 +146,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
         cv::Point2f best_circle_center;
-        double best_circle_radius = 0.0;
-        double best_error = 1.0;
-        double current_error;
-        
+        float best_circle_radius = 0.0;
+        float best_error = 1.0;
+        float current_error;
 
-        if (current_state.state == MOVE_TO_BALL && best_circle_radius > min_floor_radius) {
+        if ((current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || !require_correct_state) &&
+          best_circle_radius > min_floor_radius) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
@@ -167,7 +169,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             ball.y=best_circle_center.y;
             ball_pixel_pub.publish(ball);
         }
-        else if (current_state.sub_state == CHECK_BALL) {
+        else if (current_state.sub_state == CHECK_GREEN) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
@@ -237,4 +239,4 @@ int main(int argc, char **argv)
         cv::destroyWindow(WINDOW1);
         cv::destroyWindow(WINDOW2);
     }
- }
+}
