@@ -11,8 +11,8 @@
 #include <coconuts_common/ControlState.h>
 
 // display images?
-bool display = false;
-bool require_correct_state = false;
+bool display;
+bool require_correct_state;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_down_orange/image_raw";
@@ -31,11 +31,13 @@ int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN_ORANGE, H_MAX_ORANGE, S_MIN_ORANGE, S_MAX_ORANGE, V_MIN_ORANGE, V_MAX_ORANGE; // To be loaded from parameter server
+int H_MIN_ORANGE_CHECK, H_MAX_ORANGE_CHECK, S_MIN_ORANGE_CHECK;
+int S_MAX_ORANGE_CHECK, V_MIN_ORANGE_CHECK, V_MAX_ORANGE_CHECK;
 coconuts_common::ControlState current_state;
 float error_floor_threshold = 0.35;
-float error_grab_threshold = 0.6;
+float error_grab_threshold = 0.7;
 float min_floor_radius = 35;
-float min_grab_radius = 50;
+float min_grab_radius = 35;
 float grab_ball_center_x = 331;
 float grab_ball_center_y = 332;
 float grab_ball_center_dist = 50;
@@ -57,7 +59,6 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    
     if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || 
       current_state.sub_state == CHECK_ORANGE || !require_correct_state) {
 
@@ -88,11 +89,19 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // split HSV, then threshold
         cv::split(hsv_image, hsv_channels);
-        cv::inRange(hsv_image, cv::Scalar(H_MIN_ORANGE, S_MIN_ORANGE, V_MIN_ORANGE), cv::Scalar(H_MAX_ORANGE, S_MAX_ORANGE, V_MAX_ORANGE), hsv_thresh);
+        if (current_state.sub_state == CHECK_ORANGE) {
+          cv::inRange(hsv_image, cv::Scalar(H_MIN_ORANGE_CHECK, S_MIN_ORANGE_CHECK, V_MIN_ORANGE_CHECK), 
+            cv::Scalar(H_MAX_ORANGE_CHECK, S_MAX_ORANGE_CHECK, V_MAX_ORANGE_CHECK), hsv_thresh);
+        }
+        else {
+            cv::inRange(hsv_image, cv::Scalar(H_MIN_ORANGE, S_MIN_ORANGE, V_MIN_ORANGE), 
+              cv::Scalar(H_MAX_ORANGE, S_MAX_ORANGE, V_MAX_ORANGE), hsv_thresh);
+        }
+
         if (display) {
             cv::imshow(WINDOW2, hsv_thresh);
-
         }
+
         cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
         cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
@@ -146,7 +155,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
         cv::Point2f best_circle_center;
-        float best_circle_radius = 0.0;
+        float best_circle_radius = 2000.0;
         float best_error = 1.0;
         float current_error;
 
@@ -164,7 +173,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
             ball.x=best_circle_center.x;
             ball.y=best_circle_center.y;
             ball_pixel_pub.publish(ball);
@@ -175,14 +184,14 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
                 contour_area = cv::contourArea(contours[i]);
                 current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
+                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_grab_radius) {
                     best_error = current_error;
                     best_circle_radius = enclosing_circle_radius;
                     best_circle_center = enclosing_circle_center;
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
 
             if (best_circle_radius > min_grab_radius && 
               calculateDistance(best_circle_center.x, best_circle_center.y, grab_ball_center_x, grab_ball_center_y) < grab_ball_center_dist) {
@@ -220,12 +229,42 @@ int main(int argc, char **argv)
         cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     }
 
+    nh.getParam("/detect_ball_down_orange/display", display);
+    nh.getParam("/detect_ball_down_orange/require_correct_state", require_correct_state);
+
     nh.getParam("/detect_ball_down_orange/h_min_orange", H_MIN_ORANGE);
     nh.getParam("/detect_ball_down_orange/h_max_orange", H_MAX_ORANGE);
     nh.getParam("/detect_ball_down_orange/s_min_orange", S_MIN_ORANGE);
     nh.getParam("/detect_ball_down_orange/s_max_orange", S_MAX_ORANGE);
     nh.getParam("/detect_ball_down_orange/v_min_orange", V_MIN_ORANGE);
     nh.getParam("/detect_ball_down_orange/v_max_orange", V_MAX_ORANGE);
+
+    nh.getParam("/detect_ball_down_orange/h_min_orange_check", H_MIN_ORANGE_CHECK);
+    nh.getParam("/detect_ball_down_orange/h_max_orange_check", H_MAX_ORANGE_CHECK);
+    nh.getParam("/detect_ball_down_orange/s_min_orange_check", S_MIN_ORANGE_CHECK);
+    nh.getParam("/detect_ball_down_orange/s_max_orange_check", S_MAX_ORANGE_CHECK);
+    nh.getParam("/detect_ball_down_orange/v_min_orange_check", V_MIN_ORANGE_CHECK);
+    nh.getParam("/detect_ball_down_orange/v_max_orange_check", V_MAX_ORANGE_CHECK);
+
+    if (display) {
+        cv::namedWindow("trackbars_orange",0);
+
+        cv::createTrackbar("H_MIN", "trackbars_orange", &H_MIN_ORANGE, H_TOP, onTrackbar);
+        cv::createTrackbar("H_MAX", "trackbars_orange", &H_MAX_ORANGE, H_TOP, onTrackbar);
+        cv::createTrackbar("S_MIN", "trackbars_orange", &S_MIN_ORANGE, S_TOP, onTrackbar);
+        cv::createTrackbar("S_MAX", "trackbars_orange", &S_MAX_ORANGE, S_TOP, onTrackbar);
+        cv::createTrackbar("V_MIN", "trackbars_orange", &V_MIN_ORANGE, V_TOP, onTrackbar);
+        cv::createTrackbar("V_MAX", "trackbars_orange", &V_MAX_ORANGE, V_TOP, onTrackbar);
+
+        cv::namedWindow("trackbars_orange_check",0);
+
+        cv::createTrackbar("H_MIN", "trackbars_orange_check", &H_MIN_ORANGE_CHECK, H_TOP, onTrackbar);
+        cv::createTrackbar("H_MAX", "trackbars_orange_check", &H_MAX_ORANGE_CHECK, H_TOP, onTrackbar);
+        cv::createTrackbar("S_MIN", "trackbars_orange_check", &S_MIN_ORANGE_CHECK, S_TOP, onTrackbar);
+        cv::createTrackbar("S_MAX", "trackbars_orange_check", &S_MAX_ORANGE_CHECK, S_TOP, onTrackbar);
+        cv::createTrackbar("V_MIN", "trackbars_orange_check", &V_MIN_ORANGE_CHECK, V_TOP, onTrackbar);
+        cv::createTrackbar("V_MAX", "trackbars_orange_check", &V_MAX_ORANGE_CHECK, V_TOP, onTrackbar);
+    }
 
     image_transport::Subscriber sub = it.subscribe("/camera_down/image_raw", 1, imageCallback);
 	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down_orange/ball_pixel", 1, true);
