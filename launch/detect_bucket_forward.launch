@@ -7,7 +7,7 @@
   <param name="/detect_bucket_forward/s_max" type="int" value="255" />
   <param name="/detect_bucket_forward/v_min" type="int" value="70" />
   <param name="/detect_bucket_forward/v_max" type="int" value="255" />
-  <node name="detect_bucket_forward" pkg="coconuts_master" type="detect_bucket_forward" />
+  <node name="detect_bucket_forward" pkg="coconuts_odroid" type="detect_bucket_forward" />
 
 
   <!-- Publishes bucket transform in 3d space -->
