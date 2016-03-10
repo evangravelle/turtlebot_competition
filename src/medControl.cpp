@@ -111,7 +111,11 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 }
 
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
-	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == MOVING_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
+	if (control_state -> state == MOVE_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
+
+		if (state==2){
+			substate=1;
+		}
 		state=1;
 	}else if (control_state -> state ==FIND_BALL || control_state -> state ==FIND_GOAL){
 		state=2;
@@ -340,6 +344,8 @@ while(ros::ok()){
 	}else if (state==2){
 		cout << "Exploring ~~~" << "\n";
 		explore();
+	}else if (state==3){
+		cout << "Global ~~~" << "\n";
 	}
 	else{
 		cout << "inactive" << "\n";
