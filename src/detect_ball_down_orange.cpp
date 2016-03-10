@@ -40,7 +40,7 @@ float min_floor_radius = 35;
 float min_grab_radius = 35;
 float grab_ball_center_x = 331;
 float grab_ball_center_y = 332;
-float grab_ball_center_dist = 50;
+float grab_ball_center_dist = 30;
 
 void onTrackbar(int,void*) {}
 
