@@ -12,7 +12,7 @@
 
 // display images?
 bool display = false;
-bool require_correct_state = false;
+bool require_correct_state = true;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_down_green/image_raw";
@@ -31,6 +31,8 @@ int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN_GREEN, H_MAX_GREEN, S_MIN_GREEN, S_MAX_GREEN, V_MIN_GREEN, V_MAX_GREEN; // To be loaded from parameter server
+int H_MIN_GREEN_CHECK, H_MAX_GREEN_CHECK, S_MIN_GREEN_CHECK;
+int S_MAX_GREEN_CHECK, V_MIN_GREEN_CHECK, V_MAX_GREEN_CHECK;
 coconuts_common::ControlState current_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.6;
@@ -88,11 +90,19 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // split HSV, then threshold
         cv::split(hsv_image, hsv_channels);
-        cv::inRange(hsv_image, cv::Scalar(H_MIN_GREEN, S_MIN_GREEN, V_MIN_GREEN), cv::Scalar(H_MAX_GREEN, S_MAX_GREEN, V_MAX_GREEN), hsv_thresh);
+        if (current_state.sub_state == CHECK_GREEN) {
+          cv::inRange(hsv_image, cv::Scalar(H_MIN_GREEN_CHECK, S_MIN_GREEN_CHECK, V_MIN_GREEN_CHECK), 
+            cv::Scalar(H_MAX_GREEN_CHECK, S_MAX_GREEN_CHECK, V_MAX_GREEN_CHECK), hsv_thresh);
+        }
+        else {
+            cv::inRange(hsv_image, cv::Scalar(H_MIN_GREEN, S_MIN_GREEN, V_MIN_GREEN), 
+              cv::Scalar(H_MAX_GREEN, S_MAX_GREEN, V_MAX_GREEN), hsv_thresh);
+        }
+
         if (display) {
             cv::imshow(WINDOW2, hsv_thresh);
-
         }
+
         cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
         cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(8,8));
 
@@ -146,7 +156,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
         cv::Point2f best_circle_center;
-        float best_circle_radius = 0.0;
+        float best_circle_radius = 2000.0;
         float best_error = 1.0;
         float current_error;
 
@@ -164,7 +174,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
             ball.x=best_circle_center.x;
             ball.y=best_circle_center.y;
             ball_pixel_pub.publish(ball);
@@ -182,7 +192,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 255, 255, 0),2);
+            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
 
             if (best_circle_radius > min_grab_radius && 
               calculateDistance(best_circle_center.x, best_circle_center.y, grab_ball_center_x, grab_ball_center_y) < grab_ball_center_dist) {
@@ -226,6 +236,32 @@ int main(int argc, char **argv)
     nh.getParam("/detect_ball_down_green/s_max_green", S_MAX_GREEN);
     nh.getParam("/detect_ball_down_green/v_min_green", V_MIN_GREEN);
     nh.getParam("/detect_ball_down_green/v_max_green", V_MAX_GREEN);
+    nh.getParam("/detect_ball_down_green/h_min_green_check", H_MIN_GREEN_CHECK);
+    nh.getParam("/detect_ball_down_green/h_max_green_check", H_MAX_GREEN_CHECK);
+    nh.getParam("/detect_ball_down_green/s_min_green_check", S_MIN_GREEN_CHECK);
+    nh.getParam("/detect_ball_down_green/s_max_green_check", S_MAX_GREEN_CHECK);
+    nh.getParam("/detect_ball_down_green/v_min_green_check", V_MIN_GREEN_CHECK);
+    nh.getParam("/detect_ball_down_green/v_max_green_check", V_MAX_GREEN_CHECK);
+
+    if (display) {
+        cv::namedWindow("trackbars_green",0);
+
+        cv::createTrackbar("H_MIN", "trackbars_green", &H_MIN_GREEN, H_TOP, onTrackbar);
+        cv::createTrackbar("H_MAX", "trackbars_green", &H_MAX_GREEN, H_TOP, onTrackbar);
+        cv::createTrackbar("S_MIN", "trackbars_green", &S_MIN_GREEN, S_TOP, onTrackbar);
+        cv::createTrackbar("S_MAX", "trackbars_green", &S_MAX_GREEN, S_TOP, onTrackbar);
+        cv::createTrackbar("V_MIN", "trackbars_green", &V_MIN_GREEN, V_TOP, onTrackbar);
+        cv::createTrackbar("V_MAX", "trackbars_green", &V_MAX_GREEN, V_TOP, onTrackbar);
+
+        cv::namedWindow("trackbars_green_check",0);
+
+        cv::createTrackbar("H_MIN", "trackbars_green_check", &H_MIN_GREEN_CHECK, H_TOP, onTrackbar);
+        cv::createTrackbar("H_MAX", "trackbars_green_check", &H_MAX_GREEN_CHECK, H_TOP, onTrackbar);
+        cv::createTrackbar("S_MIN", "trackbars_green_check", &S_MIN_GREEN_CHECK, S_TOP, onTrackbar);
+        cv::createTrackbar("S_MAX", "trackbars_green_check", &S_MAX_GREEN_CHECK, S_TOP, onTrackbar);
+        cv::createTrackbar("V_MIN", "trackbars_green_check", &V_MIN_GREEN_CHECK, V_TOP, onTrackbar);
+        cv::createTrackbar("V_MAX", "trackbars_green_check", &V_MAX_GREEN_CHECK, V_TOP, onTrackbar);
+    }
 
     image_transport::Subscriber sub = it.subscribe("/camera_down/image_raw", 1, imageCallback);
 	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down_green/ball_pixel", 1, true);

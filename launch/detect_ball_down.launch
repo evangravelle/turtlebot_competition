@@ -2,21 +2,33 @@
 
   <!-- parameters-->
   <param name="/detect_ball_down_orange/h_min_orange" value="0" />
-  <param name="/detect_ball_down_orange/h_max_orange" value="55" />
+  <param name="/detect_ball_down_orange/h_max_orange" value="45" />
   <param name="/detect_ball_down_orange/s_min_orange" value="0" />
   <param name="/detect_ball_down_orange/s_max_orange" value="255" />
-  <param name="/detect_ball_down_orange/v_min_orange" value="195" />
+  <param name="/detect_ball_down_orange/v_min_orange" value="200" />
   <param name="/detect_ball_down_orange/v_max_orange" value="255" />
+  <param name="/detect_ball_down_orange/h_min_orange_check" value="0" />
+  <param name="/detect_ball_down_orange/h_max_orange_check" value="28" />
+  <param name="/detect_ball_down_orange/s_min_orange_check" value="45" />
+  <param name="/detect_ball_down_orange/s_max_orange_check" value="255" />
+  <param name="/detect_ball_down_orange/v_min_orange_check" value="143" />
+  <param name="/detect_ball_down_orange/v_max_orange_check" value="255" />
 
   <node name="detect_ball_down_orange" pkg="coconuts_odroid" type="detect_ball_down_orange" />
 
   <!-- parameters-->
-  <param name="/detect_ball_down_green/h_min_green" value="21" />
-  <param name="/detect_ball_down_green/h_max_green" value="60" />
+  <param name="/detect_ball_down_green/h_min_green" value="25" />
+  <param name="/detect_ball_down_green/h_max_green" value="48" />
   <param name="/detect_ball_down_green/s_min_green" value="0" />
   <param name="/detect_ball_down_green/s_max_green" value="255" />
-  <param name="/detect_ball_down_green/v_min_green" value="195" />
+  <param name="/detect_ball_down_green/v_min_green" value="177" />
   <param name="/detect_ball_down_green/v_max_green" value="255" />
+  <param name="/detect_ball_down_green/h_min_green_check" value="23" />
+  <param name="/detect_ball_down_green/h_max_green_check" value="73" />
+  <param name="/detect_ball_down_green/s_min_green_check" value="63" />
+  <param name="/detect_ball_down_green/s_max_green_check" value="255" />
+  <param name="/detect_ball_down_green/v_min_green_check" value="82" />
+  <param name="/detect_ball_down_green/v_max_green_check" value="255" />
 
   <node name="detect_ball_down_green" pkg="coconuts_odroid" type="detect_ball_down_green" />
 
@@ -25,8 +37,8 @@
 
   <!-- downward camera uses usb_cam, this one is not on the USB bus -->
   <node name= "camera_down" pkg="usb_cam" type="usb_cam_node" >
-    <param name="video_device" type="string" value="/dev/video2"/>
-    <param name="framerate" type="int" value="5"/>
+    <param name="video_device" type="string" value="/dev/video0"/>  <!-- /dev/video2 -->
+    <param name="framerate" type="int" value="10"/>
     <param name="camera_frame_id" type="string" value="camera_down" /> 
     <param name="camera_info_url" type="string" value="file://$(find coconuts_odroid)/src/camera_down_calibration.yaml"/>
   </node> 
