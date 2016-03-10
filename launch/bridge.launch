@@ -39,7 +39,7 @@
 
 
         <!-- A -->
-        <param name="GRAB_BALL_OPEN" type="string" value="1 395|2 668|3 291|W|0 88|" />
+        <param name="GRAB_BALL_OPEN" type="string" value="1 395|2 668|3 291|W|0 88|W|" />
 
         <!-- B -->
         <param name="GRAB_BALL_CLOSE" type="string" value="3 425|" />
@@ -52,7 +52,7 @@
         <param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|" />
 
         <!-- ? -->
-        <param name="CHECK_BALL" type="string" value="0 525|1 461|2 668|" />
+        <param name="CHECK_BALL" type="string" value="0 401|1 461|2 668|" />
 
 </node>
 

@@ -50,7 +50,8 @@ double thresholdDistance=0;
 double m=0;
 double b=0;
 
-int state=0;
+int state=1;
+int substate=1;
 bool goForBall=false;
 bool got_cdot=false;
 geometry_msgs::Twist cdot;
@@ -67,63 +68,50 @@ using namespace std;
 
 geometry_msgs::Twist robVel;
 geometry_msgs::Twist lastVel;
+geometry_msgs::Twist finalVel;
 
 bool got_vel_;
 bool gotInitialGoal=false;
 
 
 void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
+	if (substate==1){
+	gotInitialGoal=true;
+	double xPrime=((480-cenPose->y)-b)/m;
+		dist=438-cenPose->y;
+		angle=xPrime-cenPose->x-15; //CENTER
 
-//Calculate Dist and angle
-gotInitialGoal=true;
-
-double xPrime=((480-cenPose->y)-b)/m;
-dist=438-cenPose->y;
-angle=xPrime-cenPose->x-15; //CENTER
-
-	if (abs(dist)<10 && abs(angle) <5){
-		state=0;
-		cs.sub_state=CENTER_ON_BALL;
-		control_pub.publish(cs);
+		if (abs(dist)<10 && abs(angle) <5){
+			substate=2;
+	//		cs.sub_state=CENTER_ON_BALL;
+	//		control_pub.publish(cs);
+		}
 	}
+}
 
+void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
+	if (substate==2){
+		gotInitialGoal=true;
+		dist=235-cenPose->y;
+		angle=350-cenPose->x; 
+		if (abs(dist)<10 && abs(angle) <5){
+			substate=3;
+	//		cs.sub_state=CENTER_ON_BALL;
+	//		control_pub.publish(cs);
+		}
+	}
 }
 
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 	if (control_state -> state == MOVE_TO_BALL && control_state-> sub_state == MOVING_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
 		state=1;
+	}else{
+		state=0;
 	}
 }
 
-int main(int argc, char **argv)
-{
 
-ros::init(argc, argv, "AaRoNmA");
-ros::NodeHandle ph_, nh_;
-ros::Rate loop_rate(50); 
-ros::Subscriber cen_sub_, control_sub;
-ros::Publisher u_pub_,m_pub;
-
-
-control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
-cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
-u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
-control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
-
-
-geometry_msgs::Twist finalVel;
-
-//LAST VELOCITY INIT
-lastVel.linear.x=0;
-lastVel.angular.z=0;
-
-m=(((480-124)-(480-322.5))/(266-322.5));
-b=(480-124)-m*(266);
-
-while(ros::ok()){
-	ros::spinOnce();
-		std::cout << "state : " <<  state<<"\n";
-	if (state==1){
+void medControl(){
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
 	}
@@ -159,24 +147,6 @@ while(ros::ok()){
 		}
 
 
-
-
-
-//				if ((finalVel.linear.x-lastVel.linear.x)>.01){
-//					finalVel.linear.x=lastVel.linear.x+.01;
-//				}	
-//				else if ((finalVel.linear.x-lastVel.linear.x)<-.01){
-//					finalVel.linear.x=lastVel.linear.x-.01;
-//				}
-
-
-//				if ((finalVel.angular.z-lastVel.angular.z)>.001){
-//					finalVel.angular.z=lastVel.angular.z+.001;
-//				}	
-//				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
-//					finalVel.angular.z=lastVel.angular.z-.001;
-//				}
-		
 		if (abs(finalVel.angular.z)<.0001){
 		finalVel.angular.z=0;			
 		}
@@ -200,16 +170,104 @@ while(ros::ok()){
 		std::cout << "Error x: " <<  angle<<"\n";
 		std::cout << "Error y: " <<  dist<<"\n";
 
-		if (goForBall==false||1==1){
-			u_pub_.publish(finalVel);
-		}else{
-			m_pub.publish(grabBallOpen);
+}
+
+void fineControl(){
+
+		ILinear=ILinear+dist;
+		IAngular=IAngular+angle;
+
+		if (ILinear > 25){
+			ILinear=25;
+		}else if (ILinear <-25){
+			ILinear=-25;
 		}
+
+		if (IAngular > 25){
+			IAngular=25;
+		}else if (IAngular <-25){
+			IAngular=-25;
+		}
+
+		if (abs(dist)>thresholdDistance){
+			finalVel.linear.x=KLinear*dist+KILinear*ILinear;
+		}else{
+			finalVel.linear.x=0;
+		}
+
+		if (abs(angle)>thresholdAngle){
+			finalVel.angular.z=KAngular*angle+KIAngular*IAngular;
+		}else{
+			finalVel.angular.z=0;
+		}
+
+
+		if (abs(finalVel.angular.z)<.0001){
+			finalVel.angular.z=0;
+		}
+
+		lastVel=finalVel;
+
+
+//Maxes
+		if (finalVel.angular.z >.5){
+			finalVel.angular.z=.5;
+		}else if (finalVel.angular.z<-.5){
+			finalVel.angular.z=-.5;
+		}
+
+		if (finalVel.linear.x>.1){
+			finalVel.linear.x=.1;
+		}else if (finalVel.linear.x<-.1){
+			finalVel.linear.x=-.1;
+		}
+		std::cout <<"\n\n";
+		std::cout << "Error x: " <<  angle<<"\n";
+		std::cout << "Error y: " <<  dist<<"\n";
+
+        // ON SUCCESS THIS SHOULD PUBLISH SUBSTATE "AT_BALL"
+
+}
+
+int main(int argc, char **argv)
+{
+ros::init(argc, argv, "AaRoNmA");
+ros::NodeHandle ph_, nh_;
+ros::Rate loop_rate(50); 
+ros::Subscriber cen_sub_, cen2_sub_, control_sub;
+ros::Publisher u_pub_,m_pub;
+
+control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
+cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
+cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB2);
+u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
+control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
+
+
+
+
+//LAST VELOCITY INIT
+lastVel.linear.x=0;
+lastVel.angular.z=0;
+
+m=(((480-124)-(480-322.5))/(266-322.5));
+b=(480-124)-m*(266);
+
+while(ros::ok()){
+	ros::spinOnce();
+		std::cout << "state : " <<  state<<"\n";
+	if (state==1){
+		if (substate==1){
+			medControl();
+		}else if (substate==2){
+			fineControl();
+		}
+		u_pub_.publish(finalVel);
+	}else{
+		cout << "inactive" << "\n";
 	}
 
-
-
-		loop_rate.sleep();
+	loop_rate.sleep();
 
 }
 
