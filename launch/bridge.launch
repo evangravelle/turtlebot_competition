@@ -52,7 +52,7 @@
         <param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|" />
 
         <!-- ? -->
-        <param name="CHECK_BALL" type="string" value="0 401|1 461|2 668|" />
+        <param name="CHECK_BALL" type="string" value="0 294|1 461|2 668|" />
 
 </node>
 
