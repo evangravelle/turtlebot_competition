@@ -10,9 +10,6 @@
 #include <states.h>
 #include <coconuts_common/ControlState.h>
 
-// Display images?
-bool display = false;
-
 static const char WINDOW1[] = "/detect_bucket_forward/image_raw";
 static const char WINDOW2[] = "/detect_bucket_forward/hsv_thresh";
 
@@ -25,6 +22,8 @@ image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub, bucket_pixel_pub;
 geometry_msgs::Point bucket;
 coconuts_common::ControlState current_state;
+bool display;
+bool require_correct_state;
 
 void on_trackbar(int,void*) {}
 
@@ -36,7 +35,7 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    if (current_state.state == FIND_GOAL) {
+    if (current_state.state == FIND_GOAL || !require_correct_state) {
         // const sensor_msgs::ImageConstPtr hsv_image;
         cv_bridge::CvImagePtr cv_ptr_raw;
 
@@ -131,6 +130,9 @@ int main(int argc, char **argv)
         cv::namedWindow(WINDOW1, CV_WINDOW_AUTOSIZE); //another option is: CV_WINDOW_NORMAL
         cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     }
+
+    nh.getParam("/detect_bucket_forward/display", display);
+    nh.getParam("/detect_bucket_forward/require_correct_state", require_correct_state);
 
     nh.getParam("/detect_bucket_forward/h_min", H_MIN);
     nh.getParam("/detect_bucket_forward/h_max", H_MAX);
