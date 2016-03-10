@@ -244,8 +244,8 @@ public:
 
         if (behavior_state_ == START) {
             ROS_INFO("Mother Brain (START): Starting Initialization.");
-            ros::Duration(3.0).sleep();
             arm_search();
+            ros::Duration(3.0).sleep();
             ROS_INFO("Mother Brain (START): Finished Initialization, moving to FIND_BALL.");
             behavior_state_ = FIND_BALL;
             behavior_sub_state_ = DEFAULT_SUB_STATE;
