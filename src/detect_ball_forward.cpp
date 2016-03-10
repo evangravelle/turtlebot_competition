@@ -10,10 +10,6 @@
 #include <states.h>
 #include <coconuts_common/ControlState.h>
 
-// Display images and trackbars?
-bool display = false;
-bool require_correct_state = true;
-
 // Create publishers
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub, control_state_pub, ball_pixel_pub;
@@ -31,6 +27,8 @@ cv::Point2f best_circle_center_orange, best_circle_center_green;
 float best_circle_radius_orange, best_circle_radius_green;
 cv::Mat drawing_orange, drawing_green;
 cv_bridge::CvImagePtr cv_ptr_raw;
+bool display;
+bool require_correct_state;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/usb_cam/image_rect_color";
@@ -416,6 +414,9 @@ int main(int argc, char **argv)
         cv::namedWindow(WINDOW4, CV_WINDOW_AUTOSIZE);
         cv::namedWindow(WINDOW5, CV_WINDOW_AUTOSIZE);
     }
+
+    nh.getParam("/detect_ball_forward/display", display);
+    nh.getParam("/detect_ball_forward/require_correct_state", require_correct_state);
 
     nh.getParam("/detect_ball_forward/h_min_orange", H_MIN_ORANGE);
     nh.getParam("/detect_ball_forward/h_max_orange", H_MAX_ORANGE);

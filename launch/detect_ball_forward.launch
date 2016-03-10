@@ -1,30 +1,22 @@
 <launch>
 
   <!-- Detect Ball Parameters-->
-  <arg name="h_min_forward_orange" default="0" />
-  <arg name="h_max_forward_orange" default="27" />
-  <arg name="s_min_forward_orange" default="52" />
-  <arg name="s_max_forward_orange" default="255" />
-  <arg name="v_min_forward_orange" default="111" />
-  <arg name="v_max_forward_orange" default="255" />
-  <arg name="h_min_forward_green" default="28" />
-  <arg name="h_max_forward_green" default="44" />
-  <arg name="s_min_forward_green" default="18" />
-  <arg name="s_max_forward_green" default="160" />
-  <arg name="v_min_forward_green" default="148" />
-  <arg name="v_max_forward_green" default="255" />
-  <param name="/detect_ball_forward/h_min_orange" value="$(arg h_min_forward_orange)" />
-  <param name="/detect_ball_forward/h_max_orange" value="$(arg h_max_forward_orange)" />
-  <param name="/detect_ball_forward/s_min_orange" value="$(arg s_min_forward_orange)" />
-  <param name="/detect_ball_forward/s_max_orange" value="$(arg s_max_forward_orange)" />
-  <param name="/detect_ball_forward/v_min_orange" value="$(arg v_min_forward_orange)" />
-  <param name="/detect_ball_forward/v_max_orange" value="$(arg v_max_forward_orange)" />
-  <param name="/detect_ball_forward/h_min_green" value="$(arg h_min_forward_green)" />
-  <param name="/detect_ball_forward/h_max_green" value="$(arg h_max_forward_green)" />
-  <param name="/detect_ball_forward/s_min_green" value="$(arg s_min_forward_green)" />
-  <param name="/detect_ball_forward/s_max_green" value="$(arg s_max_forward_green)" />
-  <param name="/detect_ball_forward/v_min_green" value="$(arg v_min_forward_green)" />
-  <param name="/detect_ball_forward/v_max_green" value="$(arg v_max_forward_green)" />
+  <param name="/detect_ball_forward/display" value="0" />   <!-- 0 will not display images -->
+  <param name="/detect_ball_forward/require_correct_state" value="1" />   <!-- 1 requires the correct state -->
+  
+  <param name="/detect_ball_forward/h_min_orange" value="0" />
+  <param name="/detect_ball_forward/h_max_orange" value="27" />
+  <param name="/detect_ball_forward/s_min_orange" value="52" />
+  <param name="/detect_ball_forward/s_max_orange" value="255" />
+  <param name="/detect_ball_forward/v_min_orange" value="111" />
+  <param name="/detect_ball_forward/v_max_orange" value="255" />
+
+  <param name="/detect_ball_forward/h_min_green" value="24" />
+  <param name="/detect_ball_forward/h_max_green" value="44" />
+  <param name="/detect_ball_forward/s_min_green" value="18" />
+  <param name="/detect_ball_forward/s_max_green" value="160" />
+  <param name="/detect_ball_forward/v_min_green" value="148" />
+  <param name="/detect_ball_forward/v_max_green" value="255" />
 
   <node name="detect_ball_forward" pkg="coconuts_odroid" type="detect_ball_forward"/>
 

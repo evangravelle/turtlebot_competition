@@ -11,8 +11,8 @@
 #include <coconuts_common/ControlState.h>
 
 // display images?
-bool display = false;
-bool require_correct_state = true;
+bool display;
+bool require_correct_state;
 
 //Declare a string with the name of the window that we will create using OpenCV where processed images will be displayed.
 static const char WINDOW1[] = "/detect_ball_down_green/image_raw";
@@ -37,7 +37,7 @@ coconuts_common::ControlState current_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.6;
 float min_floor_radius = 35;
-float min_grab_radius = 50;
+float min_grab_radius = 35;
 float grab_ball_center_x = 331;
 float grab_ball_center_y = 332;
 float grab_ball_center_dist = 50;
@@ -185,7 +185,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
                 contour_area = cv::contourArea(contours[i]);
                 current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
+                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_grab_radius) {
                     best_error = current_error;
                     best_circle_radius = enclosing_circle_radius;
                     best_circle_center = enclosing_circle_center;
@@ -230,12 +230,16 @@ int main(int argc, char **argv)
         cv::namedWindow(WINDOW2, CV_WINDOW_AUTOSIZE);
     }
 
+    nh.getParam("/detect_ball_down_green/display", display);
+    nh.getParam("/detect_ball_down_green/require_correct_state", require_correct_state);
+
     nh.getParam("/detect_ball_down_green/h_min_green", H_MIN_GREEN);
     nh.getParam("/detect_ball_down_green/h_max_green", H_MAX_GREEN);
     nh.getParam("/detect_ball_down_green/s_min_green", S_MIN_GREEN);
     nh.getParam("/detect_ball_down_green/s_max_green", S_MAX_GREEN);
     nh.getParam("/detect_ball_down_green/v_min_green", V_MIN_GREEN);
     nh.getParam("/detect_ball_down_green/v_max_green", V_MAX_GREEN);
+
     nh.getParam("/detect_ball_down_green/h_min_green_check", H_MIN_GREEN_CHECK);
     nh.getParam("/detect_ball_down_green/h_max_green_check", H_MAX_GREEN_CHECK);
     nh.getParam("/detect_ball_down_green/s_min_green_check", S_MIN_GREEN_CHECK);
