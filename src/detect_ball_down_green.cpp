@@ -60,7 +60,7 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
     
-    if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || 
+    if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || current_state.sub_state == CENTER_ON_GREEN || 
       current_state.sub_state == CHECK_GREEN || !require_correct_state) {
 
         current_time = ros::Time::now();
@@ -161,7 +161,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         float best_error = 1.0;
         float current_error, current_distance;
 
-        if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || !require_correct_state) {
+        if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || 
+          current_state.sub_state == CENTER_ON_GREEN ||!require_correct_state) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
