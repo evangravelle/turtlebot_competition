@@ -156,45 +156,54 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         cv::Point2f best_circle_center;
         float best_circle_radius = 2000.0;
+        float best_distance = 1000;
         float best_error = 1.0;
-        float current_error;
+        float current_error, current_distance;
 
-        if ((current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || !require_correct_state) &&
-          best_circle_radius > min_floor_radius) {
+        if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || !require_correct_state) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
                 contour_area = cv::contourArea(contours[i]);
                 current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-                if (current_error < error_floor_threshold && current_error < best_error && enclosing_circle_radius > min_floor_radius) {
+                // If circular enough, if more circular, and if the circle is large enough
+                if (current_error < best_error && enclosing_circle_radius > min_floor_radius) {
                     best_error = current_error;
                     best_circle_radius = enclosing_circle_radius;
                     best_circle_center = enclosing_circle_center;
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
-            ball.x=best_circle_center.x;
-            ball.y=best_circle_center.y;
-            ball_pixel_pub.publish(ball);
+            if (best_error < error_floor_threshold) {
+                cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
+                ball.x = best_circle_center.x;
+                ball.y = best_circle_center.y;
+                ball_pixel_pub.publish(ball);
+            }
+            else {
+                ball.x = -1;
+                ball.y = -1;
+                ball_pixel_pub.publish(ball);
+            }
         }
+
         else if (current_state.sub_state == CHECK_ORANGE) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
                 contour_area = cv::contourArea(contours[i]);
                 current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-                if (current_error < error_grab_threshold && current_error < best_error && enclosing_circle_radius > min_grab_radius) {
+                current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, grab_ball_center_x, grab_ball_center_y);
+                if (enclosing_circle_radius > min_grab_radius && current_distance < best_distance) {
                     best_error = current_error;
+                    best_distance = current_distance;
                     best_circle_radius = enclosing_circle_radius;
                     best_circle_center = enclosing_circle_center;
                 }
             }
 
-            cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
-
-            if (best_circle_radius > min_grab_radius && 
-              calculateDistance(best_circle_center.x, best_circle_center.y, grab_ball_center_x, grab_ball_center_y) < grab_ball_center_dist) {
+            if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
+                cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
                 current_state.sub_state = GOT_BALL;
             }
             else {
@@ -267,10 +276,10 @@ int main(int argc, char **argv)
     }
 
     image_transport::Subscriber sub = it.subscribe("/camera_down/image_raw", 1, imageCallback);
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down_orange/ball_pixel", 1, true);
+	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down/ball_pixel", 1, true);
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
-    it_pub = it.advertise("/detect_ball_down_orange/ball_circles", 1);
+    it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
 
 	ros::spin();
     

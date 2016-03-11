@@ -337,7 +337,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_ORANGE, look for orange
-    else if(current_state.sub_state == MOVING_TO_ORANGE || !require_correct_state) {
+    else if(current_state.sub_state == MOVING_TO_ORANGE) {
 
         cv_ptr_raw = loadImage(raw_image);
         findOrange();
@@ -373,7 +373,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_GREEN, look for green
-    else if(current_state.sub_state == MOVING_TO_GREEN || !require_correct_state) {
+    else if(current_state.sub_state == MOVING_TO_GREEN) {
         cv_ptr_raw = loadImage(raw_image);
         findGreen();
 
