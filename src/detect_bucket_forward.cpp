@@ -144,6 +144,7 @@ int main(int argc, char **argv)
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
     bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1,true);
+    it_pub = it.advertise("/detect_bucket_forward/bucket_rectangle", 1);
 
     if (display) {
         cv::namedWindow("trackbars",0);
