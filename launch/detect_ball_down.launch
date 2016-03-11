@@ -3,6 +3,8 @@
   <!-- parameters-->
   <param name="/detect_ball_down_orange/display" type="bool" value="false" /> 
   <param name="/detect_ball_down_orange/require_correct_state" type="bool" value="true" /> 
+  <param name="/detect_ball_down_orange/image_width" value="320" /> 
+  <param name="/detect_ball_down_orange/image_height" value="240" /> 
   <param name="/detect_ball_down_orange/h_max_orange" value="45" />
   <param name="/detect_ball_down_orange/s_min_orange" value="0" />
   <param name="/detect_ball_down_orange/s_max_orange" value="255" />
@@ -20,6 +22,8 @@
   <!-- parameters-->
   <param name="/detect_ball_down_green/display" type="bool" value="false" />
   <param name="/detect_ball_down_green/require_correct_state" type="bool" value="true" />
+  <param name="/detect_ball_down_green/image_width" value="320" /> 
+  <param name="/detect_ball_down_green/image_height" value="240" /> 
   <param name="/detect_ball_down_green/h_min_green" value="25" />
   <param name="/detect_ball_down_green/h_max_green" value="48" />
   <param name="/detect_ball_down_green/s_min_green" value="0" />

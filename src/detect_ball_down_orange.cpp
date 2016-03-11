@@ -9,6 +9,7 @@
 #include <geometry_msgs/Point.h>
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <cmath>
 
 // display images?
 bool display;
@@ -36,11 +37,12 @@ int S_MAX_ORANGE_CHECK, V_MIN_ORANGE_CHECK, V_MAX_ORANGE_CHECK;
 coconuts_common::ControlState current_state, pub_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.7;
-float min_floor_radius = 35;
-float min_grab_radius = 35;
-float grab_ball_center_x = 331;
-float grab_ball_center_y = 332;
-float grab_ball_center_dist = 30;
+float min_floor_radius;
+float min_grab_radius;
+float grab_ball_center_x;
+float grab_ball_center_y;
+float grab_ball_center_dist;
+int image_width, image_height;
 
 void onTrackbar(int,void*) {}
 
@@ -134,8 +136,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
         cv::Point2f best_circle_center;
-        float best_circle_radius = 2000.0;
-        float best_distance = 2000.0;
+        float best_circle_radius = 2.0*image_width;
+        float best_distance = 2.0*image_width;
         float best_error = 1.0;
         float current_error, current_distance;
 
@@ -223,6 +225,9 @@ int main(int argc, char **argv)
     nh.getParam("/detect_ball_down_orange/display", display);
     nh.getParam("/detect_ball_down_orange/require_correct_state", require_correct_state);
 
+    nh.getParam("/detect_ball_down_orange/image_width", image_width);
+    nh.getParam("/detect_ball_down_orange/image_height", image_height);
+
     nh.getParam("/detect_ball_down_orange/h_min_orange", H_MIN_ORANGE);
     nh.getParam("/detect_ball_down_orange/h_max_orange", H_MAX_ORANGE);
     nh.getParam("/detect_ball_down_orange/s_min_orange", S_MIN_ORANGE);
@@ -262,6 +267,12 @@ int main(int argc, char **argv)
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
+
+    grab_ball_center_x = 0.517*image_width;
+    grab_ball_center_y = 0.691*image_height;
+    min_floor_radius = 0.055*image_width;
+    min_grab_radius = 0.055*image_width;
+    grab_ball_center_dist = 0.05*image_width;
 
 	ros::spin();
     

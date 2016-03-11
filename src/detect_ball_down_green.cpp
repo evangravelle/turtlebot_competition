@@ -9,6 +9,7 @@
 #include <geometry_msgs/Point.h>
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <cmath>
 
 // display images?
 bool display;
@@ -33,14 +34,15 @@ int V_TOP = 255;
 int H_MIN_GREEN, H_MAX_GREEN, S_MIN_GREEN, S_MAX_GREEN, V_MIN_GREEN, V_MAX_GREEN; // To be loaded from parameter server
 int H_MIN_GREEN_CHECK, H_MAX_GREEN_CHECK, S_MIN_GREEN_CHECK;
 int S_MAX_GREEN_CHECK, V_MIN_GREEN_CHECK, V_MAX_GREEN_CHECK;
-coconuts_common::ControlState current_state;
+coconuts_common::ControlState current_state, pub_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.6;
-float min_floor_radius = 35;
-float min_grab_radius = 35;
-float grab_ball_center_x = 331;
-float grab_ball_center_y = 332;
-float grab_ball_center_dist = 50;
+float min_floor_radius;
+float min_grab_radius;
+float grab_ball_center_x;
+float grab_ball_center_y;
+float grab_ball_center_dist;
+int image_width, image_height;
 
 void onTrackbar(int,void*) {}
 
@@ -162,7 +164,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         float current_error, current_distance;
 
         if (current_state.sub_state == MOVING_TO_GREEN || current_state.sub_state == AT_GREEN || 
-          current_state.sub_state == CENTER_ON_GREEN ||!require_correct_state) {
+          current_state.sub_state == CENTER_ON_GREEN || !require_correct_state) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
@@ -205,15 +207,15 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
             if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
                 cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
-                current_state.state = PICK_UP_BALL;
-                current_state.sub_state = GOT_BALL;
+                pub_state.state = PICK_UP_BALL;
+                pub_state.sub_state = GOT_BALL;
             }
             else {
-                current_state.state = PICK_UP_BALL;
-                current_state.sub_state = GOT_BALL_FAILED;
+                pub_state.state = PICK_UP_BALL;
+                pub_state.sub_state = GOT_BALL_FAILED;
             }
 
-            control_state_pub.publish(current_state);
+            control_state_pub.publish(pub_state);
             ros::Duration(1).sleep();
         }
         if (display) {
@@ -243,6 +245,9 @@ int main(int argc, char **argv)
 
     nh.getParam("/detect_ball_down_green/display", display);
     nh.getParam("/detect_ball_down_green/require_correct_state", require_correct_state);
+
+    nh.getParam("/detect_ball_down_green/image_width", image_width);
+    nh.getParam("/detect_ball_down_green/image_height", image_height);
 
     nh.getParam("/detect_ball_down_green/h_min_green", H_MIN_GREEN);
     nh.getParam("/detect_ball_down_green/h_max_green", H_MAX_GREEN);
@@ -283,6 +288,12 @@ int main(int argc, char **argv)
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
+
+    grab_ball_center_x = 0.517*image_width;
+    grab_ball_center_y = 0.691*image_height;
+    min_floor_radius = 0.055*image_width;
+    min_grab_radius = 0.055*image_width;
+    grab_ball_center_dist = 0.05*image_width;
 
 	ros::spin();
 
