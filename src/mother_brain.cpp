@@ -508,7 +508,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "mother_brain");
     mother_brain mother_brain_h;
-
+	ros::Rate loop_rate(50);
 
     ROS_INFO("Mother Brain (main): Started");
 
@@ -583,6 +583,7 @@ int main(int argc, char** argv)
         mother_brain_h.publish_state();
 
         ros::spinOnce();
+	loop_rate.sleep();
     }
 
     ROS_INFO("Mother Brain (main): o/\" Yo holmes smell ya later \"\\o");

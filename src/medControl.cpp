@@ -33,6 +33,8 @@ double A=1;
 double transformScale=900;
 double cdotContribution=0;
 double transformX=301;
+double image_width=320.0;
+double image_height=240.0;
 double transformY=247;
 float lastcdotAngle=0;
 float CTERM=.2;
@@ -43,10 +45,10 @@ float CANGLETERM=.5;
 int orange_or_green=0;
 double dist=0;
 double angle=0;
-double KLinear=.0005;
+double KLinear=.00065;
 double ILinear=0;
 double KILinear=0;//.00005;
-double KAngular=.005;
+double KAngular=.0065;
 double IAngular=0;
 double KIAngular=.0002;//.0005;
 double thresholdAngle=0;
@@ -95,6 +97,8 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 
 		if (abs(dist)<10 && abs(angle) <5){
 			substate=2;
+			ILinear=0;
+			IAngular=0;
 			cs.sub_state=CENTER_ON_ORANGE;
 			control_pub.publish(cs);
 		}
@@ -104,9 +108,9 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 	if (substate==2 && cenPose->x >0){
 		gotInitialGoal=true;
-		dist=235-cenPose->y;
-		angle=350-cenPose->x; 
-		if (abs(dist)<10 && abs(angle) <5){
+		dist=235/2-cenPose->y;
+		angle=350/2-cenPose->x; 
+		if (abs(dist)<10 && abs(angle) <10){
 			substate=3;
 			cs.sub_state=AT_ORANGE;
 			control_pub.publish(cs);
@@ -173,9 +177,9 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
                 state=4;
-        }else if (control_state -> state ==-51){
+        }else if (control_state -> sub_state ==MOVING_TO_GOAL){
 		state=5;
-		gotInitialGoal=false;
+		gotInitialGoal=true;
 	}
 
 	else{
@@ -230,8 +234,6 @@ KILinear=0;
 
 	if (gotInitialGoal==true && goForBall==false){
 
-		ILinear=ILinear+dist;
-		IAngular=IAngular+angle;
 
 		if (ILinear > 25){
 			ILinear=25;
@@ -285,8 +287,8 @@ KILinear=0;
 }
 
 void fineControl(){
-KIAngular=0.00001;
-KILinear=0.00001;
+KIAngular=0.001;
+KILinear=0.001;
 		ILinear=ILinear+dist;
 		IAngular=IAngular+angle;
 
@@ -467,6 +469,7 @@ while(ros::ok()){
 
 	ros::spinOnce();
 		std::cout << "state : " <<  state<<"\n";
+	
 	if (state==1){
 		if (substate==1){
 			cout << "subsate: 1" << "\n";
