@@ -36,6 +36,8 @@
 #endif
 
 #include <QPushButton>
+#include <QLabel>
+#include <coconuts_common/ControlState.h>
 
 class QLineEdit;
 class QPushButton;
@@ -96,6 +98,7 @@ protected Q_SLOTS:
   // updateTopic() reads the topic name from the QLineEdit and calls
   // setTopic() with the result.
   void updateTopic();
+  void controlStateCallback(const coconuts_common::ControlState::ConstPtr& state_msg);
   void handleControlButton(int control_state);
   void handleControlSubStateButton(int control_state);
   void handleArmButton(int arm_state);
@@ -158,6 +161,9 @@ protected:
   QPushButton* arm_drop_close_button_;
   QPushButton* arm_drop_open_button_;
 
+  // State values
+  QLabel *currentStateLabel;
+  QLabel *currentSubStateLabel;
 
   // The current name of the output topic.
   QString output_topic_;

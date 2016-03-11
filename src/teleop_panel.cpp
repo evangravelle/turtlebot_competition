@@ -83,10 +83,18 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   topic_layout->addWidget( new QLabel( "Output Topic:" ));
   output_topic_editor_ = new QLineEdit;
   topic_layout->addWidget( output_topic_editor_ );
+  currentStateLabel = new QLabel("DEFAULT");
+  currentSubStateLabel = new QLabel("DEFAULT");
 
   // Control State Layout
   // 
   // Label
+  QGridLayout* status_layout = new QGridLayout;
+  status_layout->addWidget( new QLabel("Current State:"), 0, 0, 1, 1);
+  status_layout->addWidget( currentStateLabel, 0, 1, 1, 1);
+  status_layout->addWidget( new QLabel("SubState:"), 1, 0, 1, 1);
+  status_layout->addWidget( currentSubStateLabel, 1, 1, 1, 1);
+  
   QGridLayout* control_state_layout = new QGridLayout;
   control_state_layout->addWidget( new QLabel( "Control State:"), 0, 0, 1, 4 );
 
@@ -210,6 +218,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
+  layout->addLayout( status_layout );
   layout->addLayout( control_state_layout );
   layout->addLayout( arm_state_layout );
   //layout->addWidget( drive_widget_ );
@@ -327,6 +336,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   control_state_publisher_ = nh_.advertise<coconuts_common::ControlState>("/control_state_override", 1);
   arm_control_publisher_ = nh_.advertise<coconuts_common::ArmMovement>("/motor_control", 1);
+  control_state_subscriber_ = nh_.subscribe<coconuts_common::ControlState>("/control_state", 1, &coconuts_rviz_plugins::TeleopPanel::controlStateCallback, this);
 }
 
 // setVel() is connected to the DriveWidget's output, which is sent
@@ -348,6 +358,14 @@ void TeleopPanel::updateTopic()
   setTopic( output_topic_editor_->text() );
 }
 
+void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::ConstPtr& state_msg) {
+   currentStateLabel->setText(QString::number(state_msg->state)); 
+   currentSubStateLabel->setText(QString::number(state_msg->sub_state));
+   currentStateLabel->repaint();
+   currentSubStateLabel->repaint();
+   // This does not work
+   //this->parent()->processEvents();
+}
 
 void TeleopPanel::handleControlButton(int control_state) {
   ROS_INFO("in handleControlButton");
@@ -390,6 +408,14 @@ void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
       case 72:
       case 73:
       case 74:
+      case 75:
+      case 76:
+      case 77:
+      case 78:
+      case 79:
+      case 170:
+      case 171:
+      case 172:
           control_state.state = MOVE_TO_BALL;
           break;
 
@@ -397,6 +423,10 @@ void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
       case 82:
       case 83:
       case 84:
+      case 85:
+      case 86:
+      case 87:
+      case 88:
           control_state.state = PICK_UP_BALL;
           break;
 
