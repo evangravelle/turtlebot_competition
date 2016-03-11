@@ -204,9 +204,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
             if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
                 cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
+                current_state.state = PICK_UP_BALL;
                 current_state.sub_state = GOT_BALL;
             }
             else {
+                current_state.state = PICK_UP_BALL;
                 current_state.sub_state = GOT_BALL_FAILED;
             }
 
