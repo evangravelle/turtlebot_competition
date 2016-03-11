@@ -92,7 +92,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         /// Draw contours
         cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
 
-
         for( int i = 0; i< contours.size(); i++ ) {
             cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
             rectangle_temp = cv::boundingRect(contours[i]);
@@ -101,9 +100,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             }
          }
 
-        cv::rectangle(drawing, rectangle, cv::Scalar( 255, 255, 0));
+        cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
         if (display) {
-            imshow(WINDOW1, drawing);
+            imshow(WINDOW1, cv_ptr_raw->image);
         }
 
         bucket.x = rectangle.x;

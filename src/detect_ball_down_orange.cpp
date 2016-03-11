@@ -115,27 +115,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // Blur image
         cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
-        /*
-        // Use Hough tranform to search for circles
-        std::vector<cv::Vec3f> circles;
-        cv::HoughCircles(cv_ptr_raw->image, circles, CV_HOUGH_GRADIENT, 2, cv_ptr_raw->image.rows/8, 100, 20);
-
-        if(circles.size() > 0) {
-            int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
-            for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
-            //for(int current_circle = 0; current_circle < 1; ++current_circle) {
-                cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
-                int radius = std::floor(circles[current_circle][2]);
-
-                cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
-
-              ball.position.x=center.x;
-              ball.position.y=center.y;
-              ball_location_pub.publish(ball);
-
-            }
-        }
-        */
 
         // Contour method
         cv::Mat canny_output;

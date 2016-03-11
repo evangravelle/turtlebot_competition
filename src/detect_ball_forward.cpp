@@ -271,7 +271,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
         cv_ptr_raw = loadImage(raw_image);
         findOrange();
 
-        // if orange ball was detected, store location
+        // if orange ball was detected, store location and publish new state
         if (!compareFloats(best_error_orange, 1.0, epsilon)) {
 
             previous_best_circle_center_orange.x = best_circle_center_orange.x;
@@ -287,7 +287,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
             std::cout << "state changed to ORANGE_BALL_FOUND" << std::endl;
             orange_found.state = MOVE_TO_BALL;
-	    orange_found.sub_state= MOVING_TO_ORANGE;
+            orange_found.sub_state = MOVING_TO_ORANGE;
             control_state_pub.publish(orange_found);
         }
 
@@ -305,7 +305,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
                 previous_best_circle_center_green.y = -1.0;
             }
 
-            // if green ball was detected, store location
+            // if green ball was detected, store location and publish new state
             else {
                 previous_best_circle_center_green.x = best_circle_center_green.x;
                 previous_best_circle_center_green.y = best_circle_center_green.y;
@@ -320,7 +320,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
                 std::cout << "state changed to GREEN_BALL_FOUND" << std::endl;
                 green_found.state = MOVE_TO_BALL;
-		green_found.sub_state = MOVING_TO_GREEN;
+                green_found.sub_state = MOVING_TO_GREEN;
                 control_state_pub.publish(green_found);
             }
         }
@@ -359,7 +359,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
         }
 
-        // if orange ball is lost for 5 frames in a row, the publish failure
+        // if orange ball is lost for 5 frames in a row, then publish failure
         else {
             no_orange_counter++;
             if (no_orange_counter > 5) {
