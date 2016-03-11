@@ -14,7 +14,7 @@
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub, control_state_pub, ball_pixel_pub;
 geometry_msgs::Point ball, previous_best_circle_center_orange, previous_best_circle_center_green;
-coconuts_common::ControlState current_state, orange_fail, green_fail, green_found, orange_found;
+coconuts_common::ControlState current_state;
 float epsilon = 0.0001;
 float error_threshold_orange = 0.35;
 float error_threshold_green = 0.35;
@@ -286,6 +286,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             ball_pixel_pub.publish(ball);
 
             std::cout << "state changed to ORANGE_BALL_FOUND" << std::endl;
+            coconuts_common::ControlState orange_found;
             orange_found.state = MOVE_TO_BALL;
             orange_found.sub_state = MOVING_TO_ORANGE;
             control_state_pub.publish(orange_found);
@@ -319,6 +320,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
                 ball_pixel_pub.publish(ball);
 
                 std::cout << "state changed to GREEN_BALL_FOUND" << std::endl;
+                coconuts_common::ControlState green_found;
                 green_found.state = MOVE_TO_BALL;
                 green_found.sub_state = MOVING_TO_GREEN;
                 control_state_pub.publish(green_found);
@@ -363,6 +365,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             no_orange_counter++;
             if (no_orange_counter > 5) {
                 std::cout << "orange ball lost!" << std::endl;
+                coconuts_common::ControlState orange_fail;
                 orange_fail.state = MOVE_TO_BALL;
                 orange_fail.sub_state = MOVE_TO_ORANGE_FAILED;
                 control_state_pub.publish(orange_fail);
@@ -398,6 +401,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             no_green_counter++;
             if (no_orange_counter > 5) {
                 std::cout << "green ball lost!" << std::endl;
+                coconuts_common::ControlState green_fail;
                 green_fail.state = MOVE_TO_BALL;
                 green_fail.sub_state = MOVE_TO_GREEN_FAILED;
                 control_state_pub.publish(green_fail);

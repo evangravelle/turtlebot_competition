@@ -19,11 +19,12 @@ int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 image_transport::Publisher it_pub;
-ros::Publisher image_thresh_pub, bucket_pixel_pub;
+ros::Publisher image_thresh_pub, bucket_pixel_pub, control_state_pub;
 geometry_msgs::Point bucket;
 coconuts_common::ControlState current_state;
 bool display;
 bool require_correct_state;
+int no_bucket_counter;
 
 void on_trackbar(int,void*) {}
 
@@ -35,7 +36,7 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    if (current_state.state == FIND_GOAL || !require_correct_state) {
+    if (current_state.state == FIND_GOAL || current_state.sub_state == MOVING_TO_GOAL || !require_correct_state) {
         // const sensor_msgs::ImageConstPtr hsv_image;
         cv_bridge::CvImagePtr cv_ptr_raw;
 
@@ -98,16 +99,42 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             if (rectangle_temp.area() > rectangle.area()) {
                 rectangle = rectangle_temp;
             }
-         }
+        }
 
-        cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
+        // If we see blob that is about the right size
+        if (rectangle.area() < 200*200.0 && rectangle.area() > 30*30) {
+            bucket.x = rectangle.x;
+            bucket.y = rectangle.y;
+            no_bucket_counter = 0;
+            cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
+
+            if (current_state.state == FIND_GOAL) {
+                std::cout << "bucket found!" << std::endl;
+                coconuts_common::ControlState found_state;
+                found_state.state = FIND_GOAL;
+                found_state.sub_state = GOAL_FOUND;
+                control_state_pub.publish(found_state);
+
+                bucket.x = rectangle.x;
+                bucket.y = rectangle.y;
+                bucket_pixel_pub.publish(bucket);
+                cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
+            }
+        }
+        else {
+            no_bucket_counter++;
+            if (no_bucket_counter > 5 && current_state.state == MOVE_TO_GOAL) {
+                std::cout << "bucket lost!" << std::endl;
+                coconuts_common::ControlState bucket_fail;
+                bucket_fail.state = MOVE_TO_GOAL;
+                bucket_fail.sub_state = MOVE_TO_GOAL_FAILED;
+                control_state_pub.publish(bucket_fail);
+            }
+        }
+
         if (display) {
             imshow(WINDOW1, cv_ptr_raw->image);
         }
-
-        bucket.x = rectangle.x;
-        bucket.y = rectangle.y;
-        bucket_pixel_pub.publish(bucket);
 
         //Add some delay in miliseconds. The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
         cv::waitKey(3);
@@ -143,10 +170,12 @@ int main(int argc, char **argv)
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
     bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1,true);
+    control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     it_pub = it.advertise("/detect_bucket_forward/bucket_rectangle", 1);
 
     if (display) {
         cv::namedWindow("trackbars",0);
+        
         cv::createTrackbar("H_MIN", "trackbars", &H_MIN, H_TOP, on_trackbar);
         cv::createTrackbar("H_MAX", "trackbars", &H_MAX, H_TOP, on_trackbar);
         cv::createTrackbar("S_MIN", "trackbars", &S_MIN, S_TOP, on_trackbar);
