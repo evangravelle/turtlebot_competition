@@ -9,6 +9,7 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Float64.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
 #include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
@@ -22,7 +23,8 @@ Go to a position function by Aaron Ma :DxD;))))
 double y, x, r,x1,y11,x2,y22,x3,y33,cdotMag, cdotAngle;
 double orientation;
 double robVel_;
-double OmegaC;
+double OmegaC,dot,det;
+
 double cenx, ceny;
 double v=0;
 double V=.5;
@@ -37,6 +39,8 @@ float CTERM=.2;
 float KTERM=.5;
 float CANGLETERM=.5;
 
+
+int orange_or_green=0;
 double dist=0;
 double angle=0;
 double KLinear=.0005;
@@ -44,14 +48,14 @@ double ILinear=0;
 double KILinear=0;//.00005;
 double KAngular=.005;
 double IAngular=0;
-double KIAngular=0;//.0005;
+double KIAngular=.0002;//.0005;
 double thresholdAngle=0;
 double thresholdDistance=0;
 
 double m=0;
 double b=0;
 
-int state=1;
+int state=0;
 int substate=1;
 bool goForBall=false;
 bool got_cdot=false;
@@ -63,7 +67,7 @@ bool got_cdot=false;
 geometry_msgs::Twist cdot;
 coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
-ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub;
+ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, pos_sub_;
 ros::Publisher u_pub_,m_pub;
 coconuts_common::ControlState cs;
 
@@ -91,35 +95,89 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 
 		if (abs(dist)<10 && abs(angle) <5){
 			substate=2;
-	//		cs.sub_state=CENTER_ON_BALL;
-	//		control_pub.publish(cs);
-		}
-	}
-}
-
-void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
-	if (substate==2){
-		gotInitialGoal=true;
-		dist=235-cenPose->y;
-		angle=350-cenPose->x; 
-		if (abs(dist)<10 && abs(angle) <5){
-			substate=3;
-			cs.sub_state=AT_BALL;
+			cs.sub_state=CENTER_ON_ORANGE;
 			control_pub.publish(cs);
 		}
 	}
 }
 
+void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
+	if (substate==2 && cenPose->x >0){
+		gotInitialGoal=true;
+		dist=235-cenPose->y;
+		angle=350-cenPose->x; 
+		if (abs(dist)<10 && abs(angle) <5){
+			substate=3;
+			cs.sub_state=AT_ORANGE;
+			control_pub.publish(cs);
+		}
+	}
+}
+
+void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
+        if (state==5 &&  cenPose->x >0){ 
+       double xPrime=((240-cenPose->y)-b)/m;
+                dist=240-cenPose->y;
+                angle=xPrime-cenPose->x; //CENTER
+
+                if (abs(dist)<10 && abs(angle) <5){
+                        substate=3;
+                        cs.sub_state=AT_GOAL;
+            //            control_pub.publish(cs);
+                }
+        }
+}
+
+void goalCB4(const geometry_msgs::PoseStamped::ConstPtr& cenPose){
+        gotInitialGoal=true;
+	if (state==4){
+		if (cenPose->pose.position.z!=-1){
+			cenx=cenPose->pose.position.x;
+			ceny=cenPose->pose.position.y;
+		}else{
+			cenx=x;
+			ceny=y;
+		}
+	}
+}
+
+void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
+{
+
+	if (tf->transforms[0].child_frame_id=="base_footprint" && tf->transforms[0].header.frame_id=="map"){
+	orientation = tf::getYaw(tf->transforms[0].transform.rotation)+3.14/2;
+	x1=sin(orientation);
+	y11=cos(orientation);
+	x=tf->transforms[0].transform.translation.x; 
+	y=tf->transforms[0].transform.translation.y;
+
+	x2=cenx-x;
+	y22=ceny-y;
+	}
+
+}
+
+
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
-
+		if (control_state -> sub_state ==MOVING_TO_ORANGE){
+			orange_or_green=0;
+		}else if(control_state -> sub_state ==MOVING_TO_GREEN){
+			orange_or_green=1;
+		}
 		if (state==2){
 			substate=1;
 		}
 		state=1;
-	}else if (control_state -> state ==FIND_BALL || control_state -> state ==FIND_GOAL){
+	}else if (control_state -> state ==FIND_BALL){
 		state=2;
+	}else if (control_state -> state ==FIND_GOAL){
+                state=4;
+        }else if (control_state -> state ==-51){
+		state=5;
+		gotInitialGoal=false;
 	}
+
 	else{
 		state=0;
 	}
@@ -164,6 +222,8 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 
 
 void medControl(){
+KIAngular=0;
+KILinear=0;
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
 	}
@@ -225,7 +285,8 @@ void medControl(){
 }
 
 void fineControl(){
-
+KIAngular=0.00001;
+KILinear=0.00001;
 		ILinear=ILinear+dist;
 		IAngular=IAngular+angle;
 
@@ -262,16 +323,16 @@ void fineControl(){
 
 
 //Maxes
-		if (finalVel.angular.z >.5){
-			finalVel.angular.z=.5;
-		}else if (finalVel.angular.z<-.5){
-			finalVel.angular.z=-.5;
+		if (finalVel.angular.z >.15){
+			finalVel.angular.z=.15;
+		}else if (finalVel.angular.z<-.15){
+			finalVel.angular.z=-.15;
 		}
 
-		if (finalVel.linear.x>.1){
-			finalVel.linear.x=.1;
-		}else if (finalVel.linear.x<-.1){
-			finalVel.linear.x=-.1;
+		if (finalVel.linear.x>.05){
+			finalVel.linear.x=.05;
+		}else if (finalVel.linear.x<-.05){
+			finalVel.linear.x=-.05;
 		}
 		std::cout <<"\n\n";
 		std::cout << "Error x: " <<  angle<<"\n";
@@ -300,7 +361,78 @@ void explore(){
 //        }
 }
 
+void global(){
+dot = x1*x2 + y11*y22;
+		det = x1*y22 - y11*x2;
+		dist=sqrt(x2*x2+y22*y22);
 
+		angle = atan2(det, dot);
+
+			v=cos(angle)*V;
+			if (dist<.1){
+				v=0;
+			}
+	
+
+a=A*angle;
+
+
+
+			finalVel.linear.x=KTERM*v;
+			finalVel.angular.z=a;
+
+		
+
+		if (dist < .25){
+				if ((finalVel.linear.x-lastVel.linear.x)>.02){
+					finalVel.linear.x=lastVel.linear.x+.02;
+				}	
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.02){
+					finalVel.linear.x=lastVel.linear.x-.02;
+				}
+		}
+		else  {
+				if ((finalVel.linear.x-lastVel.linear.x)>.03){
+					finalVel.linear.x=lastVel.linear.x+.03;
+				}	
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.03){
+					finalVel.linear.x=lastVel.linear.x-.03;
+				}		
+		}
+				
+
+		if ((finalVel.angular.z-lastVel.angular.z)>.001){
+					finalVel.angular.z=lastVel.angular.z+.001;
+				}	
+				else if ((finalVel.linear.x-lastVel.linear.x)<-.001){
+					finalVel.angular.z=lastVel.angular.z-.001;
+				}
+		
+		if (abs(finalVel.angular.z)<.0001){
+		finalVel.angular.z=0;			
+		}
+
+		lastVel=finalVel;
+		finalVel.linear.x=finalVel.linear.x/2;
+
+		if (a>.5){
+			a=.5;
+		}else if (a<-.5){
+			a=-.5;
+		}
+
+		if (finalVel.linear.x>.2){
+			finalVel.linear.x=.2;
+		}else if (finalVel.linear.x<0){
+			finalVel.linear.x=0;
+		}
+
+		finalVel.angular.z=a;
+
+
+		finalVel.angular.z=-finalVel.angular.z;
+
+}
 
 int main(int argc, char **argv)
 {
@@ -311,10 +443,13 @@ ros::Rate loop_rate(50);
 
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
-cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down_orange/ball_pixel",1, goalCB2);
+cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
+cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_foward/bucket_pixel",1, goalCB3);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
 sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
+cen4_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal_pose",1, goalCB4);
+pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
 
 
 
@@ -346,6 +481,12 @@ while(ros::ok()){
 		explore();
 	}else if (state==3){
 		cout << "Global ~~~" << "\n";
+	}else if (state==4){
+		cout << "BUCKET \n";
+		global();
+	}else if (state==5){
+		cout << "GLOBAL \n";
+		global();
 	}
 	else{
 		cout << "inactive" << "\n";
@@ -357,7 +498,3 @@ while(ros::ok()){
 }
 
 }
-
-
-
-
