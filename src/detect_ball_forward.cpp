@@ -266,7 +266,7 @@ void findGreen() {
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
     // If state is FIND_BALL, look for orange over green
-    if (current_state.state == FIND_BALL || !require_correct_state) {
+    if (current_state.state == FIND_BALL ) { //|| !require_correct_state) {
 
         cv_ptr_raw = loadImage(raw_image);
         findOrange();
@@ -337,7 +337,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_ORANGE, look for orange
-    else if( (current_state.state == FIND_BALL || !require_correct_state) && current_state.sub_state == MOVING_TO_ORANGE) {
+    //else if( (current_state.state == MOVE_TO_BALL || !require_correct_state) && current_state.sub_state == MOVING_TO_ORANGE) {
+    else if ( current_state.state == MOVE_TO_BALL && current_state.sub_state == MOVING_TO_ORANGE) {
 
         cv_ptr_raw = loadImage(raw_image);
         findOrange();
@@ -373,7 +374,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_GREEN, look for green
-    else if( (current_state.state == FIND_BALL || !require_correct_state) && current_state.sub_state == MOVING_TO_GREEN) {
+    //else if( (current_state.state == MOVE_TO_BALL || !require_correct_state) && current_state.sub_state == MOVING_TO_GREEN) {
+    else if( current_state.state == MOVE_TO_BALL  && current_state.sub_state == MOVING_TO_GREEN) {
         cv_ptr_raw = loadImage(raw_image);
         findGreen();
 
