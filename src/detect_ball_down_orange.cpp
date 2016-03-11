@@ -135,7 +135,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         cv::Point2f best_circle_center;
         float best_circle_radius = 2000.0;
-        float best_distance = 1000;
+        float best_distance = 2000.0;
         float best_error = 1.0;
         float current_error, current_distance;
 
@@ -183,9 +183,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
             if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
                 cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
+                current_state.state = PICK_UP_BALL;
                 current_state.sub_state = GOT_BALL;
             }
             else {
+                current_state.state = PICK_UP_BALL;
                 current_state.sub_state = GOT_BALL_FAILED;
             }
 

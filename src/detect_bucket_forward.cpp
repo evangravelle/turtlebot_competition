@@ -69,7 +69,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // Erode then display
         cv::erode(hsv_thresh, hsv_thresh, erodeElement,cv::Point(-1,-1),2);
-    //    cv::imshow(WINDOW3, hsv_thresh);
+        // cv::imshow(WINDOW3, hsv_thresh);
 
         // Dilate then display
         cv::dilate(hsv_thresh, hsv_thresh, dilateElement);
