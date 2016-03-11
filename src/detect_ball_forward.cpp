@@ -14,7 +14,7 @@
 image_transport::Publisher it_pub;
 ros::Publisher image_thresh_pub, control_state_pub, ball_pixel_pub;
 geometry_msgs::Point ball, previous_best_circle_center_orange, previous_best_circle_center_green;
-coconuts_common::ControlState current_state, orange_fail, green_fail;
+coconuts_common::ControlState current_state, orange_fail, green_fail, green_found, orange_found;
 float epsilon = 0.0001;
 float error_threshold_orange = 0.35;
 float error_threshold_green = 0.35;
@@ -145,7 +145,7 @@ void findOrange() {
         contour_area_orange = cv::contourArea(contours_orange[i]);
         current_error_orange = (M_PI*pow(enclosing_circle_radius_orange,2) - contour_area_orange) / (M_PI*pow(enclosing_circle_radius_orange,2));
         current_distance_orange = calculateDistance(enclosing_circle_center_orange.x, enclosing_circle_center_orange.y, 
-            previous_best_circle_center_orange.x, previous_best_circle_center_orange.y);
+          previous_best_circle_center_orange.x, previous_best_circle_center_orange.y);
 
         // if no previous orange best ball location
         if (compareFloats(previous_best_circle_center_orange.x, -1.0, epsilon)) {
@@ -274,7 +274,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
         // if orange ball was detected, store location
         if (!compareFloats(best_error_orange, 1.0, epsilon)) {
 
-
             previous_best_circle_center_orange.x = best_circle_center_orange.x;
             previous_best_circle_center_orange.y = best_circle_center_orange.y;
 
@@ -286,6 +285,10 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             ball.y = best_circle_center_orange.y;
             ball_pixel_pub.publish(ball);
 
+            std::cout << "state changed to ORANGE_BALL_FOUND" << std::endl;
+            orange_found.state = MOVE_TO_BALL;
+            orange_fail.sub_state = ORANGE_BALL_FOUND;
+            control_state_pub.publish(orange_found);
         }
 
         // if no orange ball was detected, reset previous best orange value and look for green   
@@ -314,6 +317,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
                 ball.x = best_circle_center_green.x;
                 ball.y = best_circle_center_green.y;
                 ball_pixel_pub.publish(ball);
+
+                std::cout << "state changed to GREEN_BALL_FOUND" << std::endl;
+                orange_found.state = MOVE_TO_BALL;
+                orange_fail.sub_state = GREEN_BALL_FOUND;
+                control_state_pub.publish(green_found);
             }
         }
 
@@ -329,7 +337,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_ORANGE, look for orange
-    else if(current_state.sub_state == MOVING_TO_ORANGE || !require_correct_state) {
+    else if(current_state.sub_state == MOVING_TO_ORANGE) {
 
         cv_ptr_raw = loadImage(raw_image);
         findOrange();
@@ -365,7 +373,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
     }
 
     // If sub_state is MOVING_TO_GREEN, look for green
-    else if(current_state.sub_state == MOVING_TO_GREEN || !require_correct_state) {
+    else if(current_state.sub_state == MOVING_TO_GREEN) {
         cv_ptr_raw = loadImage(raw_image);
         findGreen();
 

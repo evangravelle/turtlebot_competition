@@ -87,7 +87,7 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 	gotInitialGoal=true;
 	double xPrime=((480-cenPose->y)-b)/m;
 		dist=438-cenPose->y;
-		angle=xPrime-cenPose->x-15; //CENTER
+		angle=xPrime-cenPose->x; //CENTER
 
 		if (abs(dist)<10 && abs(angle) <5){
 			substate=2;
@@ -111,7 +111,7 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 }
 
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
-	if (control_state -> state == MOVE_TO_BALL){ //&& control_state -> sub_state == MOVING_TO_BALL
+if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
 
 		if (state==2){
 			substate=1;
@@ -284,20 +284,20 @@ void fineControl(){
 
 
 void explore(){
-        finalVel.linear.x = 0.1;
-        finalVel.angular.z = 0.0;
-        if (left_obstacle && right_obstacle) {
-           finalVel.linear.x = -0.3; // Go Backwards
-        } else {
-            if (left_obstacle) {
-                finalVel.angular.z = -1.0; // rotate right
-                finalVel.linear.x = 0.0;
-            }
-            else if (right_obstacle) {
-                finalVel.angular.z = 1.0; // rotate left
-                finalVel.linear.x = 0.0;
-            }
-        }
+//        finalVel.linear.x = 0.1;
+//       finalVel.angular.z = 0.0;
+//       if (left_obstacle && right_obstacle) {
+//           finalVel.linear.x = -0.3; // Go Backwards
+//        } else {
+//           if (left_obstacle) {
+//                finalVel.angular.z = -1.0; // rotate right
+//                finalVel.linear.x = 0.0;
+//            }
+//            else if (right_obstacle) {
+//                finalVel.angular.z = 1.0; // rotate left
+//                finalVel.linear.x = 0.0;
+//            }
+//        }
 }
 
 
@@ -311,7 +311,7 @@ ros::Rate loop_rate(50);
 
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
-cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/ball_pixel",1, goalCB2);
+cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down_orange/ball_pixel",1, goalCB2);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
 sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
