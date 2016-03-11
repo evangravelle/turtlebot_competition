@@ -33,7 +33,7 @@ int V_TOP = 255;
 int H_MIN_ORANGE, H_MAX_ORANGE, S_MIN_ORANGE, S_MAX_ORANGE, V_MIN_ORANGE, V_MAX_ORANGE; // To be loaded from parameter server
 int H_MIN_ORANGE_CHECK, H_MAX_ORANGE_CHECK, S_MIN_ORANGE_CHECK;
 int S_MAX_ORANGE_CHECK, V_MIN_ORANGE_CHECK, V_MAX_ORANGE_CHECK;
-coconuts_common::ControlState current_state;
+coconuts_common::ControlState current_state, pub_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.7;
 float min_floor_radius = 35;
@@ -59,7 +59,7 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
-    if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || 
+    if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || current_state.sub_state == CENTER_ON_ORANGE ||
       current_state.sub_state == CHECK_ORANGE || !require_correct_state) {
 
         current_time = ros::Time::now();
@@ -139,7 +139,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         float best_error = 1.0;
         float current_error, current_distance;
 
-        if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || !require_correct_state) {
+        if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || 
+          current_state.sub_state == CENTER_ON_ORANGE || !require_correct_state) {
             for(int i = 0; i < contours.size(); i++) {
                 cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
                 cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
@@ -183,15 +184,15 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
             if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
                 cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
-                current_state.state = PICK_UP_BALL;
-                current_state.sub_state = GOT_BALL;
+                pub_state.state = PICK_UP_BALL;
+                pub_state.sub_state = GOT_BALL;
             }
             else {
-                current_state.state = PICK_UP_BALL;
-                current_state.sub_state = GOT_BALL_FAILED;
+                pub_state.state = PICK_UP_BALL;
+                pub_state.sub_state = GOT_BALL_FAILED;
             }
 
-            control_state_pub.publish(current_state);
+            control_state_pub.publish(pub_state);
             ros::Duration(1).sleep();
         }
         if (display) {
