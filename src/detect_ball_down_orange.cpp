@@ -195,7 +195,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             }
 
             control_state_pub.publish(pub_state);
-            ros::Duration(1).sleep();
+            ros::Duration(3).sleep();
         }
         if (display) {
             cv::imshow(WINDOW1, cv_ptr_raw->image);
