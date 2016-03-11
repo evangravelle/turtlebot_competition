@@ -531,6 +531,7 @@ int main(int argc, char** argv)
         switch ( behavior_state_ ) {
 
             case INIT:
+                behavior_sub_state_ = DEFAULT_SUB_STATE;
                 break;
 
             case MANUAL:
