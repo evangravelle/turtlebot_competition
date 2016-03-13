@@ -26,7 +26,7 @@ static const char WINDOW2[] = "/detect_ball_down_orange/hsv_thresh";
 image_transport::Publisher it_pub;
 ros::Publisher ball_pixel_pub, control_state_pub, image_thresh_pub;
 geometry_msgs::Point ball;
-ros::Time current_time;
+double t = 0;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
@@ -64,7 +64,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
     if (current_state.sub_state == MOVING_TO_ORANGE || current_state.sub_state == AT_ORANGE || current_state.sub_state == CENTER_ON_ORANGE ||
       current_state.sub_state == CHECK_ORANGE || !require_correct_state) {
 
-        current_time = ros::Time::now();
         // const sensor_msgs::ImageConstPtr hsv_image;
         cv_bridge::CvImagePtr cv_ptr_raw;
 
@@ -184,19 +183,24 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 }
             }
 
-            if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
-                cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
-                pub_state.state = PICK_UP_BALL;
-                pub_state.sub_state = GOT_BALL;
+            // If at least 3 seconds have passed since last publication
+            if (t < 0.0001 || ros::Time::now().toSec() - t > 3) {
+                if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
+                    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
+                    pub_state.state = PICK_UP_BALL;
+                    pub_state.sub_state = GOT_BALL;
+                    control_state_pub.publish(pub_state);
+                    t = ros::Time::now().toSec();
+                }
+                else {
+                    pub_state.state = PICK_UP_BALL;
+                    pub_state.sub_state = GOT_BALL_FAILED;
+                    control_state_pub.publish(pub_state);
+                    t = ros::Time::now().toSec();
+                }
             }
-            else {
-                pub_state.state = PICK_UP_BALL;
-                pub_state.sub_state = GOT_BALL_FAILED;
-            }
-
-            control_state_pub.publish(pub_state);
-            ros::Duration(3).sleep();
         }
+
         if (display) {
             cv::imshow(WINDOW1, cv_ptr_raw->image);
         }
