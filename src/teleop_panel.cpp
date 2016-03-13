@@ -205,7 +205,10 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   arm_state_layout->addWidget(arm_grab_close_button_, 2, 1, 1, 1);
   
   arm_check_button_ = new QPushButton("Check", this);
-  arm_state_layout->addWidget(arm_check_button_, 3, 0, 1, 2);
+  arm_state_layout->addWidget(arm_check_button_, 3, 0, 1, 1);
+
+  arm_got_ball_search_button_ = new QPushButton("Got Ball Search", this);
+  arm_state_layout->addWidget(arm_got_ball_search_button_, 3, 1, 1, 1);
 
   arm_drop_close_button_ = new QPushButton("Drop Close", this);
   arm_state_layout->addWidget(arm_drop_close_button_, 4, 0, 1, 1);
@@ -282,6 +285,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( arm_check_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
   connect( arm_drop_close_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
   connect( arm_drop_open_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
+  connect( arm_got_ball_search_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
   
   // Control
   control_mapper->setMapping(init_button_, INIT);
@@ -323,6 +327,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   arm_mapper->setMapping(arm_check_button_, 3);
   arm_mapper->setMapping(arm_drop_close_button_, 4);
   arm_mapper->setMapping(arm_drop_open_button_, 5);
+  arm_mapper->setMapping(arm_got_ball_search_button_, 6);
 
   connect( control_mapper, SIGNAL(mapped(int)), this, SLOT(handleControlButton(int)));
   connect( arm_mapper, SIGNAL(mapped(int)), this, SLOT(handleArmButton(int)));
@@ -464,6 +469,9 @@ void TeleopPanel::handleArmButton(int arm_state) {
           break;
       case 5:
           arm_control.pose = "DROP_BALL_OPEN";
+          break;
+      case 6:
+          arm_control.pose = "GOT_BALL_SEARCH";
           break;
       default:
           arm_control.pose = "SEARCH";

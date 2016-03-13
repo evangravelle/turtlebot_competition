@@ -160,6 +160,7 @@ protected:
   QPushButton* arm_check_button_;
   QPushButton* arm_drop_close_button_;
   QPushButton* arm_drop_open_button_;
+  QPushButton* arm_got_ball_search_button_;
 
   // State values
   QLabel *currentStateLabel;
