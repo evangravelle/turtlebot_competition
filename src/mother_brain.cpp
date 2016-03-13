@@ -71,10 +71,83 @@ public:
 
 	}
 
+    bool isValidSubState( int state, int subState) {
+
+        bool isValid = false;
+
+        if ( subState == 100 )  {
+            isValid = true;
+        } else {
+            switch (state) {
+
+                case INIT:
+                    isValid = true;
+                    break;
+
+                case MANUAL:
+                    isValid = true;
+                    break;
+
+                case START:
+                    isValid = true;
+                    break;
+
+                case END:
+                    isValid = true;
+                    break;
+
+                case CONFIG:
+                    if (subState > 20 && subState < 40) isValid = true;
+                    break;
+
+                case FIND_GOAL:
+                    if (subState > 40 && subState < 50) isValid = true;
+                    break;
+
+                case MOVE_TO_GOAL:
+                    if (subState > 50 && subState < 60) isValid = true;
+                    break;
+
+                case FIND_BALL:
+                    if (subState > 60 && subState < 70) isValid = true;
+                    break;
+
+                case MOVE_TO_BALL:
+                    if ((subState > 70 && subState < 80) ||
+                        (subState >= 170 && subState < 180)) isValid = true;
+                    break;
+
+                case PICK_UP_BALL:
+                    if (subState > 80 && subState < 90) isValid = true;
+                    break;
+
+                case DROP_BALL:
+                    if (subState > 90 && subState < 100) isValid = true;
+                    break;
+            }
+        }
+
+        return isValid;
+
+    }
+
     void control_substate_receive(const coconuts_common::ControlState::ConstPtr& control_msg) {
 
-        behavior_sub_state_ = control_msg->sub_state;
-        ROS_INFO("Mother Brain: Forced sub state to [%d].", behavior_sub_state_);
+            bool enforce_substates = true;
+
+        if ( enforce_substates ) {
+
+            if (isValidSubState(behavior_state_, control_msg->sub_state)) {
+                behavior_sub_state_ = control_msg->sub_state;
+                ROS_INFO("Mother Brain: Forced sub state to [%d].", behavior_sub_state_);
+            } else {
+                ROS_INFO("Mother Brain: Invalid substate to [%d], ignored.", behavior_sub_state_);
+            }
+
+        } else {
+            behavior_sub_state_ = control_msg->sub_state;
+            ROS_INFO("Mother Brain: Forced sub state to [%d].", behavior_sub_state_);
+        }
 
     }
 
@@ -240,6 +313,8 @@ public:
                     ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL_FAILED, going to FIND_BALL.");
                     behavior_state_ = FIND_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    arm_search();
+                    reset_arm_ = true;
                     break;
 
                 default:
