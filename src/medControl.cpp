@@ -1,6 +1,6 @@
 /*
 
-Go to a position function by Aaron Ma :DxD;))))
+Go to a position function by Aaron Ma :DxD;)))),
 
 */
 
@@ -19,35 +19,28 @@ Go to a position function by Aaron Ma :DxD;))))
 #include <math.h>
 #include <states.h>
 
-//Declare Variables
-double y, x, r,x1,y11,x2,y22,x3,y33,cdotMag, cdotAngle;
+//~~~Declare Variables
+double y, x, r,x1,y11,x2,y22,x3,y33;
 double orientation;
-double robVel_;
-double OmegaC,dot,det;
+double dot,det;
 
+//~~~Define Define starting locations for the bucket and cocobot
 double startingLocX=130;
 double startingLocY=130;
-
 double bucketLocX=130;
 double bucketLocY=130;
 
+//~~~blah blah blah
 double cenx, ceny;
 double v=0;
 double V=.5;
 double a=0;
 double A=1;
-double transformScale=900;
-double cdotContribution=0;
-double transformX=301;
+
 double image_width=320.0;
 double image_height=240.0;
-double transformY=247;
-float lastcdotAngle=0;
-float CTERM=.2;
+
 float KTERM=.5;
-float CANGLETERM=.5;
-
-
 int orange_or_green=0;
 double dist=0;
 double angle=0;
@@ -66,13 +59,12 @@ double b=0;
 int state=0;
 int substate=1;
 bool goForBall=false;
-bool got_cdot=false;
 
-    bool left_obstacle=false;
-    bool right_obstacle=false;
-    bool center_obstacle=false;
 
-geometry_msgs::Twist cdot;
+bool left_obstacle=false;
+bool right_obstacle=false;
+bool center_obstacle=false;
+
 coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
 ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, pos_sub_;
@@ -85,8 +77,6 @@ using namespace std;
 
 
 // Other member variables
-
-geometry_msgs::Twist robVel;
 geometry_msgs::Twist lastVel;
 geometry_msgs::Twist finalVel;
 
@@ -94,6 +84,8 @@ bool got_vel_;
 bool gotInitialGoal=false;
 
 
+
+//~~~Callback from detect_ball_forward/ball_pixel for approaching ballz
 void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 	if (substate==1){
 	gotInitialGoal=true;
@@ -107,12 +99,17 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 			IAngular=0;
 			angle=200;
 			dist=0;
+			if (orange_or_green==0){
 			cs.sub_state=CENTER_ON_ORANGE;
+			}else{
+			cs.sub_state=CENTER_ON_GREEN;
+			}
 			control_pub.publish(cs);
 		}
 	}
 }
 
+//~~~Callback for detect_ball_down/ball_pixel for centering on ballz
 void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 	if (substate==2 && cenPose->x >0){
 		gotInitialGoal=true;
@@ -120,12 +117,17 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 		angle=350/2-cenPose->x; 
 		if (abs(dist)<10 && abs(angle) <10){
 			substate=3;
+			if (orange_or_green==0){
 			cs.sub_state=AT_ORANGE;
+			}else{
+			cs.sub_state=AT_GREEN;
+			}
 			control_pub.publish(cs);
 		}
 	}
 }
 
+//~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
         if (state==5 &&  cenPose->x >0){ 
        double xPrime=((240-cenPose->y)-b)/m;
@@ -140,6 +142,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
         }
 }
 
+//~~~Callback for the global location NCU
 void goalCB4(const geometry_msgs::PoseStamped::ConstPtr& cenPose){
 
         gotInitialGoal=true;
@@ -156,6 +159,7 @@ void goalCB4(const geometry_msgs::PoseStamped::ConstPtr& cenPose){
 	//}
 }
 
+//~~~Callback for the cocobots position in meter coordinates
 void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 {
 
@@ -172,7 +176,7 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 
 }
 
-
+//~~~Callback to find out what the heck we are doing
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
 		if (control_state -> sub_state ==MOVING_TO_ORANGE){
@@ -198,6 +202,7 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 	}
 }
 
+//~~~Callback for the ultrasonics, gotta go fast
 void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 
         // TODO define these magic numbers and parameterize the reading value
@@ -235,7 +240,7 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
         }
 }
 
-
+//~~~medium distance control, for ballz and bucket approaching
 void medControl(){
 KIAngular=0;
 KILinear=0;
@@ -297,6 +302,7 @@ KILinear=0;
 
 }
 
+//~~~Fine adjustment control for centering on ballz
 void fineControl(){
 KIAngular=0.001;
 KILinear=0.001;
@@ -356,7 +362,7 @@ KILinear=0.001;
 }
 
 
-
+//~~~ explore function ncu
 void explore(){
 //        finalVel.linear.x = 0.1;
 //       finalVel.angular.z = 0.0;
@@ -374,6 +380,7 @@ void explore(){
 //        }
 }
 
+//~~~global control function, goes to a position cenx and ceny
 void global(){
 dot = x1*x2 + y11*y22;
 		det = x1*y22 - y11*x2;
@@ -447,6 +454,8 @@ a=A*angle;
 
 }
 
+
+//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~
 int main(int argc, char **argv)
 {
 ros::init(argc, argv, "AaRoNmA");
