@@ -94,8 +94,6 @@ public:
                 case DEFAULT_SUB_STATE:
                     arm_drop_ball_open();
                     ros::Duration(3.0).sleep();
-                    cocobot_turn_around();
-                    ros::Duration(3.0).sleep();
                     behavior_sub_state_ = BALL_DROPPED;
                     break;
 
@@ -131,11 +129,13 @@ public:
                     break;
 
                 case MOVING_TO_GOAL:
-                    //ROS_INFO("Mother Brain (MOVE_TO_GOAL): Moving To Ball.");
+                    //ROS_INFO("Mother Brain (MOVE_TO_GOAL): Moving To Goal.");
                     break;
 
                 case AT_GOAL:
                     ROS_INFO("Mother Brain (MOVE_TO_GOAL): AT_GOAL, going to DROP_BALL.");
+                    arm_drop_ball_close();
+                    ros::Duration(3.0).sleep();
                     behavior_state_ = DROP_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
@@ -232,7 +232,7 @@ public:
                     ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL, going to FIND_GOAL");
                     behavior_state_ = FIND_GOAL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
-                    arm_drop_ball_close();
+                    arm_search();
                     ros::Duration(3.0).sleep();
                     break;
 
