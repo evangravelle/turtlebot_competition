@@ -364,8 +364,209 @@ void TeleopPanel::updateTopic()
 }
 
 void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::ConstPtr& state_msg) {
-   currentStateLabel->setText(QString::number(state_msg->state)); 
-   currentSubStateLabel->setText(QString::number(state_msg->sub_state));
+
+   switch (state_msg->state) {
+
+       case INIT: 
+            currentStateLabel->setText("INIT");
+           break;
+
+       case MANUAL: 
+            currentStateLabel->setText("MANUAL");
+           break;
+
+       case START: 
+            currentStateLabel->setText("START");
+           break;
+
+       case END: 
+            currentStateLabel->setText("END");
+           break;
+
+       case CONFIG: 
+            currentStateLabel->setText("CONFIG");
+           break;
+
+       case FIND_GOAL: 
+            currentStateLabel->setText("FIND_GOAL");
+           break;
+
+       case MOVE_TO_GOAL: 
+            currentStateLabel->setText("MOVE_TO_GOAL");
+           break;
+
+       case FIND_BALL: 
+            currentStateLabel->setText("FIND_BALL");
+           break;
+
+       case MOVE_TO_BALL: 
+           currentStateLabel->setText("MOVE_TO_BALL");
+           break;
+
+       case PICK_UP_BALL: 
+            currentStateLabel->setText("PICK_UP_BALL");
+           break;
+
+       case DROP_BALL: 
+            currentStateLabel->setText("DROP_BALL");
+           break;
+
+       default:
+           currentStateLabel->setText(QString::number(state_msg->state));
+           break;
+
+   }
+
+   switch(state_msg->sub_state) {
+       case CONFIG_GOAL_COLOR:
+           currentSubStateLabel->setText("CONFIG_GOAL_COLOR");
+           break;
+
+       case CONFIG_CEILING:
+           currentSubStateLabel->setText("CONFIG_CEILING");
+           break;
+
+       case CONFIG_BALL_COLOR:
+           currentSubStateLabel->setText("CONFIG_BALL_COLOR");
+           break;
+
+       case SEARCH_FOR_GOAL:
+           currentSubStateLabel->setText("SEARCH_FOR_GOAL");
+           break;
+
+       case GOAL_FOUND:
+           currentSubStateLabel->setText("GOAL_FOUND");
+           break;
+
+       case MOVING_TO_GOAL:
+           currentSubStateLabel->setText("MOVING_TO_GOAL");
+           break;
+
+       case AT_GOAL:
+           currentSubStateLabel->setText("AT_GOAL");
+           break;
+
+       case MOVE_TO_GOAL:
+           currentSubStateLabel->setText("MOVE_TO_GOAL");
+           break;
+
+       case MOVE_TO_GOAL_FAILED:
+           currentSubStateLabel->setText("MOVE_TO_GOAL_FAILED");
+           break;
+
+       case SEARCH_FOR_BALL:
+           currentSubStateLabel->setText("SEARCH_FOR_BALL");
+           break;
+
+       case BALL_FOUND:
+           currentSubStateLabel->setText("BALL_FOUND");
+           break;
+
+       case GREEN_BALL_FOUND:
+           currentSubStateLabel->setText("GREEN_BALL_FOUND");
+           break;
+
+       case ORANGE_BALL_FOUND:
+           currentSubStateLabel->setText("ORANGE_BALL_FOUND");
+           break;
+
+       case MOVING_TO_GREEN:
+           currentSubStateLabel->setText("MOVING_TO_GREEN");
+           break;
+
+       case AT_GREEN:
+           currentSubStateLabel->setText("AT_GREEN");
+           break;
+
+       case MOVE_TO_GREEN_FAILED:
+           currentSubStateLabel->setText("MOVE_TO_GREEN_FAILED");
+           break;
+
+       case CENTER_ON_GREEN:
+           currentSubStateLabel->setText("CENTER_ON_GREEN");
+           break;
+
+       case MOVING_TO_ORANGE:
+           currentSubStateLabel->setText("MOVING_TO_ORANGE");
+           break;
+
+       case AT_ORANGE:
+           currentSubStateLabel->setText("AT_ORANGE");
+           break;
+
+       case MOVE_TO_ORANGE_FAILED:
+           currentSubStateLabel->setText("MOVE_TO_ORANGE_FAILED");
+           break;
+
+       case CENTER_ON_ORANGE:
+           currentSubStateLabel->setText("CENTER_ON_ORANGE");
+           break;
+
+       case MOVE_TO_BALL_FAILED:
+           currentSubStateLabel->setText("MOVE_TO_BALL_FAILED");
+           break;
+
+       case CENTER_ON_BALL:
+           currentSubStateLabel->setText("CENTER_ON_BALL");
+           break;
+
+       case MOVING_TO_BALL:
+           currentSubStateLabel->setText("MOVING_TO_BALL");
+           break;
+
+       case AT_BALL:
+           currentSubStateLabel->setText("AT_BALL");
+           break;
+
+       case ATTEMPT_PICK_UP_GREEN:
+           currentSubStateLabel->setText("ATTEMPT_PICK_UP_GREEN");
+           break;
+
+       case CHECK_GREEN:
+           currentSubStateLabel->setText("CHECK_GREEN");
+           break;
+
+       case ATTEMPT_PICK_UP_ORANGE:
+           currentSubStateLabel->setText("ATTEMPT_PICK_UP_ORANGE");
+           break;
+
+       case CHECK_ORANGE:
+           currentSubStateLabel->setText("CHECK_ORANGE");
+           break;
+
+       case GOT_BALL:
+           currentSubStateLabel->setText("GOT_BALL");
+           break;
+
+       case GOT_BALL_FAILED:
+           currentSubStateLabel->setText("GOT_BALL_FAILED");
+           break;
+
+       case ATTEMPT_PICK_UP:
+           currentSubStateLabel->setText("ATTEMPT_PICK_UP");
+           break;
+
+       case CHECK_BALL:
+           currentSubStateLabel->setText("CHECK_BALL");
+           break;
+
+       case DROP_BALL:
+           currentSubStateLabel->setText("DROP_BALL");
+           break;
+
+       case DROP_BALL_FAILED:
+           currentSubStateLabel->setText("DROP_BALL_FAILED");
+           break;
+
+       case DEFAULT_SUB_STATE:
+           currentSubStateLabel->setText("DEFAULT_SUB_STATE");
+           break;
+
+       default:
+           currentSubStateLabel->setText(QString::number(state_msg->sub_state));
+           break;
+   }
+
    currentStateLabel->repaint();
    currentSubStateLabel->repaint();
    // This does not work
