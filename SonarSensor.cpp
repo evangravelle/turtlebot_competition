@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "SonarSensor.h"
 
-long* SonarSensor::_samples = new long[NUM_PINGS];
+// long* SonarSensor::_samples = new long[NUM_PINGS];
 
 SonarSensor::SonarSensor(int trig, int echo){
 	_trig_pin = trig;
@@ -28,36 +28,36 @@ long SonarSensor::update(){
 	return diff;
 }
 
-long SonarSensor::update_averaging(){
-	long avg = 0;
-	long sample;
-	for(int i=0;i<NUM_PINGS;i++){
-		sample = ping();
-		delay(5);
-		if(sample == 0){
-			_distance = 0;
-			return 0;
-		}
-		avg += sample;
-		_samples[i] = sample;
-	}
+// long SonarSensor::update_averaging(){
+// 	long avg = 0;
+// 	long sample;
+// 	for(int i=0;i<NUM_PINGS;i++){
+// 		sample = ping();
+// 		delay(5);
+// 		if(sample == 0){
+// 			_distance = 0;
+// 			return 0;
+// 		}
+// 		avg += sample;
+// 		_samples[i] = sample;
+// 	}
 
-	avg /= NUM_PINGS;
-	long var=0;
-	long diff;
-	for(int i=0;i<NUM_PINGS;i++){
-		diff = _samples[i] - avg;
-		var += diff * diff;
-	}
-	var /= NUM_PINGS;
-	var /= (58*58);
-	if(var <= 10){
-		_distance = avg / 29 / 2;
-	}else{
-		_distance = 0;
-	}
-	return var;
-}
+// 	avg /= NUM_PINGS;
+// 	long var=0;
+// 	long diff;
+// 	for(int i=0;i<NUM_PINGS;i++){
+// 		diff = _samples[i] - avg;
+// 		var += diff * diff;
+// 	}
+// 	var /= NUM_PINGS;
+// 	var /= (58*58);
+// 	if(var <= 10){
+// 		_distance = avg / 29 / 2;
+// 	}else{
+// 		_distance = 0;
+// 	}
+// 	return var;
+// }
 
 long SonarSensor::ping(){
 	digitalWrite(_trig_pin, LOW);

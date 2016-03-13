@@ -11,7 +11,7 @@ public:
 	int get_distance();
 
 	//Update the calculated distance
-	long update_averaging();
+	// long update_averaging();
 
 	long update();
 
@@ -22,7 +22,7 @@ public:
 
 private:
 	//The last calculated distance as measured in update()
-	static long *_samples;
+	// static long *_samples;
 
 	int _distance;
 

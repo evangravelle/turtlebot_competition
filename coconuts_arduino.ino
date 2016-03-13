@@ -11,7 +11,6 @@ e.g.
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include <stdint.h>
-// #include "utility/Adafruit_MS_PWMServoDriver.h"
 #include "JointController.h"
 #include "CommandQueue.h"
 #include "SonarSensor.h"
@@ -66,7 +65,7 @@ void setup() {
   Serial.print("hello");
   AFMS.begin();  // create with the default frequency 1.6KHz
 
-  // joint_3.move_to(240);
+  joint_3.move_to(320);
   joint_3.set_ki(0);
 }
 
