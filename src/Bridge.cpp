@@ -150,6 +150,12 @@ int main(int argc, char **argv) {
 	int count=0;
 	uint8_t moving = 0;
 
+    try {
+        serial_port_.write(poses["GOT_BALL_SEARCH"]);
+	} catch (std::exception & e) {
+		std::cerr<<"Couldnt send initialization, ignoring: " <<e.what()<<std::endl;
+    }
+
 	while(ros::ok()) {
 
 		coconuts_common::ArmStatus arm_status;
