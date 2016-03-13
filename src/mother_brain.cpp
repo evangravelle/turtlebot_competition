@@ -207,10 +207,10 @@ public:
                 case ATTEMPT_PICK_UP_ORANGE:
                     // grab ball
                     arm_grab_ball_close();
-                    ros::Duration(5.0).sleep();
+                    ros::Duration(2.0).sleep();
                     // move to validate posltion
                     arm_check();
-                    ros::Duration(5.0).sleep();
+                    ros::Duration(2.0).sleep();
 
                     if (behavior_sub_state_ == ATTEMPT_PICK_UP_ORANGE) {
                         behavior_sub_state_ = CHECK_ORANGE;
