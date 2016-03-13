@@ -10,6 +10,7 @@ Go to a position function by Aaron Ma :DxD;)))),
 #include <std_msgs/Float64.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <tf/tf.h>
 #include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
@@ -60,14 +61,14 @@ int state=0;
 int substate=1;
 bool goForBall=false;
 
-
+int queueState=0;
 bool left_obstacle=false;
 bool right_obstacle=false;
 bool center_obstacle=false;
 
 coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
-ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, pos_sub_;
+ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, cen5_sub_ , pos_sub_;
 ros::Publisher u_pub_,m_pub;
 coconuts_common::ControlState cs;
 
@@ -79,6 +80,7 @@ using namespace std;
 // Other member variables
 geometry_msgs::Twist lastVel;
 geometry_msgs::Twist finalVel;
+geometry_msgs::PoseArray poseArray;
 
 bool got_vel_;
 bool gotInitialGoal=false;
@@ -87,7 +89,7 @@ bool gotInitialGoal=false;
 
 //~~~Callback from detect_ball_forward/ball_pixel for approaching ballz
 void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
-	if (substate==1){
+	if (substate==1 && state==1){
 	gotInitialGoal=true;
 	double xPrime=((480-cenPose->y)-b)/m;
 		dist=438-cenPose->y;
@@ -111,7 +113,7 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Callback for detect_ball_down/ball_pixel for centering on ballz
 void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
-	if (substate==2 && cenPose->x >0){
+	if (substate==2 && cenPose->x >0 && state==1){
 		gotInitialGoal=true;
 		dist=235/2-cenPose->y;
 		angle=350/2-cenPose->x; 
@@ -129,25 +131,41 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
-        if (state==5 &&  cenPose->x >0){ 
-       double xPrime=((240-cenPose->y)-b)/m;
-                dist=240-cenPose->y;
-                angle=xPrime-cenPose->x; //CENTER
+	if (state==4){
 
-                if (abs(dist)<10 && abs(angle) <5){
-                        substate=3;
-                        cs.sub_state=AT_GOAL;
-            //            control_pub.publish(cs);
-                }
-        }
+		if (substate!=3 && cenPose->x > 0){
+			substate=2;
+		}
+
+	double xPrime=((240-cenPose->y)-b)/m;
+		dist=240-cenPose->y;
+		angle=xPrime-cenPose->x; 
+
+		if (abs(dist)<10 && abs(angle) <5){
+		substate=3;
+		cs.sub_state=AT_GOAL;
+		//control_pub.publish(cs);
+		}
+	}
+}
+
+//~~~Queue
+void goalCB5(const geometry_msgs::PoseArray::ConstPtr& cenPose){
+	if (state==4){
+		queueState=0;
+		substate=3;
+		for (int i=0;i<5;i++){
+			poseArray.poses[i]=cenPose ->poses[i];
+		}
+	}
 }
 
 //~~~Callback for the global location NCU
 void goalCB4(const geometry_msgs::PoseStamped::ConstPtr& cenPose){
-
-        gotInitialGoal=true;
-	cenx=bucketLocX/112.5;
-	ceny=-bucketLocY/112.5;
+//OBSOLETE
+//        gotInitialGoal=true;
+//	cenx=bucketLocX/112.5;
+//	ceny=-bucketLocY/112.5;
 //	if (state==4){
 //		if (cenPose->pose.position.z!=-1){
 //			cenx=cenPose->pose.position.x;
@@ -172,6 +190,15 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 
 	x2=cenx-x;
 	y22=ceny-y;
+
+		if (state==4 && substate==3){
+			if (abs(x-poseArray.poses[queueState].position.x)<.1 && abs(y-poseArray.poses[queueState].position.y)<.1 ){
+				queueState=queueState+1;
+				if (poseArray.poses[queueState].position.x==0){
+					substate=1;
+				}
+			}
+		}
 	}
 
 }
@@ -191,9 +218,15 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 	}else if (control_state -> state ==FIND_BALL){
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
-                state=4;
-        }else if (control_state -> sub_state ==MOVING_TO_GOAL){
-		state=5;
+		if (state==1){
+			substate==1;
+		}
+		state=4;
+	}else if (control_state -> sub_state ==MOVING_TO_GOAL){
+		if (state==1){
+			substate==1;
+		}
+		state=4;
 		gotInitialGoal=true;
 	}
 
@@ -380,6 +413,12 @@ void explore(){
 //        }
 }
 
+void setGlobalGoal(double targetX, double targetY){
+	gotInitialGoal=true;
+	cenx=targetX;
+	ceny=targetY;
+}
+
 //~~~global control function, goes to a position cenx and ceny
 void global(){
 dot = x1*x2 + y11*y22;
@@ -466,6 +505,7 @@ ros::Rate loop_rate(50);
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
+cen5_sub_ = nh_.subscribe<geometry_msgs::PoseArray>("/waypoints",1, goalCB5);
 cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_foward/bucket_pixel",1, goalCB3);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
@@ -507,7 +547,16 @@ while(ros::ok()){
 		cout << "Global ~~~" << "\n";
 	}else if (state==4){
 		cout << "BUCKET \n";
-		global();
+		if (substate==1){
+			setGlobalGoal(bucketLocX/112.5,-bucketLocY/112.5);
+			global();
+		}else if (substate==2){
+			medControl();
+		}else if (substate==3){
+			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);
+			global();
+		}
+
 	}else if (state==5){
 		cout << "GLOBAL \n";
 		global();
