@@ -54,6 +54,8 @@
         <!-- ? -->
         <param name="CHECK_BALL" type="string" value="0 294|1 461|2 668|" />
 
+        <param name="GOT_BALL_SEARCH" type="string" value="0 418|1 138|2 351|3 425|" />
+
 </node>
 
 </launch>
