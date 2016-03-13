@@ -131,6 +131,7 @@ int main(int argc, char **argv) {
 	pn.param<std::string>("DROP_BALL_OPEN", poses["DROP_BALL_OPEN"], "UNDEF");
 	pn.param<std::string>("DROP_BALL_CLOSE", poses["DROP_BALL_CLOSE"], "UNDEF");
 	pn.param<std::string>("CHECK_BALL", poses["CHECK_BALL"], "UNDEF");
+	pn.param<std::string>("GOT_BALL_SEARCH", poses["GOT_BALL_SEARCH"], "UNDEF");
 
    	ros::Rate loop_rate(10);
 
