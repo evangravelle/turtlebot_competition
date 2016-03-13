@@ -283,7 +283,7 @@ public:
                     ros::Duration(2.0).sleep();
                     // move to validate posltion
                     arm_check();
-                    ros::Duration(2.0).sleep();
+                    ros::Duration(5.0).sleep();
 
                     if (behavior_sub_state_ == ATTEMPT_PICK_UP_ORANGE) {
                         behavior_sub_state_ = CHECK_ORANGE;
@@ -384,7 +384,7 @@ public:
             switch(behavior_sub_state_) {
 
                 case DEFAULT_SUB_STATE:
-                    behavior_sub_state_ = MOVING_TO_BALL;
+                    //behavior_sub_state_ = MOVING_TO_BALL;
                     break;
 
                 case MOVING_TO_GREEN:
