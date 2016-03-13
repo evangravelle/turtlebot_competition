@@ -19,6 +19,7 @@ int S_TOP = 255;
 int V_TOP = 255;
 int H_MIN, H_MAX, S_MIN, S_MAX, V_MIN, V_MAX; // To be loaded from parameter server
 image_transport::Publisher it_pub;
+ros::Subscriber control_state_sub;
 ros::Publisher image_thresh_pub, bucket_pixel_pub, control_state_pub;
 geometry_msgs::Point bucket;
 coconuts_common::ControlState current_state;
@@ -170,6 +171,7 @@ int main(int argc, char **argv)
     //image_transport::Subscriber sub = it.subscribe("/usb_cam/image_raw", 1, imageCallback);
     image_transport::Subscriber sub = it.subscribe("/camera_forward/image_rect_color", 1, imageCallback);
     bucket_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1,true);
+    control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     control_state_pub = nh.advertise<coconuts_common::ControlState>("/control_substate", 1, true);
     it_pub = it.advertise("/detect_bucket_forward/bucket_rectangle", 1);
 

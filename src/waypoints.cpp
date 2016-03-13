@@ -77,6 +77,7 @@ int main(int argc, char **argv)
     tf2_ros::TransformListener tf_listener(tf_buffer);
     goal.position.x = -1;
     goal.position.y = -1;
+    double t = 0;
 
     ros::Rate rate(5.0);
     while(ros::ok()) {
@@ -89,32 +90,32 @@ int main(int argc, char **argv)
             ros::Duration(2.0).sleep();
         }
 
-        if (right_counter > 3 && goal.position.x > 0 && current_state.sub_state == MOVING_TO_GOAL && t < 0.0001 || ros::Time::now().toSec() - t > 3) {
+        // Wait 10 seconds before considering publishing a new waypoint
+        if (current_state.sub_state == MOVING_TO_GOAL && right_counter > 3 && goal.position.x > 0 && 
+            (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+
             float relative_x = goal.position.x - odom.transform.translation.x;
             float relative_y = goal.position.y - odom.transform.translation.y;
-
             double angle = atan2(relative_y, relative_x);
 
             waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle + M_PI/2.0);
             waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle + M_PI/2.0);
             waypoints_pub.publish(waypoint);
-
-            // Wait 10 seconds before considering publishing a new waypoint
-            ros::Duration(10.0).sleep();
+            t = ros::Time::now().toSec();
         }
 
-        else if (left_counter > 3 && goal.position.x > 0 && current_state.sub_state == MOVING_TO_GOAL) {
+        // Wait 10 seconds before considering publishing a new waypoint
+        else if (current_state.sub_state == MOVING_TO_GOAL && right_counter > 3 && goal.position.x > 0 && 
+            (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+            
             float relative_x = goal.position.x - odom.transform.translation.x;
             float relative_y = goal.position.y - odom.transform.translation.y;
-
             double angle = atan2(relative_y, relative_x);
 
             waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle - M_PI/2.0);
             waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle - M_PI/2.0);
             waypoints_pub.publish(waypoint);
-
-            // Wait 10 seconds before considering publishing a new waypoint
-            ros::Duration(10.0).sleep();
+            t = ros::Time::now().toSec();
         }
      
         rate.sleep();
