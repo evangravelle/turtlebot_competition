@@ -131,20 +131,21 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
+                        cout << "got bucket pixel" << "\n";
 	if (state==4){
 
-		if (substate!=3 && cenPose->x > 0){
+		if (cenPose->x > 0){
 			substate=2;
 		}
 
-	double xPrime=((240-cenPose->y)-b)/m;
-		dist=240-cenPose->y;
-		angle=xPrime-cenPose->x; 
+	double xPrime=((230-cenPose->y)-b)/m;
+		dist=230-cenPose->y;
+		angle=xPrime-cenPose->x-25; 
 
-		if (abs(dist)<10 && abs(angle) <5){
+		if (abs(dist)<15 && abs(angle) <10){
 		substate=3;
 		cs.sub_state=AT_GOAL;
-		//control_pub.publish(cs);
+		control_pub.publish(cs);
 		}
 	}
 }
@@ -219,12 +220,12 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 	}else if (control_state -> state ==FIND_BALL){
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
-		if (state==1){
+		if (state==1 || state==0){
 			substate==1;
 		}
 		state=4;
 	}else if (control_state -> sub_state ==MOVING_TO_GOAL){
-		if (state==1){
+		if (state==1 || state==0){
 			substate==1;
 		}
 		state=4;
@@ -278,6 +279,7 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 void medControl(){
 KIAngular=0;
 KILinear=0;
+
 	if (abs(angle)<5 && abs(dist)<5){
 		goForBall=false;
 	}
@@ -441,7 +443,13 @@ a=A*angle;
 			finalVel.linear.x=KTERM*v;
 			finalVel.angular.z=a;
 
-		
+		if (left_obstacle==true){
+			finalVel.linear.x=0;
+			finalVel.angular.z=-.3;
+		}else if (right_obstacle==true){
+			finalVel.linear.x=0;
+			finalVel.angular.z=.3;
+		}
 
 		if (dist < .25){
 				if ((finalVel.linear.x-lastVel.linear.x)>.02){
@@ -507,7 +515,7 @@ control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, s
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
 cen5_sub_ = nh_.subscribe<geometry_msgs::PoseArray>("/waypoints",1, goalCB5);
-cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_foward/bucket_pixel",1, goalCB3);
+cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1, goalCB3);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
 sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
@@ -530,24 +538,25 @@ while(ros::ok()){
 	finalVel.angular.z=0;
 
 	ros::spinOnce();
-//		std::cout << "state : " <<  state<<"\n";
-	
+		std::cout << "state : " <<  state<<"\n";
+		std::cout << "substate : " << substate << "\n"; 	
 	if (state==1){
 		if (substate==1){
-//			cout << "subsate: 1" << "\n";
+			cout << "subsate: 1" << "\n";
 			medControl();
 		}else if (substate==2){
-//			cout << "substate: 2" << "\n";
+			cout << "substate: 2" << "\n";
 			fineControl();
 		}
 		u_pub_.publish(finalVel);
 	}else if (state==2){
-//		cout << "Exploring ~~~" << "\n";
-		explore();
+		cout << "Exploring ~~~" << "\n";
+		setGlobalGoal(130/112.5,-170/112.5);
+		global();
 	}else if (state==3){
-//		cout << "Global ~~~" << "\n";
+		cout << "Global ~~~" << "\n";
 	}else if (state==4){
-//		cout << "BUCKET \n";
+		cout << "BUCKET \n";
 		if (substate==1){
 			setGlobalGoal(bucketLocX/112.5,-bucketLocY/112.5);
 			global();
