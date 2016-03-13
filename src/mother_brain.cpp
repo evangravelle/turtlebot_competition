@@ -232,7 +232,7 @@ public:
                     ROS_INFO("Mother Brain (PICK_UP_BALL): GOT_BALL, going to FIND_GOAL");
                     behavior_state_ = FIND_GOAL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
-                    arm_search();
+                    arm_got_ball_search();
                     ros::Duration(3.0).sleep();
                     break;
 
@@ -480,6 +480,14 @@ public:
         coconuts_common::ArmMovement arm_movement;
         arm_movement.type = "POSE";
         arm_movement.pose = "CHECK_BALL";
+        positionArm(arm_movement);
+    }
+
+    void arm_got_ball_search() {
+        ROS_INFO("Mother Brain: Moving arm to Got Ball Search.");
+        coconuts_common::ArmMovement arm_movement;
+        arm_movement.type = "POSE";
+        arm_movement.pose = "GOT_BALL_SEARCH";
         positionArm(arm_movement);
     }
 
