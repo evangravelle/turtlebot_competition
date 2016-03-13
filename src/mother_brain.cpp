@@ -51,7 +51,7 @@ public:
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
         control_substate_sub = nodeh.subscribe<coconuts_common::ControlState>("/control_substate", 1, &mother_brain::control_substate_receive, this);
         detect_ball_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
-        detect_goal_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_goal_forward/ball_pixel", 1, &mother_brain::find_goal_callback, this);
+        detect_goal_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel", 1, &mother_brain::move_to_goal_callback, this);
 
         // Publishers
         control_state_pub = nodeh.advertise<coconuts_common::ControlState>("/control_state", 10);
@@ -207,8 +207,6 @@ public:
 
                 case AT_GOAL:
                     ROS_INFO("Mother Brain (MOVE_TO_GOAL): AT_GOAL, going to DROP_BALL.");
-                    arm_drop_ball_close();
-                    ros::Duration(3.0).sleep();
                     behavior_state_ = DROP_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
@@ -254,13 +252,20 @@ public:
 
     }
 
-    void find_goal_callback(const geometry_msgs::Point::ConstPtr& msg) {
+    void move_to_goal_callback(const geometry_msgs::Point::ConstPtr& msg) {
 
-        if (behavior_state_ == FIND_GOAL) {
+        if (behavior_state_ == MOVE_TO_GOAL) {
 
-                ROS_INFO("Mother Brain (FIND_GOAL): Callback Executed, going to MOVE_TO_GOAL.");
-                behavior_state_ = MOVE_TO_GOAL;
-                behavior_sub_state_ = DEFAULT_SUB_STATE;
+            switch(behavior_sub_state_) {
+                case MOVING_TO_GOAL:
+                    if (msg->y > 140) {
+                        arm_drop_ball_close();
+                        //ros::Duration(3.0).sleep();
+                    }
+                    break;
+                default:
+                    break;
+            }
 
         }
     }
