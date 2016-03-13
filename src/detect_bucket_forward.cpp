@@ -36,6 +36,7 @@ void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
 //This function is called everytime a new image is published
 void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 {
+	std::cout << "state: " << current_state.state << "\n";
     if (current_state.state == FIND_GOAL || current_state.sub_state == MOVING_TO_GOAL || !require_correct_state) {
         // const sensor_msgs::ImageConstPtr hsv_image;
         cv_bridge::CvImagePtr cv_ptr_raw;
