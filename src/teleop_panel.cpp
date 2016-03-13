@@ -189,6 +189,14 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   drop_ball_button_failed_ = new QPushButton("Droped Ball Failed", this);
   control_state_layout->addWidget( drop_ball_button_failed_, 15, 1, 1, 1 ); 
 
+  next_run_prep_button_ = new QPushButton("Next Run Prep", this);
+  control_state_layout->addWidget( next_run_prep_button_, 16, 1, 1, 2);
+
+  next_run_prep_button_turn_around_ = new QPushButton("Turn Around", this);
+  control_state_layout->addWidget( next_run_prep_button_turn_around_, 17, 0, 1, 1);
+  next_run_prep_button_ready_for_next_run_ = new QPushButton("Ready For Next Run", this);
+  control_state_layout->addWidget( next_run_prep_button_ready_for_next_run_, 17, 1, 1, 1);
+
   // Arm Control Layout
   //
   // Label
@@ -277,6 +285,9 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( drop_ball_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
       connect( drop_ball_button_dropped_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
       connect( drop_ball_button_failed_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+  connect( next_run_prep_button_, SIGNAL( released() ), control_mapper, SLOT( map() ));
+      connect( next_run_prep_button_turn_around_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
+      connect( next_run_prep_button_ready_for_next_run_, SIGNAL( released() ), control_sub_mapper, SLOT( map() ));
 
   // Arm
   connect( arm_search_button_, SIGNAL( released() ), arm_mapper, SLOT( map() ));
@@ -319,6 +330,9 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   control_mapper->setMapping(drop_ball_button_, DROP_BALL);
       control_sub_mapper->setMapping(drop_ball_button_dropped_, BALL_DROPPED);
       control_sub_mapper->setMapping(drop_ball_button_failed_, DROP_BALL_FAILED);
+  control_mapper->setMapping(next_run_prep_button_, NEXT_RUN_PREP);
+      control_sub_mapper->setMapping(next_run_prep_button_turn_around_, TURN_AROUND);
+      control_sub_mapper->setMapping(next_run_prep_button_ready_for_next_run_, READY_FOR_NEXT_RUN);
 
   // Arm
   arm_mapper->setMapping(arm_search_button_, 0);
@@ -409,6 +423,10 @@ void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::Cons
 
        case DROP_BALL: 
             currentStateLabel->setText("DROP_BALL");
+           break;
+
+       case NEXT_RUN_PREP: 
+            currentStateLabel->setText("NEXT_RUN_PREP");
            break;
 
        default:
@@ -558,6 +576,14 @@ void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::Cons
            currentSubStateLabel->setText("DROP_BALL_FAILED");
            break;
 
+       case TURN_AROUND:
+           currentSubStateLabel->setText("TURN_AROUND");
+           break;
+
+       case READY_FOR_NEXT_RUN:
+           currentSubStateLabel->setText("READY_FOR_NEXT_RUN");
+           break;
+
        case DEFAULT_SUB_STATE:
            currentSubStateLabel->setText("DEFAULT_SUB_STATE");
            break;
@@ -640,6 +666,12 @@ void TeleopPanel::handleControlSubStateButton(int control_sub_state) {
       case 92:
           control_state.state = DROP_BALL;
           break;
+
+      case 101:
+      case 102:
+          control_state.state = NEXT_RUN_PREP;
+          break;
+
 
       default:
           control_state.state = INIT;

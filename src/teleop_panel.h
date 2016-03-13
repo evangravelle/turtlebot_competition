@@ -152,6 +152,10 @@ protected:
       QPushButton* drop_ball_button_dropped_;
       QPushButton* drop_ball_button_failed_;
 
+  QPushButton* next_run_prep_button_;
+      QPushButton* next_run_prep_button_turn_around_;
+      QPushButton* next_run_prep_button_ready_for_next_run_;
+
   // Arm Position Buttons
   //
   QPushButton* arm_search_button_;
