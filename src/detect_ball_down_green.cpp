@@ -192,36 +192,36 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         }
 
         else if (current_state.sub_state == CHECK_GREEN) {
-            for(int i = 0; i < contours.size(); i++) {
-                cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
-                cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
-                contour_area = cv::contourArea(contours[i]);
-                current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
-                current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, grab_ball_center_x, grab_ball_center_y);
-                if (enclosing_circle_radius > min_grab_radius && current_distance < best_distance) {
-                    best_error = current_error;
-                    best_distance = current_distance;
-                    best_circle_radius = enclosing_circle_radius;
-                    best_circle_center = enclosing_circle_center;
-                }
-            }
+            //for(int i = 0; i < contours.size(); i++) {
+            //    cv::drawContours(drawing, contours, i, cv::Scalar( 0, 255, 0), 2, 8, hierarchy, 0, cv::Point() );
+            //    cv::minEnclosingCircle(contours[i], enclosing_circle_center, enclosing_circle_radius);
+            //    contour_area = cv::contourArea(contours[i]);
+            //    current_error = (M_PI*pow(enclosing_circle_radius,2) - contour_area) / (M_PI*pow(enclosing_circle_radius,2));
+            //    current_distance = calculateDistance(enclosing_circle_center.x, enclosing_circle_center.y, grab_ball_center_x, grab_ball_center_y);
+            //    if (enclosing_circle_radius > min_grab_radius && current_distance < best_distance) {
+            //        best_error = current_error;
+            //        best_distance = current_distance;
+            //        best_circle_radius = enclosing_circle_radius;
+            //        best_circle_center = enclosing_circle_center;
+            //    }
+            //}
 
             // If at least 3 seconds have passed since last publication
             if (t < 0.0001 || ros::Time::now().toSec() - t > 3) {
-                if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
-                    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
+                //if (best_error < error_grab_threshold && best_distance < grab_ball_center_dist) {
+                //    cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
                     pub_state.state = PICK_UP_BALL;
                     pub_state.sub_state = GOT_BALL;
                     control_state_pub.publish(pub_state);
                     t = ros::Time::now().toSec();
                 }
-                else {
-                    pub_state.state = PICK_UP_BALL;
-                    pub_state.sub_state = GOT_BALL_FAILED;
-                    control_state_pub.publish(pub_state);
-                    t = ros::Time::now().toSec();
-                }
-            }
+                //else {
+                //    pub_state.state = PICK_UP_BALL;
+                //    pub_state.sub_state = GOT_BALL_FAILED;
+                //    control_state_pub.publish(pub_state);
+                //    t = ros::Time::now().toSec();
+                //}
+            //}
         }
 
         if (display) {
