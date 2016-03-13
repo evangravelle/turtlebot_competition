@@ -300,10 +300,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             // std::cout << "no ball" << std::endl;
             findGreen();
 
-            // if no green ball was detected, reset previous best green value
+            // if no green ball was detected, reset previous best green value and publish flag
             if (compareFloats(best_error_green, 1.0, epsilon)) {
                 previous_best_circle_center_green.x = -1.0;
                 previous_best_circle_center_green.y = -1.0;
+                ball.x = -1.0;
+                ball.y = -1.0;
+                ball_pixel_pub.publish(ball);
             }
 
             // if green ball was detected, store location and publish new state
@@ -362,6 +365,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
         // if orange ball is lost for 5 frames in a row, then publish failure
         else {
+            ball.x = best_circle_center_orange.x;
+            ball.y = best_circle_center_orange.y;
+            ball_pixel_pub.publish(ball);
             no_orange_counter++;
             if (no_orange_counter > 5) {
                 std::cout << "orange ball lost!" << std::endl;
@@ -398,6 +404,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
         // if green ball is lost for 5 frames in a row, the publish failure
         else {
+            ball.x = -1;
+            ball.y = -1;
+            ball_pixel_pub.publish(ball);
             no_green_counter++;
             if (no_orange_counter > 5) {
                 std::cout << "green ball lost!" << std::endl;
