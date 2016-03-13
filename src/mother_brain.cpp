@@ -283,7 +283,7 @@ public:
                     ros::Duration(2.0).sleep();
                     // move to validate posltion
                     arm_check();
-                    ros::Duration(2.0).sleep();
+                    ros::Duration(5.0).sleep();
 
                     if (behavior_sub_state_ == ATTEMPT_PICK_UP_ORANGE) {
                         behavior_sub_state_ = CHECK_ORANGE;
