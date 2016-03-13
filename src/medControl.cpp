@@ -25,6 +25,12 @@ double orientation;
 double robVel_;
 double OmegaC,dot,det;
 
+double startingLocX=130;
+double startingLocY=130;
+
+double bucketLocX=130;
+double bucketLocY=130;
+
 double cenx, ceny;
 double v=0;
 double V=.5;
@@ -99,6 +105,8 @@ void goalCB(const geometry_msgs::Point::ConstPtr& cenPose){
 			substate=2;
 			ILinear=0;
 			IAngular=0;
+			angle=200;
+			dist=0;
 			cs.sub_state=CENTER_ON_ORANGE;
 			control_pub.publish(cs);
 		}
@@ -133,16 +141,19 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 }
 
 void goalCB4(const geometry_msgs::PoseStamped::ConstPtr& cenPose){
+
         gotInitialGoal=true;
-	if (state==4){
-		if (cenPose->pose.position.z!=-1){
-			cenx=cenPose->pose.position.x;
-			ceny=cenPose->pose.position.y;
-		}else{
-			cenx=x;
-			ceny=y;
-		}
-	}
+	cenx=bucketLocX/112.5;
+	ceny=-bucketLocY/112.5;
+//	if (state==4){
+//		if (cenPose->pose.position.z!=-1){
+//			cenx=cenPose->pose.position.x;
+//			ceny=cenPose->pose.position.y;
+//		}else{
+//			cenx=x;
+//			ceny=y;
+//		}
+	//}
 }
 
 void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
@@ -275,10 +286,10 @@ KILinear=0;
 			finalVel.angular.z=-.5;
 		}
 
-		if (finalVel.linear.x>.2){
-			finalVel.linear.x=.2;
-		}else if (finalVel.linear.x<-.2){
-			finalVel.linear.x=-.2;
+		if (finalVel.linear.x>.15){
+			finalVel.linear.x=.15;
+		}else if (finalVel.linear.x<-.15){
+			finalVel.linear.x=-.15;
 		}
 		std::cout <<"\n\n";
 		std::cout << "Error x: " <<  angle<<"\n";
@@ -455,7 +466,8 @@ pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
 
 
 
-
+        cenx=bucketLocX/112.5;
+        ceny=-bucketLocY/112.5;
 //LAST VELOCITY INIT
 lastVel.linear.x=0;
 lastVel.angular.z=0;

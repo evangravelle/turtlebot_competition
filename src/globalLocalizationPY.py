@@ -30,7 +30,7 @@ from geometry_msgs.msg import PoseStamped
 
 #To be arguments for starting location and resolution parameters
 startingX=265/2 #550 for 640
-startingY=225/2
+startingY=150
 mapSliceSize=175/2 #prev 350 for 640
 sliceSize=125/2 #prev 250
 
