@@ -14,7 +14,7 @@ int behavior_state_;
 int prev_behavior_state_;
 int behavior_sub_state_;
 int prev_behavior_sub_state_;
-bool reset_arm_;
+bool ready_for_drop_;
 
 class mother_brain {
 
@@ -45,7 +45,7 @@ public:
         behavior_state_ = INIT;
         prev_behavior_state_ = INIT;
         behavior_sub_state_ = DEFAULT_SUB_STATE;
-        reset_arm_ = false;
+        ready_for_drop_ = false;
         
         // Subscriptions
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
@@ -75,7 +75,7 @@ public:
 
         bool isValid = false;
 
-        if ( subState == 100 )  {
+        if ( subState == 1000 )  {
             isValid = true;
         } else {
             switch (state) {
@@ -124,6 +124,10 @@ public:
                 case DROP_BALL:
                     if (subState > 90 && subState < 100) isValid = true;
                     break;
+
+                case NEXT_RUN_PREP:
+                    if (subState > 100 && subState < 110) isValid = true;
+                    break;
             }
         }
 
@@ -171,16 +175,14 @@ public:
                     break;
 
                 case BALL_DROPPED:
-                    ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to START.");
-                    behavior_state_ = FIND_BALL;
+                    ROS_INFO("Mother Brain (DROP_BALL): BALL_DROPPED, going to NEXT_RUN_PREP.");
+                    behavior_state_ = NEXT_RUN_PREP;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
-                    reset_arm_ = true;
-                    // TODO:  back up, ROTATE 360, tuck away arm...
                     break;
 
                 case DROP_BALL_FAILED:
-                    ROS_INFO("Mother Brain (DROP_BALL): DROP_BALL_FAILED, going to FIND_BALL.");
-                    behavior_state_ = FIND_BALL;
+                    ROS_INFO("Mother Brain (DROP_BALL): DROP_BALL_FAILED, going to NEXT_RUN_PREP");
+                    behavior_state_ = NEXT_RUN_PREP;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
@@ -198,6 +200,7 @@ public:
 
             switch(behavior_sub_state_) {
                 case DEFAULT_SUB_STATE:
+                    ready_for_drop_ = false;
                     behavior_sub_state_ = MOVING_TO_GOAL;
                     break;
 
@@ -258,9 +261,10 @@ public:
 
             switch(behavior_sub_state_) {
                 case MOVING_TO_GOAL:
-                    if (msg->y > 140) {
+                    if (msg->y > 140 && ready_for_drop_ == false) {
                         arm_drop_ball_close();
-                        //ros::Duration(3.0).sleep();
+                        // So we only call this once..
+                        ready_for_drop_ = true;
                     }
                     break;
                 default:
@@ -319,7 +323,6 @@ public:
                     behavior_state_ = FIND_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     arm_search();
-                    reset_arm_ = true;
                     break;
 
                 default:
@@ -459,11 +462,6 @@ public:
 
                 case SEARCH_FOR_BALL:
                     //ROS_INFO("Mother Brain (FIND_BALL): SEARCH_FOR_BALL contines....");
-                    //Get arm out of way if its not yet
-                    if (reset_arm_) {
-                        arm_search();
-                        reset_arm_ = false;
-                    }
                     break;
 
                 case BALL_FOUND:
@@ -484,29 +482,36 @@ public:
                     break;
             }
 
-            /*
-            tf::StampedTransform ball_found_transform;
-
-            // Wait for a sign indicating we've found a ball
-            ros::Time now = ros::Time::now();
-            try {
-                ball_found_listener.waitForTransform("/camera_forward", "/ball_forward", now, ros::Duration(3.0));
-                ball_found_listener.lookupTransform("/camera_forward", "/ball_forward", now, ball_found_transform);
-                // set states 
-                behavior_state_ = MOVE_TO_BALL;
-                behavior_sub_state_ = MOVING_TO_BALL;
-                // publish transform to goal_pose
-                ROS_INFO("Ball found, moving to ball and changing state to MOVE_TO_BALL");
-                publish_goal(ball_found_transform);
-
-            } catch (tf::TransformException ex){
-                ROS_INFO("Caught exception waiting for FIND_BALL transform");
-                ROS_ERROR("%s",ex.what());
-            }
-            */
         }
     }
-        
+
+    void next_run_prep() {
+
+        if (behavior_state_ == NEXT_RUN_PREP) {
+
+            switch(behavior_sub_state_) {
+
+                case DEFAULT_SUB_STATE:
+                    ROS_INFO("Mother Brain (NEXT_RUN_PREP): DEFAULT_SUB_STATE, resetting.");
+                    behavior_sub_state_ = TURN_AROUND;
+                    break;
+
+                case TURN_AROUND:
+                    // Call code to turn around
+                    break;
+
+                case READY_FOR_NEXT_RUN:
+                    arm_search();
+                    behavior_state_ = FIND_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
+                    break;
+
+                default:
+                    ROS_INFO("Mother Brain (NEXT_RUN_PREP): DEFAULT called [%d].", behavior_sub_state_);
+                    break;
+            }
+        }
+    }
 
     void publish_goal(tf::StampedTransform transform) {
         // How do we confert the StampedTransform to a geometry_msgs::PoseStamped
@@ -659,6 +664,10 @@ int main(int argc, char** argv)
 
             case DROP_BALL:
                 mother_brain_h.drop_ball();
+                break;
+
+            case NEXT_RUN_PREP:
+                mother_brain_h.next_run_prep();
                 break;
 
             default: 
