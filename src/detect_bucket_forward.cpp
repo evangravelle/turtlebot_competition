@@ -105,6 +105,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
         if (rectangle.area() < 200*200.0 && rectangle.area() > 30*30) {
             bucket.x = rectangle.x;
             bucket.y = rectangle.y;
+            bucket_pixel_pub.publish(bucket);
             no_bucket_counter = 0;
             cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
 
@@ -114,15 +115,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 found_state.state = FIND_GOAL;
                 found_state.sub_state = GOAL_FOUND;
                 control_state_pub.publish(found_state);
-
-                bucket.x = rectangle.x;
-                bucket.y = rectangle.y;
-                bucket_pixel_pub.publish(bucket);
-                cv::rectangle(cv_ptr_raw->image, rectangle, cv::Scalar( 255, 255, 0));
             }
         }
         else {
             no_bucket_counter++;
+            bucket.x = -1;
+            bucket.y = -1;
+            bucket_pixel_pub.publish(bucket);
             if (no_bucket_counter > 5 && current_state.state == MOVE_TO_GOAL) {
                 std::cout << "bucket lost!" << std::endl;
                 coconuts_common::ControlState bucket_fail;
