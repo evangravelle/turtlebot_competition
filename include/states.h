@@ -51,4 +51,8 @@
 #define 	    BALL_DROPPED			91
 #define 	    DROP_BALL_FAILED		92
 
-#define     DEFAULT_SUB_STATE           100
+#define     NEXT_RUN_PREP               100
+#define         TURN_AROUND             101
+#define         READY_FOR_NEXT_RUN      102
+
+#define     DEFAULT_SUB_STATE           1000
