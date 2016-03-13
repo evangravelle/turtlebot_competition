@@ -154,6 +154,7 @@ void goalCB5(const geometry_msgs::PoseArray::ConstPtr& cenPose){
 	if (state==4){
 		queueState=0;
 		substate=3;
+		std::cout << "Got Queue \n";
 		for (int i=0;i<5;i++){
 			poseArray.poses[i]=cenPose ->poses[i];
 		}
@@ -190,8 +191,8 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 
 	x2=cenx-x;
 	y22=ceny-y;
-
-		if (state==4 && substate==3){
+		//OBSOLETE FOR THE MOMENT
+		if (state==4 && substate==3 && 1==2){
 			if (abs(x-poseArray.poses[queueState].position.x)<.1 && abs(y-poseArray.poses[queueState].position.y)<.1 ){
 				queueState=queueState+1;
 				if (poseArray.poses[queueState].position.x==0){
@@ -529,40 +530,40 @@ while(ros::ok()){
 	finalVel.angular.z=0;
 
 	ros::spinOnce();
-		std::cout << "state : " <<  state<<"\n";
+//		std::cout << "state : " <<  state<<"\n";
 	
 	if (state==1){
 		if (substate==1){
-			cout << "subsate: 1" << "\n";
+//			cout << "subsate: 1" << "\n";
 			medControl();
 		}else if (substate==2){
-			cout << "substate: 2" << "\n";
+//			cout << "substate: 2" << "\n";
 			fineControl();
 		}
 		u_pub_.publish(finalVel);
 	}else if (state==2){
-		cout << "Exploring ~~~" << "\n";
+//		cout << "Exploring ~~~" << "\n";
 		explore();
 	}else if (state==3){
-		cout << "Global ~~~" << "\n";
+//		cout << "Global ~~~" << "\n";
 	}else if (state==4){
-		cout << "BUCKET \n";
+//		cout << "BUCKET \n";
 		if (substate==1){
 			setGlobalGoal(bucketLocX/112.5,-bucketLocY/112.5);
 			global();
 		}else if (substate==2){
 			medControl();
 		}else if (substate==3){
-			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);
+//			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);
 			global();
 		}
 
 	}else if (state==5){
-		cout << "GLOBAL \n";
+//		cout << "GLOBAL \n";
 		global();
 	}
 	else{
-		cout << "inactive" << "\n";
+//		cout << "inactive" << "\n";
 	}
 
 	u_pub_.publish(finalVel);
