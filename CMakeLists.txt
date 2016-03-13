@@ -141,6 +141,7 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(mother_brain src/mother_brain.cpp)
+add_executable(waypoints src/waypoints.cpp)
 add_executable(explorer src/explorer.cpp)
 add_executable(Bridge src/Bridge.cpp)
 add_executable(arm_control src/arm_control.cpp)
@@ -165,6 +166,7 @@ add_executable(obstacleFilter src/detect_obstacle.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(mother_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
+add_dependencies(waypoints ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(explorer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp )
 add_dependencies(Bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
 add_dependencies(arm_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} coconuts_common_generate_messages_cpp)
@@ -187,6 +189,7 @@ add_dependencies(medControl ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(mother_brain ${catkin_LIBRARIES})
+target_link_libraries(waypoints ${catkin_LIBRARIES})
 target_link_libraries(explorer ${catkin_LIBRARIES})
 target_link_libraries(Bridge ${catkin_LIBRARIES})
 target_link_libraries(arm_control ${catkin_LIBRARIES})

@@ -272,8 +272,8 @@ int main(int argc, char **argv)
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     it_pub = it.advertise("/detect_ball_down/ball_circles", 1);
 
-    grab_ball_center_x = 0.517*image_width;
-    grab_ball_center_y = 0.691*image_height;
+    grab_ball_center_x = 0.5*image_width;
+    grab_ball_center_y = 0.79*image_height;
     min_floor_radius = 0.055*image_width;
     min_grab_radius = 0.055*image_width;
     grab_ball_center_dist = 0.05*image_width;

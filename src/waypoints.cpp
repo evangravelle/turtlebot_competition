@@ -3,7 +3,9 @@
 #include <geometry_msgs/Pose.h>
 #include <states.h>
 #include <coconuts_common/ControlState.h>
+#include <coconuts_common/SensorStatus.h>
 #include <tf2_ros/transform_listener.h>
+#include <cmath>
 
 // Initialize variables
 geometry_msgs::Pose waypoint, goal;
@@ -12,6 +14,9 @@ coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
 int left_counter, right_counter;
 double inches_to_meters = 0.0254;
+double obstacle_distance = 24; // inches
+geometry_msgs::TransformStamped odom;
+double t;
 
 void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
     current_state.state = control_msg->state;
@@ -64,11 +69,10 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "waypoints");
 	ros::NodeHandle nh;
 
-	ball_pixel_pub = nh.advertise<geometry_msgs::Point>("/detect_ball_down/ball_pixel", 1, true);
     ros::Publisher waypoints_pub = nh.advertise<geometry_msgs::Pose>("/waypoint", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     ros::Subscriber sensor_sub  = nh.subscribe<coconuts_common::SensorStatus>("/sensor_status", 1, sensorCallback);
-    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::Pose>("/control_state", 1, stateCallback);
+    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::Pose>("/goal", 1, goalCallback);
     tf2_ros::Buffer tf_buffer;
     tf2_ros::TransformListener tf_listener(tf_buffer);
     goal.position.x = -1;
@@ -78,30 +82,40 @@ int main(int argc, char **argv)
     while(ros::ok()) {
         tf::StampedTransform transform;
         try{
-            tf_listener.lookupTransform("/map", "/base_footprint", ros::Time(0), transform);
+            odom = tf_buffer.lookupTransform("map", "base_footprint", ros::Time(0));
         }
         catch (tf::TransformException ex){
             ROS_ERROR("%s",ex.what());
-            ros::Duration(1.0).sleep();
+            ros::Duration(2.0).sleep();
         }
 
-        
-        // transform.getOrigin().y();
+        if (right_counter > 3 && goal.position.x > 0 && current_state.sub_state == MOVING_TO_GOAL && t < 0.0001 || ros::Time::now().toSec() - t > 3) {
+            float relative_x = goal.position.x - odom.transform.translation.x;
+            float relative_y = goal.position.y - odom.transform.translation.y;
 
-        if (right_counter > 3 && goal.position.x > 0) {
-            float delta_x = goal.position.x - transform.getOrigin().x();
-            float delta_y = goal.position.y - transform.getOrigin().y();
+            double angle = atan2(relative_y, relative_x);
 
-            
-            
-
+            waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle + M_PI/2.0);
+            waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle + M_PI/2.0);
             waypoints_pub.publish(waypoint);
 
             // Wait 10 seconds before considering publishing a new waypoint
             ros::Duration(10.0).sleep();
         }
 
-        waypoints_pub.publish(waypoint);
+        else if (left_counter > 3 && goal.position.x > 0 && current_state.sub_state == MOVING_TO_GOAL) {
+            float relative_x = goal.position.x - odom.transform.translation.x;
+            float relative_y = goal.position.y - odom.transform.translation.y;
+
+            double angle = atan2(relative_y, relative_x);
+
+            waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle - M_PI/2.0);
+            waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle - M_PI/2.0);
+            waypoints_pub.publish(waypoint);
+
+            // Wait 10 seconds before considering publishing a new waypoint
+            ros::Duration(10.0).sleep();
+        }
      
         rate.sleep();
     }
