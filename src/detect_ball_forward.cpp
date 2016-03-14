@@ -372,7 +372,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             if (no_orange_counter > 5) {
                 std::cout << "orange ball lost!" << std::endl;
                 coconuts_common::ControlState orange_fail;
-                orange_fail.state = MOVE_TO_BALL;
+                //orange_fail.state = MOVE_TO_BALL;
                 orange_fail.sub_state = MOVE_TO_ORANGE_FAILED;
                 control_state_pub.publish(orange_fail);
             }
@@ -408,10 +408,10 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
             ball.y = -1;
             ball_pixel_pub.publish(ball);
             no_green_counter++;
-            if (no_orange_counter > 5) {
+            if (no_green_counter > 5) {
                 std::cout << "green ball lost!" << std::endl;
                 coconuts_common::ControlState green_fail;
-                green_fail.state = MOVE_TO_BALL;
+                //green_fail.state = MOVE_TO_BALL;
                 green_fail.sub_state = MOVE_TO_GREEN_FAILED;
                 control_state_pub.publish(green_fail);
             }

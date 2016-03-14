@@ -392,7 +392,8 @@ public:
             switch(behavior_sub_state_) {
 
                 case DEFAULT_SUB_STATE:
-                    //behavior_sub_state_ = MOVING_TO_BALL;
+		    behavior_state_ = FIND_BALL;
+                    behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
                 case MOVING_TO_GREEN:
@@ -498,6 +499,7 @@ public:
 
                 case TURN_AROUND:
                     // Call code to turn around
+		    cocobot_turn_around();
                     break;
 
                 case READY_FOR_NEXT_RUN:
@@ -585,8 +587,13 @@ public:
     void cocobot_turn_around() {
         geometry_msgs::Twist bot_movement;
         bot_movement.linear.x = 0.0;
-        bot_movement.angular.z = 1.0;
-        sendMovement(bot_movement);
+        bot_movement.angular.z = 0.7;
+	
+	double t = ros::Time::now().toSec();
+	while (ros::Time::now().toSec() - t < 6) {
+		sendMovement(bot_movement);
+	}	
+	behavior_sub_state_ = READY_FOR_NEXT_RUN;
     }
 
     void sendMovement(geometry_msgs::Twist bot_movement) {

@@ -26,10 +26,10 @@ double orientation;
 double dot,det;
 
 //~~~Define Define starting locations for the bucket and cocobot
-double startingLocX=130;
-double startingLocY=130;
-double bucketLocX=130;
-double bucketLocY=130;
+double startingLocX=400;
+double startingLocY=400;
+double bucketLocX=400;
+double bucketLocY=400;
 
 //~~~blah blah blah
 double cenx, ceny;
@@ -142,8 +142,9 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 		dist=230-cenPose->y;
 		angle=xPrime-cenPose->x-25; 
 
-		if (abs(dist)<15 && abs(angle) <10){
-		substate=3;
+		if (abs(dist)<15 && abs(angle) <15){
+		state=10;
+		substate=1;
 		cs.sub_state=AT_GOAL;
 		control_pub.publish(cs);
 		}
@@ -232,7 +233,10 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		gotInitialGoal=true;
 	}
 
-	else{
+	else if(control_state -> state == NEXT_RUN_PREP){
+		state=10;
+	}
+	else {
 		state=0;
 	}
 }
@@ -340,8 +344,8 @@ KILinear=0;
 
 //~~~Fine adjustment control for centering on ballz
 void fineControl(){
-KIAngular=0.001;
-KILinear=0.001;
+KIAngular=0.0012;
+KILinear=0.0012;
 		ILinear=ILinear+dist;
 		IAngular=IAngular+angle;
 
@@ -483,14 +487,14 @@ a=A*angle;
 		lastVel=finalVel;
 		finalVel.linear.x=finalVel.linear.x/2;
 
-		if (a>.5){
-			a=.5;
-		}else if (a<-.5){
-			a=-.5;
+		if (a>.3){
+			a=.3;
+		}else if (a<-.3){
+			a=-.3;
 		}
 
-		if (finalVel.linear.x>.2){
-			finalVel.linear.x=.2;
+		if (finalVel.linear.x>.15){
+			finalVel.linear.x=.15;
 		}else if (finalVel.linear.x<0){
 			finalVel.linear.x=0;
 		}
@@ -551,7 +555,7 @@ while(ros::ok()){
 		u_pub_.publish(finalVel);
 	}else if (state==2){
 		cout << "Exploring ~~~" << "\n";
-		setGlobalGoal(130/112.5,-170/112.5);
+		setGlobalGoal(400/112.5,-500/112.5);
 		global();
 	}else if (state==3){
 		cout << "Global ~~~" << "\n";
@@ -574,8 +578,10 @@ while(ros::ok()){
 	else{
 //		cout << "inactive" << "\n";
 	}
-
-	u_pub_.publish(finalVel);
+	if (state!=10){
+        u_pub_.publish(finalVel);
+	}
+	
 	loop_rate.sleep();
 
 }

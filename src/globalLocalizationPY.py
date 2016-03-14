@@ -29,13 +29,13 @@ from geometry_msgs.msg import PoseStamped
 
 
 #To be arguments for starting location and resolution parameters
-startingX=265/2 #550 for 640
-startingY=150
+startingX=650 #550 for 640
+startingY=450
 mapSliceSize=175/2 #prev 350 for 640
 sliceSize=125/2 #prev 250
 
 # I dont know if I still need this
-template = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/template_dummy.png")
+template = cv2.imread("/home/ros/catkin_ws/src/coconuts_common/ceiling_1202/ceil_mod.png")
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 10, 100)
 tempt=template
@@ -54,7 +54,7 @@ def sign(x):
 
 
 #Load the ceiling map
-image = cv2.imread("/home/ros/catkin_ws/src/coconuts_odroid/src/map_tiny.png")
+image = cv2.imread("/home/ros/catkin_ws/src/coconuts_common/ceiling_1202/ceil_mod.png")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 imageCanny=cv2.Canny(image, 25, 75)
 postingImage = np.copy(image)
@@ -261,8 +261,8 @@ class GL:
 #			self.angle+=self.signal.angular.z
 
 			if self.ceilingFlag is True:
-				self.pose.position.x=self.pose.position.x+.8*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
-				self.pose.position.y=self.pose.position.y+.8*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
+				self.pose.position.x=self.pose.position.x+.2*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
+				self.pose.position.y=self.pose.position.y+.2*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
 				self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
 #				print str(self.ceilingConfidence)
 				self.ceilingFlag=False
