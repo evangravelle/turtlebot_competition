@@ -272,12 +272,10 @@ class GL:
       	        del self.averageTime[0]
                 self.averageTime.append(1/(time.time()-self.start))
 #               if sum(self.averageTime) < 150:         
-                print "Average Frequency: " + str(sum(self.averageTime)/5.)
-                del self.averageConfidence[0]
-                self.averageConfidence.append(self.ceilingConfidence)
-                print "Average Confidence: " + str(sum(self.averageConfidence)/30.)
-
- #               print "Average Map (Edged): "+ str(np.average(edged))
+	
+               	del self.averageConfidence[0]
+               	self.averageConfidence.append(self.ceilingConfidence)
+#                print "Average Map (Edged): "+ str(np.average(edged))
 #                print "Average template (Edged):"+str(np.average(template))
 
 
@@ -324,37 +322,39 @@ class GL:
 			self.counter=self.counter+1
 #                        self.pubImage.publish(self.bridge.cv2_to_imgmsg(result, "bgr8"))
 #			print str(self.waypointX)
-			if self.counter > 20:
+			if self.counter > 30:
 				self.counter=0
                         	postingImage = np.copy(postingImage2)
 
                         	(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
 				(endX, endY) = (int((self.pose.position.x+mapSliceSize/350.*40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+mapSliceSize/350.*40*math.cos(self.angle*0.0174533)) ))
                               	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2), ((endX-300)/2, (endY-300)/2), (255, 255, 0), 2)
-                        	cv2.circle(postingImage,((startX-300)/2,(startY-300)/2), int(mapSliceSize/350.*40), (255,255,0), int(mapSliceSize/350.*5))
+                        	cv2.circle(postingImage,((startX-300)/2,(startY-300)/2), int(mapSliceSize/350.*40), (255,255,0), int(mapSliceSize/350.*7))
 
                         	(startX, startY) = (int(self.odomMeasurement.position.x), int(self.odomMeasurement.position.y))
 				(endX, endY) = (int((self.odomMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.odomAngle*0.0174533)) ))
                         	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2),  ((endX-300)/2, (endY-300)/2), (0, 255, 0), 2)
-                        	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,0), int(mapSliceSize/350.*5))
+                        	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,0), int(mapSliceSize/350.*7))
 
        	               	        if self.ceilingConfidence > thresholdConfidence:
 					(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
                 	        	(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.ceilingAngle*0.0174533)) ))
         	                	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2),  ((endX-300)/2, (endY-300)/2), (0, 255, 255), 2)
- 	                        	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*5))
+ 	                        	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*7))
 
                 	        (startX, startY) = (int(bucketX), int(bucketY))
-                	        cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 1)
-        	                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 1)
+                	        cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 2)
+        	                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 2)
 	                        cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*30), (200,100,200), int(mapSliceSize/350.*5))
 
                                 (startX, startY) = (int(self.waypointX), int(self.waypointY))
-                                cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 1)
-                                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 1)
+                                cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 2)
+                                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 2)
                                 cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*30), (200,100,200), int(mapSliceSize/350.*5))
 
 #                                postingImage=cv2.flip(imageCanny,1)
+                        	print "Average Frequency: " + str(sum(self.averageTime)/5.)
+                                print "Average Confidence: " + str(sum(self.averageConfidence)/30.)
 
 				postingImage=cv2.flip(postingImage,1)
 				self.pubImage.publish(self.bridge.cv2_to_imgmsg(postingImage, "bgr8"))
