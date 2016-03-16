@@ -13,6 +13,13 @@
     <param name="camera_info_url" type="string" value="file://$(find coconuts_odroid)/src/camera_up_calibration.yaml"/>
   </node>
 
-  <node name="globalLocalizationPy" pkg="coconuts_odroid" type="globalLocalizationPY.py" output="screen"/>
+  <node name="globalLocalizationPy" pkg="coconuts_odroid" type="globalLocalizationPY.py" output="screen">
+	<param name="startingX" type="int" value="600" />
+	<param name="startingY" type="int" value="600" />
+	<param name="bucketLocX" type="int" value="500"/>
+	<param name="bucketLocY" type="int" value="500"/>
+	<param name="direction" type="double" value="270" />	
+
+  </node>
 
 </launch>

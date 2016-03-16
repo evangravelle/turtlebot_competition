@@ -26,10 +26,9 @@ double orientation;
 double dot,det;
 
 //~~~Define Define starting locations for the bucket and cocobot
-double startingLocX=600;
-double startingLocY=350;
-double bucketLocX=400;
-double bucketLocY=600;
+
+int BUCKETLOCX;
+int BUCKETLOCY;
 
 //~~~blah blah blah
 double cenx, ceny;
@@ -599,14 +598,29 @@ pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
 
 
 
-        cenx=bucketLocX/112.5;
-        ceny=-bucketLocY/112.5;
 //LAST VELOCITY INIT
 lastVel.linear.x=0;
 lastVel.angular.z=0;
 
 m=(((480-124)-(480-322.5))/(266-322.5));
 b=(480-124)-m*(266);
+
+
+    if (nh_.getParam("/medControl/bucketLocX", BUCKETLOCX))
+    {
+      ROS_INFO("Got BUCKET LOCATION");
+    }
+    else
+    {
+      ROS_ERROR("Failed to get param BUCKET LOCATION");
+    }
+
+    nh_.getParam("/medControl/bucketLocY", BUCKETLOCY);
+
+        ceny=-BUCKETLOCY/112.5;
+        cenx=BUCKETLOCX/112.5;
+
+
 
 while(ros::ok()){
 	finalVel.linear.x=0;
@@ -641,7 +655,7 @@ while(ros::ok()){
 	}else if (state==4){
 		// cout << "BUCKET \n";
 		if (substate==1){
-			setGlobalGoal(bucketLocX/112.5,-bucketLocY/112.5);
+			setGlobalGoal(BUCKETLOCX/112.5,-BUCKETLOCY/112.5);
 			global();
 		}else if (substate==2 || substate==8){
 			medControl();

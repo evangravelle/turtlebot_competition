@@ -102,6 +102,8 @@ class GL:
 		self.counter=0
 		self.waypointX=0
 		self.waypointY=0
+		self.bucketLocX=0
+		self.bucketLocY=0
 #For visualization (Comment out in Final)
 		self.poseAndroid=PoseStamped()
 		self.pubPoseAndroid=rospy.Publisher('/poseEstimation',PoseStamped,queue_size=1)		
@@ -327,22 +329,22 @@ class GL:
                         	postingImage = np.copy(postingImage2)
 
                         	(startX, startY) = (int(self.pose.position.x), int(self.pose.position.y))
-				(endX, endY) = (int((self.pose.position.x+mapSliceSize/350.*40*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+mapSliceSize/350.*40*math.cos(self.angle*0.0174533)) ))
+				(endX, endY) = (int((self.pose.position.x+mapSliceSize/350.*50*math.sin(self.angle*0.0174533)) ), int((self.pose.position.y+mapSliceSize/350.*50*math.cos(self.angle*0.0174533)) ))
                               	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2), ((endX-300)/2, (endY-300)/2), (255, 255, 0), 2)
                         	cv2.circle(postingImage,((startX-300)/2,(startY-300)/2), int(mapSliceSize/350.*40), (255,255,0), int(mapSliceSize/350.*7))
 
                         	(startX, startY) = (int(self.odomMeasurement.position.x), int(self.odomMeasurement.position.y))
-				(endX, endY) = (int((self.odomMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.odomAngle*0.0174533)) ))
+				(endX, endY) = (int((self.odomMeasurement.position.x+mapSliceSize/350.*50*math.sin(self.odomAngle*0.0174533)) ), int((self.odomMeasurement.position.y+mapSliceSize/350.*50*math.cos(self.odomAngle*0.0174533)) ))
                         	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2),  ((endX-300)/2, (endY-300)/2), (0, 255, 0), 2)
                         	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,0), int(mapSliceSize/350.*7))
 
        	               	        if self.ceilingConfidence > thresholdConfidence:
 					(startX, startY) = (int(self.ceilingMeasurement.position.x), int(self.ceilingMeasurement.position.y))
-                	        	(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*40*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*40*math.cos(self.ceilingAngle*0.0174533)) ))
+                	        	(endX, endY) = (int((self.ceilingMeasurement.position.x+mapSliceSize/350.*50*math.sin(self.ceilingAngle*0.0174533)) ), int((self.ceilingMeasurement.position.y+mapSliceSize/350.*50*math.cos(self.ceilingAngle*0.0174533)) ))
         	                	cv2.line(postingImage, ((startX-300)/2, (startY-300)/2),  ((endX-300)/2, (endY-300)/2), (0, 255, 255), 2)
  	                        	cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*40), (0,255,255), int(mapSliceSize/350.*7))
 
-                	        (startX, startY) = (int(bucketX), int(bucketY))
+                	        (startX, startY) = (int(self.bucketLocX), int(self.bucketLocY))
                 	        cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 2)
         	                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 2)
 	                        cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*30), (200,100,200), int(mapSliceSize/350.*5))
@@ -377,7 +379,18 @@ class GL:
 # main
 def main(args):
 	rospy.init_node('image_converter', anonymous=True)
+	startingX = rospy.get_param('~startingX')	
+	startingY = rospy.get_param('~startingY')
+	
+
+	print str(startingX)
 	gl = GL()
+        gl.bucketLocX= rospy.get_param('~bucketLocX')
+        gl.bucketLocY= rospy.get_param('~bucketLocY')
+	gl.angle= rospy.get_param('~direction')
+        gl.pose.position.x = rospy.get_param('~startingX')
+        gl.pose.position.y = rospy.get_param('~startingY')
+
 	gl.kalman()
 	try:
 
