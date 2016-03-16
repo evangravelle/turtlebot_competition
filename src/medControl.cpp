@@ -37,6 +37,8 @@ double v=0;
 double V=.5;
 double a=0;
 double A=1;
+double waypointX=0;
+double waypointY=0;
 
 double image_width=320.0;
 double image_height=240.0;
@@ -156,14 +158,11 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 }
 
 //~~~Queue
-void goalCB5(const geometry_msgs::PoseArray::ConstPtr& cenPose){
-	if (state==4){
-		queueState=0;
-		substate=3;
-		std::cout << "Got Queue \n";
-		for (int i=0;i<5;i++){
-			poseArray.poses[i]=cenPose ->poses[i];
-		}
+void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
+	if (state==4 || state==2){
+		queueState=1;
+		waypointX=cenPose->position.x;
+		waypointY=cenPose->position.y;
 	}
 }
 
@@ -570,6 +569,12 @@ a=A*angle;
 
 		finalVel.angular.z=-finalVel.angular.z;
 
+                        if (dist<.1){
+                                finalVel.linear.x=0;
+				finalVel.angular.z=.25;
+                        }
+
+
 }
 
 
@@ -584,7 +589,7 @@ ros::Rate loop_rate(50);
 control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
 cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
 cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
-cen5_sub_ = nh_.subscribe<geometry_msgs::PoseArray>("/waypoints",1, goalCB5);
+cen5_sub_ = nh_.subscribe<geometry_msgs::Pose>("/waypoint",1, goalCB5);
 cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1, goalCB3);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
@@ -610,6 +615,14 @@ while(ros::ok()){
 	ros::spinOnce();
 		// std::cout << "state : " <<  state<<"\n";
 		// std::cout << "substate : " << substate << "\n"; 	
+	
+	if (queueState==1){
+		if (dist < .2){
+			queueState=0;
+		}
+		setGlobalGoal(waypointX,waypointY);
+		global();
+	} else{
 	if (state==1){
 		if (substate==1){
 			cout << "subsate: 1" << "\n";
@@ -647,7 +660,7 @@ while(ros::ok()){
 	if (state!=10){
         u_pub_.publish(finalVel);
 	}
-	
+	}
 	loop_rate.sleep();
 
 }

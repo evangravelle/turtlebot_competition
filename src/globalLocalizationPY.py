@@ -100,7 +100,8 @@ class GL:
                 self.averageTime=[30]*5
                 self.averageConfidence=[1]*30
 		self.counter=0
-
+		self.waypointX=0
+		self.waypointY=0
 #For visualization (Comment out in Final)
 		self.poseAndroid=PoseStamped()
 		self.pubPoseAndroid=rospy.Publisher('/poseEstimation',PoseStamped,queue_size=1)		
@@ -135,8 +136,8 @@ class GL:
 
 
 	def waypointCB(self,data):
-		waypointX=data.position.x
-		waypointY=data.position.y	
+		self.waypointX=data.position.x*112.5
+		self.waypointY=-data.position.y*112.5	
 
 #Odometry subscriber and updater
 	def odometryCB(self,data):
@@ -309,8 +310,11 @@ class GL:
 			self.t.header.stamp= rospy.Time.now()
 			self.t.header.frame_id = "map";
 			self.t.child_frame_id = "base_footprint";
-			self.t.transform.translation.x = self.pose.position.x/450.*350./mapSliceSize;
-			self.t.transform.translation.y = -self.pose.position.y/450.*350./mapSliceSize;
+#			self.t.transform.translation.x = self.pose.position.x/450.*350./mapSliceSize;
+#			self.t.transform.translation.y = -self.pose.position.y/450.*350./mapSliceSize;
+                        self.t.transform.translation.x = self.pose.position.x/112.5;
+                        self.t.transform.translation.y = -self.pose.position.y/112.5;
+
 			self.q= tf.transformations.quaternion_from_euler(0, 0, -(self.angle-90)*0.0174533)
 			self.t.transform.rotation.x = self.q[0]
 			self.t.transform.rotation.y = self.q[1]
@@ -319,6 +323,7 @@ class GL:
 			self.br.sendTransform(self.t)
 			self.counter=self.counter+1
 #                        self.pubImage.publish(self.bridge.cv2_to_imgmsg(result, "bgr8"))
+#			print str(self.waypointX)
 			if self.counter > 20:
 				self.counter=0
                         	postingImage = np.copy(postingImage2)
@@ -344,7 +349,7 @@ class GL:
         	                cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 1)
 	                        cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*30), (200,100,200), int(mapSliceSize/350.*5))
 
-                                (startX, startY) = (int(waypointX*112.5), int(waypointY*112.5))
+                                (startX, startY) = (int(self.waypointX), int(self.waypointY))
                                 cv2.line(postingImage, ((startX-300)/2-10, (startY-300)/2), ((startX-300)/2+10, (startY-300)/2) , (200, 100, 200), 1)
                                 cv2.line(postingImage, ((startX-300)/2, (startY-300)/2-10),  ((startX-300)/2, (startY-300)/2+10), (200, 100, 200), 1)
                                 cv2.circle(postingImage,((startX-300)/2, (startY-300)/2), int(mapSliceSize/350.*30), (200,100,200), int(mapSliceSize/350.*5))
