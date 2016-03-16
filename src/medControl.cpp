@@ -71,6 +71,7 @@ coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
 ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, cen5_sub_ , pos_sub_;
 ros::Publisher u_pub_,m_pub;
+ros::Publisher goal_pub;
 coconuts_common::ControlState cs;
 
 // Construct Node Class
@@ -591,12 +592,15 @@ cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1
 cen5_sub_ = nh_.subscribe<geometry_msgs::Pose>("/waypoint",1, goalCB5);
 cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1, goalCB3);
 u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
+goal_pub = nh_.advertise<geometry_msgs::Pose>("/goal",1, true);
 control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
 sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
 cen4_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal_pose",1, goalCB4);
 pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
 
 
+
+geometry_msgs::Pose goal_pose;
 
 //LAST VELOCITY INIT
 lastVel.linear.x=0;
@@ -620,6 +624,9 @@ b=(480-124)-m*(266);
         ceny=-BUCKETLOCY/112.5;
         cenx=BUCKETLOCX/112.5;
 
+	goal_pose.position.y=BUCKETLOCY;
+	goal_pose.position.x=BUCKETLOCX;
+
 
 
 while(ros::ok()){
@@ -627,8 +634,8 @@ while(ros::ok()){
 	finalVel.angular.z=0;
 
 	ros::spinOnce();
-		// std::cout << "state : " <<  state<<"\n";
-		// std::cout << "substate : " << substate << "\n"; 	
+		 std::cout << "queuestate : " <<  queueState<<"\n";
+//		 std::cout << "substate : " << substate << "\n"; 	
 	
 	if (queueState==1){
 		if (dist < .2){
@@ -636,27 +643,35 @@ while(ros::ok()){
 		}
 		setGlobalGoal(waypointX,waypointY);
 		global();
+	        u_pub_.publish(finalVel);
+
 	} else{
 	if (state==1){
 		if (substate==1){
-			cout << "subsate: 1" << "\n";
+//			cout << "subsate: 1" << "\n";
 			medControl();
 		}else if (substate==2){
-			cout << "substate: 2" << "\n";
+//			cout << "substate: 2" << "\n";
 			fineControl();
 		}
 		u_pub_.publish(finalVel);
 	}else if (state==2){
-		cout << "Exploring ~~~" << "\n";
+//		cout << "Exploring ~~~" << "\n";
 		setGlobalGoal(400/112.5,-400/112.5);
+                goal_pose.position.x=400/112.5;
+		goal_pose.position.y=-400/112.5;
+		goal_pub.publish(goal_pose);
 		global();
 	}else if (state==3){
-		cout << "Global ~~~" << "\n";
+//		cout << "Global ~~~" << "\n";
 	}else if (state==4){
 		// cout << "BUCKET \n";
 		if (substate==1){
 			setGlobalGoal(BUCKETLOCX/112.5,-BUCKETLOCY/112.5);
 			global();
+			goal_pose.position.x=BUCKETLOCX/112.5;
+			goal_pose.position.y=-BUCKETLOCY/112.5;
+			goal_pub.publish(goal_pose);
 		}else if (substate==2 || substate==8){
 			medControl();
 		}else if (substate==3){

@@ -8,5 +8,7 @@
     <include file="$(find coconuts_odroid)/launch/detect_bucket_forward.launch" />
     <include file="$(find coconuts_odroid)/launch/motion.launch" />
     <include file="$(find coconuts_odroid)/launch/localization.launch" />
+
+    <node name="waypoints" pkg="coconuts_odroid" type="waypoints" />
    
 </launch>
