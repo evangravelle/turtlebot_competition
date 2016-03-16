@@ -5,6 +5,7 @@
   <param name="/detect_ball_down_orange/require_correct_state" type="bool" value="true" /> 
   <param name="/detect_ball_down_orange/image_width" value="320" /> 
   <param name="/detect_ball_down_orange/image_height" value="240" /> 
+  <param name="/detect_ball_down_orange/h_min_orange" value="0" />
   <param name="/detect_ball_down_orange/h_max_orange" value="45" />
   <param name="/detect_ball_down_orange/s_min_orange" value="0" />
   <param name="/detect_ball_down_orange/s_max_orange" value="255" />
@@ -24,11 +25,11 @@
   <param name="/detect_ball_down_green/require_correct_state" type="bool" value="true" />
   <param name="/detect_ball_down_green/image_width" value="320" /> 
   <param name="/detect_ball_down_green/image_height" value="240" /> 
-  <param name="/detect_ball_down_green/h_min_green" value="25" />
-  <param name="/detect_ball_down_green/h_max_green" value="48" />
+  <param name="/detect_ball_down_green/h_min_green" value="26" />
+  <param name="/detect_ball_down_green/h_max_green" value="59" />
   <param name="/detect_ball_down_green/s_min_green" value="0" />
   <param name="/detect_ball_down_green/s_max_green" value="255" />
-  <param name="/detect_ball_down_green/v_min_green" value="177" />
+  <param name="/detect_ball_down_green/v_min_green" value="201" />
   <param name="/detect_ball_down_green/v_max_green" value="255" />
   <param name="/detect_ball_down_green/h_min_green_check" value="25" />
   <param name="/detect_ball_down_green/h_max_green_check" value="70" />

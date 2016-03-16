@@ -4,11 +4,11 @@
   <param name="/detect_bucket_forward/display" type="bool" value="false" />
   <param name="/detect_bucket_forward/require_correct_state" type="bool" value="true" />
 
-  <param name="/detect_bucket_forward/h_min" type="int" value="147" />
+  <param name="/detect_bucket_forward/h_min" type="int" value="155" />
   <param name="/detect_bucket_forward/h_max" type="int" value="179" />
-  <param name="/detect_bucket_forward/s_min" type="int" value="57" />
+  <param name="/detect_bucket_forward/s_min" type="int" value="64" />
   <param name="/detect_bucket_forward/s_max" type="int" value="255" />
-  <param name="/detect_bucket_forward/v_min" type="int" value="70" />
+  <param name="/detect_bucket_forward/v_min" type="int" value="37" />
   <param name="/detect_bucket_forward/v_max" type="int" value="255" />
 
   <node name="detect_bucket_forward" pkg="coconuts_odroid" type="detect_bucket_forward" />

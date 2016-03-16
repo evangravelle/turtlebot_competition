@@ -179,7 +179,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
             }
 
             if (best_error < error_floor_threshold) {
-                cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 165, 255),2);
+                cv::circle(cv_ptr_raw->image, best_circle_center, best_circle_radius, cv::Scalar( 0, 255, 0),2);
                 ball.x = best_circle_center.x;
                 ball.y = best_circle_center.y;
                 ball_pixel_pub.publish(ball);
