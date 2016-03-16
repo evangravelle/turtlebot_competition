@@ -212,6 +212,7 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 //~~~Callback to find out what the heck we are doing
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
+		queueState=0;
 		if (control_state -> sub_state ==MOVING_TO_ORANGE){
 			orange_or_green=0;
 		}else if(control_state -> sub_state ==MOVING_TO_GREEN){
@@ -222,6 +223,7 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		}
 		state=1;
 	}else if (control_state -> state ==FIND_BALL){
+		queueState=0;
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
 		if (state==1 || state==0){
@@ -241,6 +243,7 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 
 	else if(control_state -> state == NEXT_RUN_PREP){
 		state=10;
+		queueState=0;
 	}
 	else {
 		state=0;

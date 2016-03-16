@@ -14,7 +14,7 @@ coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
 int left_counter, right_counter;
 double inches_to_meters = 0.0254;
-double obstacle_distance = .5;
+double obstacle_distance = .75;
 geometry_msgs::TransformStamped odom;
 double t;
 
