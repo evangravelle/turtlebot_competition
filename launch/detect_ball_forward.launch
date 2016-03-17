@@ -5,17 +5,17 @@
   <param name="/detect_ball_forward/require_correct_state" type="bool" value="true" />
   
   <param name="/detect_ball_forward/h_min_orange" value="0" />
-  <param name="/detect_ball_forward/h_max_orange" value="19" />
-  <param name="/detect_ball_forward/s_min_orange" value="64" />
-  <param name="/detect_ball_forward/s_max_orange" value="255" />
+  <param name="/detect_ball_forward/h_max_orange" value="25" />
+  <param name="/detect_ball_forward/s_min_orange" value="121" />
+  <param name="/detect_ball_forward/s_max_orange" value="130 />
   <param name="/detect_ball_forward/v_min_orange" value="120" />
   <param name="/detect_ball_forward/v_max_orange" value="255" />
 
-  <param name="/detect_ball_forward/h_min_green" value="33" />
+  <param name="/detect_ball_forward/h_min_green" value="35" />
   <param name="/detect_ball_forward/h_max_green" value="46" />
-  <param name="/detect_ball_forward/s_min_green" value="19" />
+  <param name="/detect_ball_forward/s_min_green" value="80" />
   <param name="/detect_ball_forward/s_max_green" value="255" />
-  <param name="/detect_ball_forward/v_min_green" value="70" />
+  <param name="/detect_ball_forward/v_min_green" value="80" />
   <param name="/detect_ball_forward/v_max_green" value="255" />
 
   <node name="detect_ball_forward" pkg="coconuts_odroid" type="detect_ball_forward"/>
