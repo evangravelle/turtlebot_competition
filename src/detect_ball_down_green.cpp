@@ -34,10 +34,10 @@ int V_TOP = 255;
 int H_MIN_GREEN, H_MAX_GREEN, S_MIN_GREEN, S_MAX_GREEN, V_MIN_GREEN, V_MAX_GREEN; // To be loaded from parameter server
 int H_MIN_GREEN_CHECK, H_MAX_GREEN_CHECK, S_MIN_GREEN_CHECK;
 int S_MAX_GREEN_CHECK, V_MIN_GREEN_CHECK, V_MAX_GREEN_CHECK;
-coconuts_common::ControlState current_state, pub_state;
-double t = 0;
+coconuts_common::ControlState current_state, pub_state, previous_state;
+double t = 0, center_green_time = 0;
 float error_floor_threshold = 0.35;
-float error_grab_threshold = 0.6;
+float error_grab_threshold = 0.7;
 float min_floor_radius;
 float min_grab_radius;
 float grab_ball_center_x;
@@ -57,6 +57,11 @@ float calculateDistance(const float x1, const float y1, const float x2, const fl
 void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
     current_state.state = control_msg->state;
     current_state.sub_state = control_msg->sub_state;
+        if (current_state.sub_state == CENTER_ON_GREEN && previous_state.sub_state != CENTER_ON_GREEN) {
+        center_green_time = ros::Time::now().toSec();
+    }
+    previous_state.state = current_state.state;
+    previous_state.sub_state = current_state.sub_state;
 }
 
 //This function is called everytime a new image is published
@@ -119,27 +124,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
 
         // Blur image
         cv::GaussianBlur(hsv_thresh, hsv_thresh, cv::Size(9, 9), 2, 2);
-        /*
-        // Use Hough tranform to search for circles
-        std::vector<cv::Vec3f> circles;
-        cv::HoughCircles(cv_ptr_raw->image, circles, CV_HOUGH_GRADIENT, 2, cv_ptr_raw->image.rows/8, 100, 20);
-
-        if(circles.size() > 0) {
-            int circles_to_draw = (circles.size() < max_circles) ? circles.size() : 1;
-            for(int current_circle = 0; current_circle < circles_to_draw; ++current_circle) {
-            //for(int current_circle = 0; current_circle < 1; ++current_circle) {
-                cv::Point center(std::floor(circles[current_circle][0]), std::floor(circles[current_circle][1]));
-                int radius = std::floor(circles[current_circle][2]);
-
-                cv::circle(cv_ptr_raw->image, center, radius, cv::Scalar(0, 255, 0), 5);
-
-              ball.position.x=center.x;
-              ball.position.y=center.y;
-              ball_location_pub.publish(ball);
-
-            }
-        }
-        */
 
         // Contour method
         cv::Mat canny_output;
@@ -188,6 +172,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 ball.x = -1;
                 ball.y = -1;
                 ball_pixel_pub.publish(ball);
+
+                if (current_state.sub_state == CENTER_ON_GREEN && ros::Time::now().toSec() - center_green_time > 10) {
+                    pub_state.state = MOVE_TO_BALL;
+                    pub_state.sub_state = MOVE_TO_GREEN_FAILED;
+                    control_state_pub.publish(pub_state);
+                }
             }
         }
 
