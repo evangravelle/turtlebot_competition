@@ -26,7 +26,7 @@ static const char WINDOW2[] = "/detect_ball_down_orange/hsv_thresh";
 image_transport::Publisher it_pub;
 ros::Publisher ball_pixel_pub, control_state_pub, image_thresh_pub;
 geometry_msgs::Point ball;
-double t = 0;
+double t = 0, center_orange_time = 0;
 const int max_circles = 1; // Maximum number of circles to draw
 int H_TOP = 179; // top end value of sliders
 int S_TOP = 255;
@@ -34,7 +34,7 @@ int V_TOP = 255;
 int H_MIN_ORANGE, H_MAX_ORANGE, S_MIN_ORANGE, S_MAX_ORANGE, V_MIN_ORANGE, V_MAX_ORANGE; // To be loaded from parameter server
 int H_MIN_ORANGE_CHECK, H_MAX_ORANGE_CHECK, S_MIN_ORANGE_CHECK;
 int S_MAX_ORANGE_CHECK, V_MIN_ORANGE_CHECK, V_MAX_ORANGE_CHECK;
-coconuts_common::ControlState current_state, pub_state;
+coconuts_common::ControlState current_state, pub_state, previous_state;
 float error_floor_threshold = 0.35;
 float error_grab_threshold = 0.7;
 float min_floor_radius;
@@ -43,6 +43,8 @@ float grab_ball_center_x;
 float grab_ball_center_y;
 float grab_ball_center_dist;
 int image_width, image_height;
+int no_ball_center = 0;
+
 
 void onTrackbar(int,void*) {}
 
@@ -56,6 +58,11 @@ float calculateDistance(const float x1, const float y1, const float x2, const fl
 void stateCallback(const coconuts_common::ControlState::ConstPtr& control_msg) {
     current_state.state = control_msg->state;
     current_state.sub_state = control_msg->sub_state;
+    if (current_state.sub_state == CENTER_ON_ORANGE && previous_state.sub_state != CENTER_ON_ORANGE) {
+        center_orange_time = ros::Time::now().toSec();
+    }
+    previous_state.state = current_state.state;
+    previous_state.sub_state = current_state.sub_state;
 }
 
 //This function is called everytime a new image is published
@@ -165,6 +172,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image)
                 ball.x = -1;
                 ball.y = -1;
                 ball_pixel_pub.publish(ball);
+
+                if (current_state.sub_state == CENTER_ON_ORANGE && ros::Time::now().toSec() - center_orange_time > 10) {
+                    pub_state.state = MOVE_TO_BALL;
+                    pub_state.sub_state = MOVE_TO_ORANGE_FAILED;
+                    control_state_pub.publish(pub_state);
+                }
             }
         }
 
