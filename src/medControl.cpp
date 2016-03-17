@@ -167,7 +167,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Queue
 void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
-	if (state==4 || state==2 && substate!=8 && substate!=2 abs(x-BUCKETLOCX/112.5) > 1 && abs(y+BUCKETLOCY/112.5)>1){
+	if ((state==4 || state==2) && substate!=8 && substate!=2 && abs(x-BUCKETLOCX/112.5) > .3 && abs(y+BUCKETLOCY/112.5)>.3){
 		queueState=1;
 		substate=1;
 		waypointX=cenPose->position.x;
