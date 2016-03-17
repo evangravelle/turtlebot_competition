@@ -15,7 +15,7 @@ coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
 int left_clear_counter=0, right_clear_counter=0;
 double inches_to_meters = 0.0254;
-double obstacle_distance = .35;
+double obstacle_distance = .5;
 geometry_msgs::TransformStamped odom;
 double t;
 
@@ -68,7 +68,10 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "waypoints");
 	ros::NodeHandle nh;
 
-    ros::Publisher status_string_pub = nh.advertise<std_msgs::String>("/waypoints_wtf", 1);
+    
+    //Status messages, more readable than waypoints_pub
+    ros::Publisher status_string_pub = nh.advertise<std_msgs::String>("/wtf_am_i_doing", 1);
+
     ros::Publisher waypoints_pub = nh.advertise<geometry_msgs::Pose>("/waypoint", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     ros::Subscriber sensor_sub  = nh.subscribe<coconuts_common::SensorStatus>("/sensor_status", 1, sensorCallback);
@@ -79,10 +82,13 @@ int main(int argc, char **argv)
     goal.position.y = -1;
     double t = 0;
 
-    std:ostringstream wtf_status; 
+    std::stringstream ss;
+    std_msgs::String wtf_status_msg;
+    
 
     ros::Rate rate(5.0);
     while(ros::ok()) {
+        ss.str("");
         tf::StampedTransform transform;
         try{
             odom = tf_buffer.lookupTransform("map", "base_footprint", ros::Time(0));
@@ -92,34 +98,44 @@ int main(int argc, char **argv)
             ros::Duration(2.0).sleep();
         }
     	ROS_INFO("Transform found!");
-        // Wait 10 seconds before considering publishing a new waypoint
-        if ((current_state.sub_state == MOVING_TO_GOAL  || current_state.sub_state == SEARCH_FOR_GOAL ) && right_obstacle && goal.position.x > 0 && 
-            (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
-           	ROS_INFO("right sensor blocked");
-            float relative_x = goal.position.x - odom.transform.translation.x;
-            float relative_y = goal.position.y - odom.transform.translation.y;
-            double angle = atan2(relative_y, relative_x);
-
-            waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle - M_PI/3.0);
-            waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle - M_PI/3.0);
-            waypoints_pub.publish(waypoint);
-            t = ros::Time::now().toSec();
-            status_string_pub.publish("Right blocked");
-        }
+        if(current_state.sub_state == SEARCH_FOR_GOAL || current_state.sub_state==SEARCH_FOR_BALL){
 
         // Wait 10 seconds before considering publishing a new waypoint
-        else if ((current_state.sub_state == MOVING_TO_GOAL  || current_state.sub_state == SEARCH_FOR_GOAL )  && left_obstacle && goal.position.x > 0 && 
-            (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
-            ROS_INFO("left sensor blocked");
-            float relative_x = goal.position.x - odom.transform.translation.x;
-            float relative_y = goal.position.y - odom.transform.translation.y;
-            double angle = atan2(relative_y, relative_x);
+            if (right_obstacle && goal.position.x > 0 && 
+                (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+               	ROS_INFO("right sensor blocked");
+                float relative_x = goal.position.x - odom.transform.translation.x;
+                float relative_y = goal.position.y - odom.transform.translation.y;
+                double angle = atan2(relative_y, relative_x);
 
-            waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle + M_PI/3.0);
-            waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle + M_PI/3.0);
-            waypoints_pub.publish(waypoint);
-            t = ros::Time::now().toSec();
-            status_string_pub.publish("Left blocked");
+                waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle - M_PI/3.0);
+                waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle - M_PI/3.0);
+                waypoints_pub.publish(waypoint);
+                t = ros::Time::now().toSec();
+
+                
+                ss << "Right sensor blocked, rerouting to " << waypoint.position.x << "," << waypoint.position.y;
+                wtf_status_msg.data = ss.str();
+                status_string_pub.publish(wtf_status_msg);
+            }
+
+            // Wait 10 seconds before considering publishing a new waypoint
+            else if (left_obstacle && goal.position.x > 0 && 
+                (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+                ROS_INFO("left sensor blocked");
+                float relative_x = goal.position.x - odom.transform.translation.x;
+                float relative_y = goal.position.y - odom.transform.translation.y;
+                double angle = atan2(relative_y, relative_x);
+
+                waypoint.position.x = odom.transform.translation.x + obstacle_distance*cos(angle + M_PI/3.0);
+                waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle + M_PI/3.0);
+                waypoints_pub.publish(waypoint);
+                t = ros::Time::now().toSec();
+                
+                ss << "Left sensor blocked, rerouting to " << waypoint.position.x << "," << waypoint.position.y;
+                wtf_status_msg.data = ss.str();
+                status_string_pub.publish(wtf_status_msg);
+            }
         }
         ros::spinOnce();
         rate.sleep();

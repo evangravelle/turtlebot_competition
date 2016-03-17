@@ -1,7 +1,8 @@
 <launch>
   <node name="medControl" pkg="coconuts_odroid" type="medControl" output="screen">
-	<param name="bucketLocX" type="int" value="500" />
-        <param name="bucketLocY" type="int" value="500" />
-
+	<param name="bucketLocX" type="int" value="450" />
+        <param name="bucketLocY" type="int" value="400" />
+        <param name="centerX" type="int" value="450" />
+        <param name="centerY" type="int" value="700" />
   </node>
 </launch>

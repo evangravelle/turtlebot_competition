@@ -31,8 +31,8 @@ double dot,det;
 int BUCKETLOCX;
 int BUCKETLOCY;
 
-int CENTERX;
-int CENTERY;
+int CENTERX=450;
+int CENTERY=700;
 
 //~~~blah blah blah
 double cenx, ceny;
@@ -58,7 +58,7 @@ double IAngular=0;
 double KIAngular=.0002;//.0005;
 double thresholdAngle=0;
 double thresholdDistance=0;
-
+bool obstacleON=true;
 double m=0;
 double b=0;
 
@@ -141,7 +141,7 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 //~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
                         // cout << "got bucket pixel" << "\n";
-	if (state==4 && (substate==1 || substate==2) && queueState!=0){
+	if (state==4 && (substate==1 || substate==2) && queueState!=1){
 
 		if (cenPose->x > 0){
 			substate=2;
@@ -150,6 +150,11 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 	double xPrime=((230-cenPose->y)-b)/m;
 		dist=230-cenPose->y;
 		angle=xPrime-cenPose->x-25; 
+
+                if  (abs(dist)<100){
+                        obstacleON=false;
+                }
+
 
 		if  (abs(dist)<45){
 			substate=8;
@@ -166,7 +171,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Queue
 void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
-	if (state==4 || state==2 && substate!=8 && substate!=2){
+	if (state==4 || state==2 && substate!=8 && substate!=2 abs(x-BUCKETLOCX/112.5) > 1 && abs(y+BUCKETLOCY/112.5)>1){
 		queueState=1;
 		substate=1;
 		waypointX=cenPose->position.x;
@@ -300,7 +305,7 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 		        substate=1;
 		        cs.sub_state=AT_GOAL;
 		        control_pub.publish(cs);
-
+			obstacleON=true;
 			}
 		}else if(right_sonar > 0 && center_sonar > 0){
 			angle = right_sonar - 19;
