@@ -16,6 +16,7 @@
 #define         MOVING_TO_GOAL          51
 #define         AT_GOAL                 52
 #define         MOVE_TO_GOAL_FAILED     53
+#define         CENTER_ON_GOAL          54
 
 #define 	FIND_BALL					60
 #define         SEARCH_FOR_BALL         61
