@@ -590,7 +590,7 @@ public:
         bot_movement.angular.z = 0.7;
 	
 	double t = ros::Time::now().toSec();
-	while (ros::Time::now().toSec() - t < 9) {
+	while (ros::Time::now().toSec() - t < 7) {
 		sendMovement(bot_movement);
 	}	
 	behavior_sub_state_ = READY_FOR_NEXT_RUN;
