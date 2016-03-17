@@ -208,6 +208,10 @@ public:
                     //ROS_INFO("Mother Brain (MOVE_TO_GOAL): Moving To Goal.");
                     break;
 
+                case CENTER_ON_GOAL:
+                    ROS_INFO("Mother Brain (CENTER_ON_GOAL): Centering, going nowhere yet.");
+                    break;
+
                 case AT_GOAL:
                     ROS_INFO("Mother Brain (MOVE_TO_GOAL): AT_GOAL, going to DROP_BALL.");
                     behavior_state_ = DROP_BALL;
@@ -392,7 +396,7 @@ public:
             switch(behavior_sub_state_) {
 
                 case DEFAULT_SUB_STATE:
-		    behavior_state_ = FIND_BALL;
+                    behavior_state_ = FIND_BALL;
                     behavior_sub_state_ = DEFAULT_SUB_STATE;
                     break;
 
