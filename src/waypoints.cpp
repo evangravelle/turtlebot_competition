@@ -98,7 +98,8 @@ int main(int argc, char **argv)
             ros::Duration(2.0).sleep();
         }
     	ROS_INFO("Transform found!");
-        if(current_state.sub_state == SEARCH_FOR_GOAL || current_state.sub_state==SEARCH_FOR_BALL){
+        if(current_state.sub_state==SEARCH_FOR_GOAL || current_state.sub_state==SEARCH_FOR_BALL || 
+            current_state.sub_state==MOVING_TO_ORANGE || current_state.sub_state==MOVING_TO_GREEN){
 
         // Wait 10 seconds before considering publishing a new waypoint
             if (right_obstacle && goal.position.x > 0 && 
