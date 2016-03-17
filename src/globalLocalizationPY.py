@@ -168,7 +168,19 @@ class GL:
 			self.lastQuaternion.w=data.pose.pose.orientation.w
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
 			self.odomAngle=self.lastPoseAngle+57.2958*(yaw-self.lastYaw)
-			self.angle-=(57.2958*(yaw-self.lastYaw))
+			if 57.2958*yaw>180 and 57.2958*self.lastYaw>180:
+                        	self.angle-=(57.2958*(yaw-self.lastYaw))
+			elif 57.2958*yaw>180 and 57.2958*self.lastYaw<180:
+				self.angle-=(57.2958*((yaw-360)-self.lastYaw))
+			elif 57.2958*yaw<180 and 57.2958*self.lastYaw>180:
+                        	self.angle-=(57.2958*((yaw)-(self.lastYaw-360)))
+			else:
+				self.angle-=(57.2958*(yaw-self.lastYaw))
+
+			if self.angle-self.lastPoseAngle > 30:
+				self.angle=self.lastPoseAngle+5
+			elif self.angle-self.lastPoseAngle <-30:
+				self.angle=self.lastPoseAngle-5
 			self.lastPoseAngle=self.angle
 			self.lastYaw = yaw
 
@@ -293,6 +305,12 @@ class GL:
 					self.pose.position.x=self.pose.position.x+.05*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
 					self.pose.position.y=self.pose.position.y+.05*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
 					self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
+		                        if self.angle-self.lastPoseAngle > 30:         
+		                                self.angle=self.lastPoseAngle+5 
+                		        elif self.angle-self.lastPoseAngle <-30:
+                                		self.angle=self.lastPoseAngle-5
+                        		self.lastPoseAngle=self.angle
+
 #				print str(self.ceilingConfidence)
 				self.ceilingFlag=False
 
@@ -387,10 +405,11 @@ def main(args):
 	gl = GL()
         gl.bucketLocX= rospy.get_param('~bucketLocX')
         gl.bucketLocY= rospy.get_param('~bucketLocY')
+	gl.lastPoseAngle=rospy.get_param('~direction')
 	gl.angle= rospy.get_param('~direction')
         gl.pose.position.x = rospy.get_param('~startingX')
         gl.pose.position.y = rospy.get_param('~startingY')
-
+	
 	gl.kalman()
 	try:
 
