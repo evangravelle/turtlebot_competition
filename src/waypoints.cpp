@@ -13,7 +13,11 @@ geometry_msgs::Pose waypoint, goal;
 ros::Time current_time;
 coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
-int left_clear_counter=0, right_clear_counter=0;
+
+int left_detect_counter=0, right_detect_counter=0;
+int MAX_DETECT_COUNT = 4;
+int COUNT_DETECT_THRESH = 3;
+
 double inches_to_meters = 0.0254;
 double obstacle_distance = .5;
 geometry_msgs::TransformStamped odom;
@@ -32,23 +36,26 @@ void sensorCallback(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
         switch (sensor_msg->sensor_readings[i].sensor) {
 
             case 1:
-                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 50) {
-                    right_clear_counter=0;
+                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 45) {
+                    right_detect_counter++;
                 } 
                 else {
-                    right_clear_counter++;
+                    right_detect_counter--;
                 }
-                right_obstacle = right_clear_counter < 5;
+
+                right_detect_counter = std::max(std::min(right_detect_counter, MAX_DETECT_COUNT), 0);
+                right_obstacle = right_detect_counter >= COUNT_DETECT_THRESH;
                 break;
 
             case 2:
-                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 50) {
-                    left_clear_counter=0;
+                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 45 {
+                    left_detect_counter++;
                 } 
                 else {
-                    left_clear_counter++;
+                    left_detect_counter--;
                 }
-                left_obstacle = left_clear_counter < 5;
+                left_detect_counter = std::max(std::min(left_detect_counter, MAX_DETECT_COUNT), 0);
+                left_obstacle = left_detect_counter >= COUNT_DETECT_THRESH;
                 break;
             
             default:
@@ -103,7 +110,7 @@ int main(int argc, char **argv)
 
         // Wait 10 seconds before considering publishing a new waypoint
             if (right_obstacle && goal.position.x > 0 && 
-                (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+                (t < 0.0001 || ros::Time::now().toSec() - t > 5)) {
                	ROS_INFO("right sensor blocked");
                 float relative_x = goal.position.x - odom.transform.translation.x;
                 float relative_y = goal.position.y - odom.transform.translation.y;
@@ -118,11 +125,16 @@ int main(int argc, char **argv)
                 ss << "Right sensor blocked, rerouting to " << waypoint.position.x << "," << waypoint.position.y;
                 wtf_status_msg.data = ss.str();
                 status_string_pub.publish(wtf_status_msg);
+
+                left_detect_counter=0;
+                right_detect_counter=0;
+                left_obstacle=false;
+                right_obstacle=false;
             }
 
             // Wait 10 seconds before considering publishing a new waypoint
             else if (left_obstacle && goal.position.x > 0 && 
-                (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
+                (t < 0.0001 || ros::Time::now().toSec() - t > 5)) {
                 ROS_INFO("left sensor blocked");
                 float relative_x = goal.position.x - odom.transform.translation.x;
                 float relative_y = goal.position.y - odom.transform.translation.y;
@@ -136,6 +148,11 @@ int main(int argc, char **argv)
                 ss << "Left sensor blocked, rerouting to " << waypoint.position.x << "," << waypoint.position.y;
                 wtf_status_msg.data = ss.str();
                 status_string_pub.publish(wtf_status_msg);
+
+                left_detect_counter=0;
+                right_detect_counter=0;
+                left_obstacle=false;
+                right_obstacle=false;
             }
         }
         ros::spinOnce();
