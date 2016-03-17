@@ -14,6 +14,7 @@ Go to a position function by Aaron Ma :DxD;)))),
 #include <tf/tf.h>
 #include <tf2_msgs/TFMessage.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
 #include <coconuts_common/ArmMovement.h>
 #include <coconuts_common/ControlState.h>
 #include <coconuts_common/SensorStatus.h>
@@ -75,11 +76,14 @@ ros::Publisher control_pub;
 ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, cen5_sub_ , pos_sub_;
 ros::Publisher u_pub_,m_pub;
 ros::Publisher goal_pub;
+
+ros::Publisher wtf_am_i_doing_pub;
+std_msgs::String wtf_msg;
+
 coconuts_common::ControlState cs;
 
 // Construct Node Class
 using namespace std;
-
 
 
 // Other member variables
@@ -258,6 +262,8 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 
 	if (substate==8){
+		wtf_msg.data = "Centering on bucket";
+		wtf_am_i_doing_pub.publish(wtf_msg);
 
 		int center_sonar = 0;
 		int right_sonar = 0;
@@ -304,6 +310,8 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 			angle *= ANGLE_BOOST;
 		}else{
 			ROS_WARN("Sonar is fucked! Where's the bucket??");
+			wtf_msg.data = "Where's the bucket??";
+			wtf_am_i_doing_pub.publish(wtf_msg);
 		}
 		ROS_INFO("Sonar centering: angle = [%f],  dist=[%f]",angle,dist);
 	}
@@ -596,120 +604,120 @@ a=A*angle;
 //~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~//~~~
 int main(int argc, char **argv)
 {
-ros::init(argc, argv, "AaRoNmA");
-ros::NodeHandle ph_, nh_;
-ros::Rate loop_rate(50); 
+	ros::init(argc, argv, "AaRoNmA");
+	ros::NodeHandle ph_, nh_;
+	ros::Rate loop_rate(50); 
 
 
-control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
-cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
-cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
-cen5_sub_ = nh_.subscribe<geometry_msgs::Pose>("/waypoint",1, goalCB5);
-cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1, goalCB3);
-u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
-goal_pub = nh_.advertise<geometry_msgs::Pose>("/goal",1, true);
-control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
-sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
-cen4_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal_pose",1, goalCB4);
-pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
+	control_sub = nh_.subscribe<coconuts_common::ControlState>("/control_state",1, stateCB);
+	cen_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel",1, goalCB);
+	cen2_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_ball_down/ball_pixel",1, goalCB2);
+	cen5_sub_ = nh_.subscribe<geometry_msgs::Pose>("/waypoint",1, goalCB5);
+	cen3_sub_ = nh_.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel",1, goalCB3);
+	u_pub_ = nh_.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1, true);
+	goal_pub = nh_.advertise<geometry_msgs::Pose>("/goal",1, true);
+	control_pub = nh_.advertise<coconuts_common::ControlState>("/control_substate",1, true);
+	sensor_status_sub  = nh_.subscribe<coconuts_common::SensorStatus>("sensor_status",1,sensorCB);
+	cen4_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/goal_pose",1, goalCB4);
+	pos_sub_ = nh_.subscribe<tf2_msgs::TFMessage>("/tf", 1, tfCB);
+
+	wtf_am_i_doing_pub = nh_.advertise<std_msgs::String>("/wtf_am_i_doing",1);
+
+	geometry_msgs::Pose goal_pose;
+
+	//LAST VELOCITY INIT
+	lastVel.linear.x=0;
+	lastVel.angular.z=0;
+
+	m=(((480-124)-(480-322.5))/(266-322.5));
+	b=(480-124)-m*(266);
+
+
+	    if (nh_.getParam("/medControl/bucketLocX", BUCKETLOCX))
+	    {
+	      ROS_INFO("Got BUCKET LOCATION");
+	    }
+	    else
+	    {
+	      ROS_ERROR("Failed to get param BUCKET LOCATION");
+	    }
+
+	    nh_.getParam("/medControl/bucketLocY", BUCKETLOCY);
+	    nh_.getParam("/medControl/centerX", CENTERX);
+	    nh_.getParam("/medControl/centerY", CENTERY);
+
+
+	        ceny=-BUCKETLOCY/112.5;
+	        cenx=BUCKETLOCX/112.5;
+
+		goal_pose.position.y=BUCKETLOCY;
+		goal_pose.position.x=BUCKETLOCX;
 
 
 
-geometry_msgs::Pose goal_pose;
+	while(ros::ok()){
+		finalVel.linear.x=0;
+		finalVel.angular.z=0;
 
-//LAST VELOCITY INIT
-lastVel.linear.x=0;
-lastVel.angular.z=0;
-
-m=(((480-124)-(480-322.5))/(266-322.5));
-b=(480-124)-m*(266);
-
-
-    if (nh_.getParam("/medControl/bucketLocX", BUCKETLOCX))
-    {
-      ROS_INFO("Got BUCKET LOCATION");
-    }
-    else
-    {
-      ROS_ERROR("Failed to get param BUCKET LOCATION");
-    }
-
-    nh_.getParam("/medControl/bucketLocY", BUCKETLOCY);
-    nh_.getParam("/medControl/centerX", CENTERX);
-    nh_.getParam("/medControl/centerY", CENTERY);
-
-
-        ceny=-BUCKETLOCY/112.5;
-        cenx=BUCKETLOCX/112.5;
-
-	goal_pose.position.y=BUCKETLOCY;
-	goal_pose.position.x=BUCKETLOCX;
-
-
-
-while(ros::ok()){
-	finalVel.linear.x=0;
-	finalVel.angular.z=0;
-
-	ros::spinOnce();
-		 std::cout << "queuestate : " <<  queueState<<"\n";
-		 std::cout << "substate : " << substate << "\n"; 	
-	
-	if (queueState==1){
-		if (dist < .2){
-			queueState=0;
-		}
-		setGlobalGoal(waypointX,waypointY);
-		global();
-	        u_pub_.publish(finalVel);
-
-	} else{
-	if (state==1){
-		if (substate==1){
-//			cout << "subsate: 1" << "\n";
-			medControl();
-		}else if (substate==2){
-//			cout << "substate: 2" << "\n";
-			fineControl();
-		}
-		u_pub_.publish(finalVel);
-	}else if (state==2){
-//		cout << "Exploring ~~~" << "\n";
-		setGlobalGoal(CENTERX/112.5,-CENTERY/112.5);
-                goal_pose.position.x=CENTERX/112.5;
-		goal_pose.position.y=-CENTERY/112.5;
-		goal_pub.publish(goal_pose);
-		global();
-	}else if (state==3){
-//		cout << "Global ~~~" << "\n";
-	}else if (state==4){
-		// cout << "BUCKET \n";
-		if (substate==1){
-			setGlobalGoal(BUCKETLOCX/112.5,-BUCKETLOCY/112.5);
+		ros::spinOnce();
+			 std::cout << "queuestate : " <<  queueState<<"\n";
+			 std::cout << "substate : " << substate << "\n"; 	
+		
+		if (queueState==1){
+			if (dist < .2){
+				queueState=0;
+			}
+			setGlobalGoal(waypointX,waypointY);
 			global();
-			goal_pose.position.x=BUCKETLOCX/112.5;
-			goal_pose.position.y=-BUCKETLOCY/112.5;
+		        u_pub_.publish(finalVel);
+
+		} else{
+		if (state==1){
+			if (substate==1){
+	//			cout << "subsate: 1" << "\n";
+				medControl();
+			}else if (substate==2){
+	//			cout << "substate: 2" << "\n";
+				fineControl();
+			}
+			u_pub_.publish(finalVel);
+		}else if (state==2){
+	//		cout << "Exploring ~~~" << "\n";
+			setGlobalGoal(CENTERX/112.5,-CENTERY/112.5);
+	                goal_pose.position.x=CENTERX/112.5;
+			goal_pose.position.y=-CENTERY/112.5;
 			goal_pub.publish(goal_pose);
-		}else if (substate==2 || substate==8){
-			medControl();
-		}else if (substate==3){
-//			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);
+			global();
+		}else if (state==3){
+	//		cout << "Global ~~~" << "\n";
+		}else if (state==4){
+			// cout << "BUCKET \n";
+			if (substate==1){
+				setGlobalGoal(BUCKETLOCX/112.5,-BUCKETLOCY/112.5);
+				global();
+				goal_pose.position.x=BUCKETLOCX/112.5;
+				goal_pose.position.y=-BUCKETLOCY/112.5;
+				goal_pub.publish(goal_pose);
+			}else if (substate==2 || substate==8){
+				medControl();
+			}else if (substate==3){
+	//			setGlobalGoal(poseArray.poses[queueState].position.x,poseArray.poses[queueState].position.y);
+				global();
+			}
+
+		}else if (state==5){
+	//		cout << "GLOBAL \n";
 			global();
 		}
+		else{
+	//		cout << "inactive" << "\n";
+		}
+		if (state!=10){
+	        u_pub_.publish(finalVel);
+		}
+		}
+		loop_rate.sleep();
 
-	}else if (state==5){
-//		cout << "GLOBAL \n";
-		global();
 	}
-	else{
-//		cout << "inactive" << "\n";
-	}
-	if (state!=10){
-        u_pub_.publish(finalVel);
-	}
-	}
-	loop_rate.sleep();
-
-}
 
 }
