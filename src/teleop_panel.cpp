@@ -464,6 +464,10 @@ void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::Cons
            currentSubStateLabel->setText("AT_GOAL");
            break;
 
+       case CENTER_ON_GOAL:
+           currentSubStateLabel->setText("CENTER_ON_GOAL");
+           break;
+
        case MOVE_TO_GOAL:
            currentSubStateLabel->setText("MOVE_TO_GOAL");
            break;
@@ -570,6 +574,10 @@ void TeleopPanel::controlStateCallback(const coconuts_common::ControlState::Cons
 
        case DROP_BALL:
            currentSubStateLabel->setText("DROP_BALL");
+           break;
+
+       case BALL_DROPPED:
+           currentSubStateLabel->setText("BALL_DROPPED");
            break;
 
        case DROP_BALL_FAILED:
