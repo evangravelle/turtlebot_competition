@@ -71,6 +71,10 @@ bool left_obstacle=false;
 bool right_obstacle=false;
 bool center_obstacle=false;
 
+//Ma filter for checking if the center on bucket fails
+int center_on_bucket_fail_count = 0;
+double center_on_bucket_time_start = 0;
+
 coconuts_common::ArmMovement grabBallOpen;
 ros::Publisher control_pub;
 ros::Subscriber cen_sub_, cen2_sub_, control_sub,sensor_status_sub, cen3_sub_, cen4_sub_, cen5_sub_ , pos_sub_;
@@ -171,7 +175,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Queue
 void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
-	if ((state==4 && substate!=8 && substate!=2)  || state==2 || (state==1 && substate==1)){
+	if ((state==4 && substate!=8)  || state==2 || (state==1 && substate==1 && dist > 100)){
 		queueState=1;
 		substate=1;
 		waypointX=cenPose->position.x;
@@ -224,8 +228,7 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 
 //~~~Callback to find out what the heck we are doing
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
-if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
-		
+	if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL	
 		if (control_state -> sub_state ==MOVING_TO_ORANGE){
 			orange_or_green=0;
 		}else if(control_state -> sub_state ==MOVING_TO_GREEN){
@@ -252,21 +255,42 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		}
 		state=4;
 		gotInitialGoal=true;
-	}
-
-	else if(control_state -> state == NEXT_RUN_PREP){
+	}else if(control_state -> state == NEXT_RUN_PREP){
 		state=10;
 		queueState=0;
-	}
-	else if(control_state -> sub_state == CENTER_ON_GOAL){
+	}else if(control_state -> sub_state != CENTER_ON_GOAL){
 		state=0;
+	}else if(control_state->sub_state == CENTER_ON_GOAL){
+		state=4;
 	}
 }
 
 //~~~Callback for the ultrasonics, gotta go fast
 void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
+	std:ostringstream ss;
 
 	if (substate==8){
+		if(center_on_bucket_time_start==0){
+			center_on_bucket_time_start = ros::Time::now().toSec();
+		}else if(ros::Time::now().toSec() - center_on_bucket_time_start > 25){
+			center_on_bucket_time_start = 0;
+			wtf_msg.data="BUCKET SEARCH TIMED OUT";
+			wtf_am_i_doing_pub.publish(wtf_msg);
+
+			cs.sub_state = MOVE_TO_GOAL_FAILED;
+			control_pub.publish(cs);
+			return;
+		}
+
+		if(center_on_bucket_fail_count > 20){
+			wtf_msg.data="LOST THE BUCKET TOO MANY TIMES IN A ROW";
+			wtf_am_i_doing_pub.publish(wtf_msg);
+
+			cs.sub_state = MOVE_TO_GOAL_FAILED;
+			control_pub.publish(cs);
+			return;
+		}
+
 		wtf_msg.data = "Centering on bucket";
 		wtf_am_i_doing_pub.publish(wtf_msg);
 
@@ -294,6 +318,9 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 				left_sonar = reading;
 		}
 
+		if(center_sonar > 0 && (left_sonar > 0 || right_sonar > 0))
+			center_on_bucket_fail_count = 0;
+
 		if(center_sonar > 0 && right_sonar > 0 && left_sonar > 0){
 			dist = center_sonar - 6;
 			dist *= DIST_BOOST;
@@ -301,6 +328,10 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 			//Both sensors should be about 19
 			angle = ((right_sonar - 19) + (19 - left_sonar))/2.0;
 			angle *= ANGLE_BOOST;
+
+			ss << "3 sensors, angle=" << angle << ", dist=" << dist;
+			wtf_msg.data = ss.str();
+			wtf_am_i_doing_pub.publish(wtf_msg);
 			if (center_sonar >= 6 && center_sonar <= 7
 				&& right_sonar >= 16 && right_sonar <= 20
 				&& left_sonar >= 16 && right_sonar <= 20){
@@ -318,14 +349,27 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 		}else if(right_sonar > 0 && center_sonar > 0){
 			angle = right_sonar - 19;
 			angle *= ANGLE_BOOST;
+			ss << "right=" << right_sonar;
+			ss << "	center=" << center_sonar;
+			ss << "	angle=" << angle << "	dist=" << dist;
+			wtf_msg.data = ss.str();
+			wtf_am_i_doing_pub.publish(wtf_msg);
 		}else if(left_sonar > 0 && center_sonar > 0){
 			angle = 19 - left_sonar;
 			angle *= ANGLE_BOOST;
+			ss << "left=" << left_sonar;
+			ss << "	center=" << center_sonar;
+			ss << "	angle=" << angle << "	dist=" << dist;
+			wtf_msg.data = ss.str();
+			wtf_am_i_doing_pub.publish(wtf_msg);
 		}else{
 			std::stringstream msg_stream;
 			ROS_WARN("Sonar is fucked! Where's the bucket??");
-			wtf_msg.data = "Where's the bucket??";
+			ss << "NO SENSORS: " << center_sonar << "," << left_sonar << "," << right_sonar;
+			// wtf_msg.data = "Where's the bucket??";
+			wtf_msg.data = ss.str();
 			wtf_am_i_doing_pub.publish(wtf_msg);
+			center_on_bucket_fail_count++;
 		}
 		ROS_INFO("Sonar centering: angle = [%f],  dist=[%f]",angle,dist);
 	}
@@ -608,7 +652,7 @@ a=A*angle;
 
                         if (dist<.1){
                                 finalVel.linear.x=0;
-				finalVel.angular.z=.25;
+				finalVel.angular.z=.2;
                         }
 
 
@@ -676,7 +720,7 @@ int main(int argc, char **argv)
 		ros::spinOnce();
 			 std::cout << "queuestate : " <<  queueState<<"\n";
 			 std::cout << "substate : " << substate << "\n"; 	
-		
+			 std::cout << "state: " << state<< "\n";		
 		if (queueState==1){
 			if (dist < .2){
 				queueState=0;
