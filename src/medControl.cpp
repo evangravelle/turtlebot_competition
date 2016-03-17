@@ -62,6 +62,8 @@ bool obstacleON=true;
 double m=0;
 double b=0;
 
+int turnLeft=0;
+int turnRight=0;
 int state=0;
 int substate=1;
 bool goForBall=false;
@@ -160,7 +162,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
                 }
 
 
-		if  (abs(dist)<45){
+		if  (abs(dist)<150){
 			substate=8;
 		}
 
@@ -270,10 +272,14 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 	std:ostringstream ss;
 
 	if (substate==8){
+		wtf_msg.data = "Centering on bucket";
+		wtf_am_i_doing_pub.publish(wtf_msg);
+
 		if(center_on_bucket_time_start==0){
 			center_on_bucket_time_start = ros::Time::now().toSec();
 		}else if(ros::Time::now().toSec() - center_on_bucket_time_start > 25){
 			center_on_bucket_time_start = 0;
+			center_on_bucket_fail_count = 0;
 			wtf_msg.data="BUCKET SEARCH TIMED OUT";
 			wtf_am_i_doing_pub.publish(wtf_msg);
 
@@ -282,17 +288,16 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 			return;
 		}
 
-		if(center_on_bucket_fail_count > 20){
+		if(center_on_bucket_fail_count > 5){
+			center_on_bucket_fail_count = 0;
+			center_on_bucket_time_start = 0;
 			wtf_msg.data="LOST THE BUCKET TOO MANY TIMES IN A ROW";
 			wtf_am_i_doing_pub.publish(wtf_msg);
-
+			state=4;
 			cs.sub_state = MOVE_TO_GOAL_FAILED;
 			control_pub.publish(cs);
 			return;
 		}
-
-		wtf_msg.data = "Centering on bucket";
-		wtf_am_i_doing_pub.publish(wtf_msg);
 
 		cs.sub_state = CENTER_ON_GOAL;
 		control_pub.publish(cs);
@@ -399,16 +404,18 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 	            break;
 
 	        case 1:
-	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 30) {
 	                right_obstacle = true;
+			turnRight=50;
 	            } else {
 	                right_obstacle = false;
 	            }
 	            break;
 
 	        case 2:
-	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 40) {
+	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 30) {
 	                left_obstacle = true;
+			turnLeft=50;
 	            } else {
 	                left_obstacle = false;
 	            }
@@ -593,13 +600,18 @@ a=A*angle;
 			finalVel.linear.x=KTERM*v;
 			finalVel.angular.z=a;
 
-		if (left_obstacle==true){
+		if (turnLeft>0){
+			turnLeft=turnLeft-1;
 			finalVel.linear.x=0;
 			finalVel.angular.z=-.3;
-		}else if (right_obstacle==true){
+			return;
+		}else if (turnRight>0){
+			turnRight=turnRight-1;
 			finalVel.linear.x=0;
 			finalVel.angular.z=.3;
+			return;
 		}
+		
 
 		if (dist < .25){
 				if ((finalVel.linear.x-lastVel.linear.x)>.02){

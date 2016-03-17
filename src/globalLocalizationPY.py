@@ -37,7 +37,7 @@ bucketY=400
 waypointX=0
 waypointY=0
 
-thresholdConfidence=.015
+thresholdConfidence=.018
 #startingX=130;
 #startingY=130;
 mapSliceSize=200/2 #prev 350 for 640
@@ -304,7 +304,7 @@ class GL:
 				if self.ceilingConfidence > thresholdConfidence:
 					self.pose.position.x=self.pose.position.x+.05*self.ceilingConfidence*(-self.pose.position.x+self.ceilingMeasurement.position.x)
 					self.pose.position.y=self.pose.position.y+.05*self.ceilingConfidence*(-self.pose.position.y+self.ceilingMeasurement.position.y)
-					self.angle=self.angle+.4*(-self.angle+self.ceilingAngle)
+					self.angle=self.angle+.05*(-self.angle+self.ceilingAngle)
 		                        if self.angle-self.lastPoseAngle > 30:         
 		                                self.angle=self.lastPoseAngle+5 
                 		        elif self.angle-self.lastPoseAngle <-30:

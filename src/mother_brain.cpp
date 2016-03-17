@@ -265,7 +265,7 @@ public:
 
             switch(behavior_sub_state_) {
                 case MOVING_TO_GOAL:
-                    if (msg->y > 140 && ready_for_drop_ == false) {
+                    if (msg->y > 55 && ready_for_drop_ == false) {
                         arm_drop_ball_close();
                         // So we only call this once..
                         ready_for_drop_ = true;

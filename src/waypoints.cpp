@@ -47,7 +47,7 @@ void sensorCallback(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
                 break;
 
             case 2:
-                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 45 {
+                if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 45) {
                     left_detect_counter++;
                 } 
                 else {

@@ -15,10 +15,10 @@
 
   <node name="globalLocalizationPy" pkg="coconuts_odroid" type="globalLocalizationPY.py">
 	<param name="startingX" type="int" value="450" />
-	<param name="startingY" type="int" value="700" />
+	<param name="startingY" type="int" value="450" />
 	<param name="bucketLocX" type="int" value="450"/>
 	<param name="bucketLocY" type="int" value="400"/>
-	<param name="direction" type="double" value="180" />	
+	<param name="direction" type="double" value="0" />	
 
   </node>
 
