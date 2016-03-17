@@ -287,8 +287,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
             std::cout << "state changed to ORANGE_BALL_FOUND" << std::endl;
             coconuts_common::ControlState orange_found;
-            orange_found.state = MOVE_TO_BALL;
-            orange_found.sub_state = MOVING_TO_ORANGE;
+            orange_found.state = FIND_BALL;
+            orange_found.sub_state = ORANGE_BALL_FOUND;
             control_state_pub.publish(orange_found);
         }
 
@@ -324,8 +324,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& raw_image) {
 
                 std::cout << "state changed to GREEN_BALL_FOUND" << std::endl;
                 coconuts_common::ControlState green_found;
-                green_found.state = MOVE_TO_BALL;
-                green_found.sub_state = MOVING_TO_GREEN;
+                green_found.state = FIND_BALL;
+                green_found.sub_state = GREEN_BALL_FOUND;
                 control_state_pub.publish(green_found);
             }
         }

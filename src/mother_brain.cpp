@@ -26,7 +26,7 @@ private:
     ros::Subscriber 
         control_override_sub,
         control_substate_sub,
-        detect_ball_forward_sub,
+        //detect_ball_forward_sub,
         detect_goal_forward_sub;
 
 	// Topics we Publish
@@ -50,7 +50,7 @@ public:
         // Subscriptions
         control_override_sub  = nodeh.subscribe<coconuts_common::ControlState>("/control_state_override", 1, &mother_brain::control_override_receive, this);
         control_substate_sub = nodeh.subscribe<coconuts_common::ControlState>("/control_substate", 1, &mother_brain::control_substate_receive, this);
-        detect_ball_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
+        //detect_ball_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_ball_forward/ball_pixel", 1, &mother_brain::find_ball_callback, this);
         detect_goal_forward_sub  = nodeh.subscribe<geometry_msgs::Point>("/detect_bucket_forward/bucket_pixel", 1, &mother_brain::move_to_goal_callback, this);
 
         // Publishers
@@ -444,6 +444,7 @@ public:
 
     }
 
+    /*
     void find_ball_callback(const geometry_msgs::Point::ConstPtr& msg) {
 
         if (behavior_state_ == FIND_BALL) {
@@ -453,6 +454,7 @@ public:
         }
 
     }
+    */
 
     void find_ball() {
 
@@ -472,14 +474,14 @@ public:
                 case BALL_FOUND:
                 case GREEN_BALL_FOUND:
                     ROS_INFO("Mother Brain (FIND_BALL): GREEN_BALL_FOUND [%d], going to MOVE_TO_BALL.", behavior_sub_state_);
-                    //behavior_state_ = MOVE_TO_BALL;
-                    //behavior_sub_state_ = MOVING_TO_GREEN;
+                    behavior_state_ = MOVE_TO_BALL;
+                    behavior_sub_state_ = MOVING_TO_GREEN;
                     break;
 
                 case ORANGE_BALL_FOUND:
                     ROS_INFO("Mother Brain (FIND_BALL): ORANGE_BALL_FOUND [%d], going to MOVE_TO_BALL.", behavior_sub_state_);
-                    //behavior_state_ = MOVE_TO_BALL;
-                    //behavior_sub_state_ = MOVING_TO_ORANGE;
+                    behavior_state_ = MOVE_TO_BALL;
+                    behavior_sub_state_ = MOVING_TO_ORANGE;
                     break;
 
                 default:
