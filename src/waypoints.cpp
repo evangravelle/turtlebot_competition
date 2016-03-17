@@ -5,6 +5,7 @@
 #include <coconuts_common/ControlState.h>
 #include <coconuts_common/SensorStatus.h>
 #include <tf2_ros/transform_listener.h>
+#include <std_msgs/String.h>
 #include <cmath>
 
 // Initialize variables
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "waypoints");
 	ros::NodeHandle nh;
 
+    ros::Publisher status_string_pub = nh.advertise<std_msgs::String>("/waypoints_wtf", 1);
     ros::Publisher waypoints_pub = nh.advertise<geometry_msgs::Pose>("/waypoint", 1, true);
     ros::Subscriber control_state_sub = nh.subscribe<coconuts_common::ControlState>("/control_state", 1, stateCallback);
     ros::Subscriber sensor_sub  = nh.subscribe<coconuts_common::SensorStatus>("/sensor_status", 1, sensorCallback);
@@ -78,6 +80,8 @@ int main(int argc, char **argv)
     goal.position.x = -1;
     goal.position.y = -1;
     double t = 0;
+
+    std:ostringstream wtf_status; 
 
     ros::Rate rate(5.0);
     while(ros::ok()) {
@@ -89,11 +93,11 @@ int main(int argc, char **argv)
             ROS_ERROR("%s",ex.what());
             ros::Duration(2.0).sleep();
         }
-	ROS_INFO("Transform found!");
+    	ROS_INFO("Transform found!");
         // Wait 10 seconds before considering publishing a new waypoint
         if (current_state.sub_state == MOVING_TO_GOAL && right_counter > 3 && goal.position.x > 0 && 
             (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
-       	ROS_INFO("right sensor blocked");
+           	ROS_INFO("right sensor blocked");
             float relative_x = goal.position.x - odom.transform.translation.x;
             float relative_y = goal.position.y - odom.transform.translation.y;
             double angle = atan2(relative_y, relative_x);
@@ -102,6 +106,7 @@ int main(int argc, char **argv)
             waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle - M_PI/3.0);
             waypoints_pub.publish(waypoint);
             t = ros::Time::now().toSec();
+            status_string_pub.publish("Right blocked");
         }
 
         // Wait 10 seconds before considering publishing a new waypoint
@@ -116,6 +121,7 @@ int main(int argc, char **argv)
             waypoint.position.y = odom.transform.translation.y + obstacle_distance*sin(angle + M_PI/3.0);
             waypoints_pub.publish(waypoint);
             t = ros::Time::now().toSec();
+            status_string_pub.publish("Left blocked");
         }
         ros::spinOnce();
         rate.sleep();
