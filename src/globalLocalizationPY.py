@@ -156,10 +156,10 @@ class GL:
 			(roll,pitch,yaw) = euler_from_quaternion([0,0,self.lastQuaternion.z,self.lastQuaternion.w])
 			self.lastYaw = yaw
 		else:
-			self.pose.position.x+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			self.pose.position.y+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			self.odomMeasurement.position.x=self.lastPoseX+sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
-			self.odomMeasurement.position.y=self.lastPoseY+sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*250.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.x+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*200.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.pose.position.y+=mapSliceSize/350.*sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*200.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.odomMeasurement.position.x=self.lastPoseX+sign(data.twist.twist.linear.x)*math.sin(self.angle*0.0174533)*200.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
+			self.odomMeasurement.position.y=self.lastPoseY+sign(data.twist.twist.linear.x)*math.cos(self.angle*0.0174533)*200.*math.sqrt((data.pose.pose.position.x-self.lastOdomX)*(data.pose.pose.position.x-self.lastOdomX)+(data.pose.pose.position.y-self.lastOdomY)*(data.pose.pose.position.y-self.lastOdomY))
 			self.lastPoseX=self.pose.position.x
 			self.lastPoseY=self.pose.position.y
 			self.lastOdomX = data.pose.pose.position.x
