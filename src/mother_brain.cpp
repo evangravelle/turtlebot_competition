@@ -341,7 +341,6 @@ public:
         if (behavior_state_ == START) {
             ROS_INFO("Mother Brain (START): Starting Initialization.");
             arm_search();
-            ros::Duration(3.0).sleep();
             ROS_INFO("Mother Brain (START): Finished Initialization, moving to FIND_BALL.");
             behavior_state_ = FIND_BALL;
             behavior_sub_state_ = DEFAULT_SUB_STATE;
@@ -566,6 +565,9 @@ public:
         arm_movement.type = "POSE";
         arm_movement.pose = "SEARCH";
         positionArm(arm_movement);
+        double t = ros::Time::now().toSec();
+        while (ros::Time::now().toSec() - t < 5) {
+        }	
     }
 
     void arm_check() {
