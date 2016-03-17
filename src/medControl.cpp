@@ -171,7 +171,7 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Queue
 void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
-	if ((state==4 || state==2) && substate!=8 && substate!=2 && abs(x-BUCKETLOCX/112.5) > .3 && abs(y+BUCKETLOCY/112.5)>.3){
+	if ((state==4 && substate!=8 && substate!=2)  || state==2 || (state==1 && substate==1)){
 		queueState=1;
 		substate=1;
 		waypointX=cenPose->position.x;
@@ -225,7 +225,7 @@ void tfCB(const tf2_msgs::TFMessage::ConstPtr& tf)
 //~~~Callback to find out what the heck we are doing
 void stateCB(const coconuts_common::ControlState::ConstPtr& control_state){
 if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVING_TO_ORANGE || control_state -> sub_state == MOVING_TO_GREEN){ //&& control_state -> sub_state == MOVING_TO_BALL
-		queueState=0;
+		
 		if (control_state -> sub_state ==MOVING_TO_ORANGE){
 			orange_or_green=0;
 		}else if(control_state -> sub_state ==MOVING_TO_GREEN){
@@ -236,7 +236,7 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		}
 		state=1;
 	}else if (control_state -> state ==FIND_BALL){
-		queueState=0;
+		
 		state=2;
 	}else if (control_state -> state ==FIND_GOAL){
 		if (state==1 || state==0){
@@ -258,7 +258,7 @@ if (control_state -> state == MOVE_TO_BALL || control_state -> sub_state == MOVI
 		state=10;
 		queueState=0;
 	}
-	else {
+	else if(control_state -> sub_state == CENTER_ON_GOAL){
 		state=0;
 	}
 }
@@ -269,6 +269,9 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 	if (substate==8){
 		wtf_msg.data = "Centering on bucket";
 		wtf_am_i_doing_pub.publish(wtf_msg);
+
+		cs.sub_state = CENTER_ON_GOAL;
+		control_pub.publish(cs);
 
 		int center_sonar = 0;
 		int right_sonar = 0;
@@ -301,11 +304,16 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 			if (center_sonar >= 6 && center_sonar <= 7
 				&& right_sonar >= 16 && right_sonar <= 20
 				&& left_sonar >= 16 && right_sonar <= 20){
+
                 state=10;
 		        substate=1;
+		        cs.state=MOVE_TO_GOAL;
 		        cs.sub_state=AT_GOAL;
 		        control_pub.publish(cs);
-			obstacleON=true;
+				obstacleON=true;
+
+				wtf_msg.data = "Bucket is centered";
+				wtf_am_i_doing_pub.publish(wtf_msg);
 			}
 		}else if(right_sonar > 0 && center_sonar > 0){
 			angle = right_sonar - 19;
@@ -314,6 +322,7 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 			angle = 19 - left_sonar;
 			angle *= ANGLE_BOOST;
 		}else{
+			std::stringstream msg_stream;
 			ROS_WARN("Sonar is fucked! Where's the bucket??");
 			wtf_msg.data = "Where's the bucket??";
 			wtf_am_i_doing_pub.publish(wtf_msg);
