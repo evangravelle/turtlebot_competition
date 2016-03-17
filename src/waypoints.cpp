@@ -14,6 +14,8 @@ ros::Time current_time;
 coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
 int left_clear_counter=0, right_clear_counter=0;
+
+
 double inches_to_meters = 0.0254;
 double obstacle_distance = .5;
 geometry_msgs::TransformStamped odom;
