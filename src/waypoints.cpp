@@ -13,9 +13,9 @@ geometry_msgs::Pose waypoint, goal;
 ros::Time current_time;
 coconuts_common::ControlState current_state;
 bool left_obstacle, right_obstacle;
-int left_counter, right_counter;
+int left_clear_counter=0, right_clear_counter=0;
 double inches_to_meters = 0.0254;
-double obstacle_distance = .75;
+double obstacle_distance = .35;
 geometry_msgs::TransformStamped odom;
 double t;
 
@@ -33,24 +33,22 @@ void sensorCallback(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 
             case 1:
                 if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 50) {
-                    right_obstacle = true;
-                    right_counter++;
+                    right_clear_counter=0;
                 } 
                 else {
-                    right_obstacle = false;
-                    right_counter = 0;
+                    right_clear_counter++;
                 }
+                right_obstacle = right_clear_counter < 5;
                 break;
 
             case 2:
                 if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 50) {
-                    left_obstacle = true;
-                    left_counter++;
+                    left_clear_counter=0;
                 } 
                 else {
-                    left_obstacle = false;
-                    left_counter = 0;
+                    left_clear_counter++;
                 }
+                left_obstacle = left_clear_counter < 5;
                 break;
             
             default:
@@ -95,7 +93,7 @@ int main(int argc, char **argv)
         }
     	ROS_INFO("Transform found!");
         // Wait 10 seconds before considering publishing a new waypoint
-        if (current_state.sub_state == MOVING_TO_GOAL && right_counter > 3 && goal.position.x > 0 && 
+        if ((current_state.sub_state == MOVING_TO_GOAL  || current_state.sub_state == SEARCH_FOR_GOAL ) && right_obstacle && goal.position.x > 0 && 
             (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
            	ROS_INFO("right sensor blocked");
             float relative_x = goal.position.x - odom.transform.translation.x;
@@ -110,7 +108,7 @@ int main(int argc, char **argv)
         }
 
         // Wait 10 seconds before considering publishing a new waypoint
-        else if (current_state.sub_state == MOVING_TO_GOAL && left_counter > 3 && goal.position.x > 0 && 
+        else if ((current_state.sub_state == MOVING_TO_GOAL  || current_state.sub_state == SEARCH_FOR_GOAL )  && left_obstacle && goal.position.x > 0 && 
             (t < 0.0001 || ros::Time::now().toSec() - t > 10)) {
             ROS_INFO("left sensor blocked");
             float relative_x = goal.position.x - odom.transform.translation.x;

@@ -30,6 +30,9 @@ double dot,det;
 int BUCKETLOCX;
 int BUCKETLOCY;
 
+int CENTERX;
+int CENTERY;
+
 //~~~blah blah blah
 double cenx, ceny;
 double v=0;
@@ -61,7 +64,7 @@ double b=0;
 int state=0;
 int substate=1;
 bool goForBall=false;
-
+int countToTen=0;
 int queueState=0;
 bool left_obstacle=false;
 bool right_obstacle=false;
@@ -134,7 +137,7 @@ void goalCB2(const geometry_msgs::Point::ConstPtr& cenPose){
 //~~~Callback for the bucket! I think
 void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
                         // cout << "got bucket pixel" << "\n";
-	if (state==4 && (substate==1 || substate==2)){
+	if (state==4 && (substate==1 || substate==2) && queueState!=0){
 
 		if (cenPose->x > 0){
 			substate=2;
@@ -159,8 +162,9 @@ void goalCB3(const geometry_msgs::Point::ConstPtr& cenPose){
 
 //~~~Queue
 void goalCB5(const geometry_msgs::Pose::ConstPtr& cenPose){
-	if (state==4 || state==2){
+	if (state==4 || state==2 && substate!=8 && substate!=2){
 		queueState=1;
+		substate=1;
 		waypointX=cenPose->position.x;
 		waypointY=cenPose->position.y;
 	}
@@ -308,9 +312,17 @@ void sensorCB(const coconuts_common::SensorStatus::ConstPtr& sensor_msg) {
 	for (int i = 0; i < sensor_msg->sensor_readings.size(); i++ ) {
 	    //ROS_INFO("Explorer: Looking at sensor [%d] reading [%d].", sensor_msg->sensor_readings[i].sensor, sensor_msg->sensor_readings[i].reading);
 
-		if(sensor_msg->sensor_readings[i].reading == 0)
-			continue; 	//Sensor reading is invalid, skip it
+		if(countToTen>10){
+			center_obstacle=false;
+			left_obstacle=false;
+			right_obstacle=false;
+			countToTen=0;
+		}
 
+		if(sensor_msg->sensor_readings[i].reading == 0){
+			countToTen=countToTen+1;
+			continue; 	//Sensor reading is invalid, skip it
+			}
 	    switch (sensor_msg->sensor_readings[i].sensor) {
 	        case 0:
 	            if (sensor_msg->sensor_readings[i].reading > 0 && sensor_msg->sensor_readings[i].reading < 5) {
@@ -623,6 +635,9 @@ b=(480-124)-m*(266);
     }
 
     nh_.getParam("/medControl/bucketLocY", BUCKETLOCY);
+    nh_.getParam("/medControl/centerX", CENTERX);
+    nh_.getParam("/medControl/centerY", CENTERY);
+
 
         ceny=-BUCKETLOCY/112.5;
         cenx=BUCKETLOCX/112.5;
@@ -638,7 +653,7 @@ while(ros::ok()){
 
 	ros::spinOnce();
 		 std::cout << "queuestate : " <<  queueState<<"\n";
-//		 std::cout << "substate : " << substate << "\n"; 	
+		 std::cout << "substate : " << substate << "\n"; 	
 	
 	if (queueState==1){
 		if (dist < .2){
@@ -660,9 +675,9 @@ while(ros::ok()){
 		u_pub_.publish(finalVel);
 	}else if (state==2){
 //		cout << "Exploring ~~~" << "\n";
-		setGlobalGoal(400/112.5,-400/112.5);
-                goal_pose.position.x=400/112.5;
-		goal_pose.position.y=-400/112.5;
+		setGlobalGoal(CENTERX/112.5,-CENTERY/112.5);
+                goal_pose.position.x=CENTERX/112.5;
+		goal_pose.position.y=-CENTERY/112.5;
 		goal_pub.publish(goal_pose);
 		global();
 	}else if (state==3){
