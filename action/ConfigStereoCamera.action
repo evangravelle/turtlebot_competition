@@ -1,0 +1,6 @@
+# Define the goal
+uint32 calibration_request
+---
+# Define the result
+uint32 calibration_result
+---

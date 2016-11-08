@@ -1,0 +1,15 @@
+<launch>
+
+  <!-- USB cam node -->
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node"/>
+
+  <!-- Detect Ball -->
+  <param name="/detect_ball_forward/h_min" type="int" value="0" />
+  <param name="/detect_ball_forward/h_max" type="int" value="40" />
+  <param name="/detect_ball_forward/s_min" type="int" value="52" />
+  <param name="/detect_ball_forward/s_max" type="int" value="255" />
+  <param name="/detect_ball_forward/v_min" type="int" value="174" />
+  <param name="/detect_ball_forward/v_max" type="int" value="255" />
+  <node name="detect_ball_forward_tuning" pkg="coconuts_master" type="detect_ball_forward_tuning" output="screen"/>
+
+</launch>
