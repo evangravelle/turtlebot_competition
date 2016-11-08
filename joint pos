@@ -1,0 +1,32 @@
+JOINT 4 (Base) (Not connected)
+
+JOINT 0   
+low: 317
+mid: 505
+high: 700
+
+0 degree (flat): 80
+90 degree: 515
+(515 - 80) / 90 = 4.83 analog/degree
+
+JOINT 1
+low: 94
+home: 351
+up: 797
+
+degrees to joint 0
+90 degree: 675
+180 degree (straight line): 220
+(675 - 220) / 90 = 5.056 analog/degree
+
+DOWN AND READY TO GRAB:
+0 127|1 499|2 700|3 300|
+
+
+
+GOT IT:
+0 399|1 499|2 699|3 405|
+
+
+
+
