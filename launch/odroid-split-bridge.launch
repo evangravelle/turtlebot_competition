@@ -1,0 +1,53 @@
+<launch>
+
+<node pkg="coconuts_odroid" type="arm_poll" name="arm_poll_node" output="screen" >
+	<param name="port" value="/dev/ttyACM0" />
+	<param name="polling_frequency" type="int" value="5" />
+</node>
+
+<node pkg="coconuts_odroid" type="arm_control" name="arm_control_node" output="screen" >
+
+
+	<param name="port" value="/dev/ttyACM0" />
+
+
+	<!-- Commonly Used Ports
+	<param name="port" value="/dev/ttyUSB0" />
+	<param name="port" value="/dev/pts/1" />
+	-->
+
+	<param name="motor_count" type="int" value="4" />
+	
+	<!-- Link 0 -->
+	<param name="motor_0_inverted" type="int" value="0" />
+	<param name="motor_0_increment" type="int" value="5" />
+	<!-- Link 1 -->
+	<param name="motor_1_inverted" type="int" value="0" />
+	<param name="motor_1_increment" type="int" value="5" />
+	<!-- Link 2 -->
+	<param name="motor_2_inverted" type="int" value="0" />
+	<param name="motor_2_increment" type="int" value="5" />
+	<!-- Pincer -->
+	<param name="motor_3_inverted" type="int" value="0" />
+	<param name="motor_3_increment" type="int" value="10" />
+
+	<!-- POSES hold SELECT and-->
+
+	<!-- START -->
+	<param name="SEARCH" type="string" value="0 222|1 218|2 280|3 250|" />
+
+	<!-- A -->
+	<param name="GRAB_BALL_OPEN" type="string" value="0 87|1 395|W|2 668|3 291|" />
+
+	<!-- B -->
+	<param name="GRAB_BALL_CLOSE" type="string" value="0 87|1 395|W|2 668|3 416|" />
+
+	<!-- X -->
+	<param name="DROP_BALL_OPEN" type="string" value="0 525|1 461|2 285|3 300|" />
+
+	<!-- Y -->
+	<param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|3 416|" />
+
+</node>
+
+</launch>

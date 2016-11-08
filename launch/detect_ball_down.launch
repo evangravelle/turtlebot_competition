@@ -1,0 +1,60 @@
+<launch>
+
+  <!-- parameters-->
+  <param name="/detect_ball_down_orange/display" type="bool" value="false" /> 
+  <param name="/detect_ball_down_orange/require_correct_state" type="bool" value="true" /> 
+  <param name="/detect_ball_down_orange/image_width" value="320" /> 
+  <param name="/detect_ball_down_orange/image_height" value="240" /> 
+  <param name="/detect_ball_down_orange/h_min_orange" value="0" />
+  <param name="/detect_ball_down_orange/h_max_orange" value="45" />
+  <param name="/detect_ball_down_orange/s_min_orange" value="0" />
+  <param name="/detect_ball_down_orange/s_max_orange" value="255" />
+  <param name="/detect_ball_down_orange/v_min_orange" value="200" />
+  <param name="/detect_ball_down_orange/v_max_orange" value="255" />
+  <param name="/detect_ball_down_orange/h_min_orange_check" value="0" />
+  <param name="/detect_ball_down_orange/h_max_orange_check" value="36" />
+  <param name="/detect_ball_down_orange/s_min_orange_check" value="45" />
+  <param name="/detect_ball_down_orange/s_max_orange_check" value="255" />
+  <param name="/detect_ball_down_orange/v_min_orange_check" value="143" />
+  <param name="/detect_ball_down_orange/v_max_orange_check" value="255" />
+
+  <node name="detect_ball_down_orange" pkg="coconuts_odroid" type="detect_ball_down_orange" />
+
+  <!-- parameters-->
+  <param name="/detect_ball_down_green/display" type="bool" value="false" />
+  <param name="/detect_ball_down_green/require_correct_state" type="bool" value="true" />
+  <param name="/detect_ball_down_green/image_width" value="320" /> 
+  <param name="/detect_ball_down_green/image_height" value="240" /> 
+  <param name="/detect_ball_down_green/h_min_green" value="26" />
+  <param name="/detect_ball_down_green/h_max_green" value="59" />
+  <param name="/detect_ball_down_green/s_min_green" value="0" />
+  <param name="/detect_ball_down_green/s_max_green" value="255" />
+  <param name="/detect_ball_down_green/v_min_green" value="201" />
+  <param name="/detect_ball_down_green/v_max_green" value="255" />
+  <param name="/detect_ball_down_green/h_min_green_check" value="25" />
+  <param name="/detect_ball_down_green/h_max_green_check" value="70" />
+  <param name="/detect_ball_down_green/s_min_green_check" value="86" />
+  <param name="/detect_ball_down_green/s_max_green_check" value="255" />
+  <param name="/detect_ball_down_green/v_min_green_check" value="62" />
+  <param name="/detect_ball_down_green/v_max_green_check" value="255" />
+
+  <node name="detect_ball_down_green" pkg="coconuts_odroid" type="detect_ball_down_green" />
+
+  <!-- stereo image proc - down camera  --> 
+  <!-- <node ns="camera_down" name= "image_proc" pkg="image_proc" type="image_proc"/>  -->
+
+  <!-- downward camera uses usb_cam, this one is not on the USB bus -->
+  <node name= "camera_down" pkg="usb_cam" type="usb_cam_node" >
+    <param name="video_device" type="string" value="/dev/camera_down"/>   <!-- /dev/camera_down -->
+    <param name="framerate" type="int" value="15"/>
+    <param name="image_height" type="int" value="240"/>
+    <param name="image_width" type="int" value="320"/> 
+    <param name="camera_frame_id" type="string" value="camera_down" /> 
+    <param name="camera_info_url" type="string" value="file://$(find coconuts_odroid)/src/camera_down_calibration.yaml"/>
+  </node> 
+
+  <!-- locate ball publishes ball transform in 3d space -->
+  <node name="locate_ball_down" pkg="coconuts_odroid" type="locate_ball_down" />
+
+
+  </launch>

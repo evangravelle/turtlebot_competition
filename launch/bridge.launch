@@ -1,0 +1,61 @@
+<launch>
+
+<node pkg="coconuts_odroid" type="Bridge" name="bridge_node" >
+
+	<param name="port" value="/dev/ttyACM0" />
+
+	<!-- Commonly Used Ports
+	<param name="port" value="/dev/pts/27" />
+	<param name="port" value="/dev/ttyACM0" />
+	<param name="port" value="/dev/ttyUSB0" />
+	<param name="port" value="/dev/pts/1" />
+	-->
+
+	<!-- 	represents how frequently the Arduino should be queried
+		for position updates as a fraction of the ROS frequency. 
+		For example, using 20 means that for every 20 times the 
+		ROS loop executes this will execute once -->	
+	<param name="polling_frequency" type="int" value="10" />
+	<param name="sonar_polling_freq" type="int" value="5" />
+	<param name="motor_count" type="int" value="4" />
+	
+	<!-- Link 0 -->
+	<param name="motor_0_inverted" type="int" value="0" />
+	<param name="motor_0_increment" type="int" value="5" />
+	<!-- Link 1 -->
+	<param name="motor_1_inverted" type="int" value="0" />
+	<param name="motor_1_increment" type="int" value="5" />
+	<!-- Link 2 -->
+	<param name="motor_2_inverted" type="int" value="0" />
+	<param name="motor_2_increment" type="int" value="5" />
+	<!-- Pincer -->
+	<param name="motor_3_inverted" type="int" value="0" />
+	<param name="motor_3_increment" type="int" value="10" />
+
+        <!-- POSES -->
+
+        <!-- SELECT -->
+	<param name="SEARCH" type="string" value="0 300|W|2 280|3 291|W|0 222|1 218|" />
+
+
+        <!-- A -->
+        <param name="GRAB_BALL_OPEN" type="string" value="1 395|2 668|3 291|W|0 88|W|" />
+
+        <!-- B -->
+        <param name="GRAB_BALL_CLOSE" type="string" value="3 425|" />
+
+
+        <!-- X -->
+        <param name="DROP_BALL_OPEN" type="string" value="3 291|" />
+
+        <!-- Y -->
+        <param name="DROP_BALL_CLOSE" type="string" value="0 525|1 461|2 285|" />
+
+        <!-- ? -->
+        <param name="CHECK_BALL" type="string" value="0 294|1 461|2 668|" />
+
+        <param name="GOT_BALL_SEARCH" type="string" value="0 418|1 138|2 351|3 425|" />
+
+</node>
+
+</launch>

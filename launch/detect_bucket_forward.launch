@@ -1,0 +1,20 @@
+<launch>
+
+  <!-- Detect Bucket -->
+  <param name="/detect_bucket_forward/display" type="bool" value="false" />
+  <param name="/detect_bucket_forward/require_correct_state" type="bool" value="true" />
+
+  <param name="/detect_bucket_forward/h_min" type="int" value="155" />
+  <param name="/detect_bucket_forward/h_max" type="int" value="179" />
+  <param name="/detect_bucket_forward/s_min" type="int" value="64" />
+  <param name="/detect_bucket_forward/s_max" type="int" value="255" />
+  <param name="/detect_bucket_forward/v_min" type="int" value="37" />
+  <param name="/detect_bucket_forward/v_max" type="int" value="255" />
+
+  <node name="detect_bucket_forward" pkg="coconuts_odroid" type="detect_bucket_forward" />
+
+  <!-- Publishes bucket transform in 3d space 
+  <node name="locate_bucket_forward" pkg="coconuts_odroid" type="locate_bucket_forward" output="screen" /> -->
+
+
+  </launch>

@@ -1,0 +1,24 @@
+<launch>
+
+<node pkg="coconuts_odroid" type="MockArduino" name="mock_arduino_node" output="screen" >
+	<param name="port" value="/dev/pts/1" />
+	<param name="motor_count" type="int" value="4" />
+	<!-- Base -->
+	<param name="motor_0_init" type="int" value="150" />
+	<param name="motor_0_min" type="int" value="100" />
+	<param name="motor_0_max" type="int" value="200" />
+	<!-- Link 1 -->
+	<param name="motor_1_init" type="int" value="505" />
+	<param name="motor_1_min" type="int" value="317" />
+	<param name="motor_1_max" type="int" value="700" />
+	<!-- Link 2 -->
+	<param name="motor_2_init" type="int" value="351" />
+	<param name="motor_2_min" type="int" value="94" />
+	<param name="motor_2_max" type="int" value="797" />
+	<!-- Pincer -->
+	<param name="motor_3_init" type="int" value="150" />
+	<param name="motor_3_min" type="int" value="100" />
+	<param name="motor_3_max" type="int" value="200" />
+</node>
+
+</launch>
